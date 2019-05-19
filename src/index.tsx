@@ -1,7 +1,28 @@
 import * as React from 'react';
 import * as classNames from "classnames";
-import { errorResponse, errorResponseExcept } from '@servicestack/client';
-import {ChangeEvent} from "react";
+import { ChangeEvent } from "react";
+import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
+import { 
+    errorResponse, 
+    errorResponseExcept,
+    NavItem,
+    trimEnd,
+    safeVarName,
+    pick,
+    combinePaths,
+    activeClassNav,
+    activeClass,
+    btnColorClass,
+    btnSizeClass,
+    btnClasses,
+    NavDefaults,
+    NavLinkDefaults,
+    NavbarDefaults,
+    NavButtonGroupDefaults,
+    LinkButtonDefaults,
+    UserAttributes,
+    NavOptions,
+} from '@servicestack/client';
 
 interface ErrorSummaryProps {
     responseStatus: any,
@@ -193,4 +214,274 @@ export const CheckBox: React.FC<CheckBoxProps> = (props) => {
             {help ? <small className="text-muted">{help}</small> : null}
             {errorField ? <div className="invalid-feedback">{errorField}</div> : null}
         </div>);
+};
+
+declare let global: any; // populated from package.json/jest
+
+interface BootstrapColorProps {
+    primary?: boolean;
+    'outline-primary'?: boolean;
+    secondary?: boolean;
+    'outline-secondary'?: boolean;
+    success?: boolean;
+    'outline-success'?: boolean;
+    info?: boolean;
+    'outline-info'?: boolean;
+    warning?: boolean;
+    'outline-warning'?: boolean;
+    danger?: boolean;
+    'outline-danger'?: boolean;
+    light?: boolean;
+    'outline-light'?: boolean;
+    dark?: boolean;
+    'outline-dark'?: boolean;
+}
+
+interface BootstrapSizeProps {
+    lg?: boolean;
+    sm?: boolean;
+    xs?: boolean;
+}
+
+interface BootstrapModifierProps {
+    block?: boolean;
+    vertical?: boolean;
+    horizontal?: boolean;
+}
+
+type NavItemsProps = RouteComponentProps<any> & {
+    items: NavItem[];
+
+    options?: NavOptions;
+    attributes?: string[];
+    activePath?: string;
+    baseHref?: string;
+    navClass?: string;
+    navItemClass?: string;
+    navLinkClass?: string;
+    childNavItemClass?: string;
+    childNavLinkClass?: string;
+    childNavMenuClass?: string;
+    childNavMenuItemClass?: string;
+}
+type NavItemProps = RouteComponentProps<any> & {
+    item: NavItem;
+    options?: NavOptions;
+    activePath?: string;
+    navItemClass?: string;
+    navLinkClass?: string;
+}
+
+function parseIconHtml(html: string) {
+    const match = /class="([^"]+)/.exec(html);
+    if (match != null) {
+        return <i className={match[1]} />
+    }
+    return null;
+}
+
+export const Nav = withRouter<NavItemsProps>(({ items, options, ...remaining }) => {
+    if (items == null || items.length === 0) {
+        return null;
+    }
+
+    options = Object.assign(NavDefaults.forNav(options), remaining);
+
+    return (
+        <div className={options.navClass}>
+            {items.map(x => <NavLink key={x.href || x.label} item={x} options={options} />)}
+        </div>
+    );
+});
+
+export const Navbar = withRouter<NavItemsProps>(({ items, options, ...remaining }) => {
+    if (items == null || items.length === 0) {
+        return null;
+    }
+
+    options = Object.assign(NavbarDefaults.forNavbar(options), remaining);
+    return (<Nav items={items} options={options} />);
+});
+
+export const A : React.FC<any> = ({to, onClick, children, ...attrs}) => {
+    if (onClick != null) {
+        return (<a href="javascript:void(0)" onClick={onClick} {...attrs}>{children}</a>);
+    }
+    if (to.startsWith('http://') || to.startsWith('https://') || to.startsWith('://')) {
+        return (<a href={to} {...attrs}>{children}</a>);
+    } else {
+        return (<Link to={to} {...attrs}>{children}</Link>);
+    }
+}
+
+export const NavLink = withRouter<NavItemProps>(({ item, options, activePath, navItemClass, navLinkClass, history }) => {
+    options = options || NavDefaults.forNav();
+    if (item == null  || !NavDefaults.showNav(item, options.attributes)) {
+        return null;
+    }
+    options.activePath = activePath || options.activePath || history.location.pathname;
+    options.navItemClass = navItemClass || options.navItemClass;
+    options.navLinkClass = navLinkClass || options.navLinkClass;
+
+    const children = item.children || [];
+    const hasChildren = children.length > 0;
+    const navItemCls = hasChildren
+        ? options.childNavItemClass
+        : options.navItemClass;
+    const navLinkCls = hasChildren
+        ? options.childNavLinkClass
+        : options.navLinkClass;
+
+    const childProps = {};
+    let id = item.id;
+    if (hasChildren) {
+        if (id == null) {
+            id = safeVarName(item.label);
+        }
+        /* tslint:disable:no-string-literal */
+        childProps['role'] = 'button';
+        childProps['data-toggle'] = 'dropdown';
+        childProps['aria-haspopup'] = 'true';
+        childProps['aria-expanded'] = 'false';
+        /* tslint:enable:no-string-literal */
+    }
+    const baseHref = trimEnd(options.baseHref || '', '/');
+
+    return (
+        <li className={classNames(item.className, navItemCls)}>
+            <A to={baseHref + item.href} className={classNames(navLinkCls, activeClassNav(item, options.activePath))} id={id} {...childProps}>
+                {item.label}
+            </A>
+            {children.map(x =>
+                (<div className={options!.childNavMenuClass} aria-labelledby={id}>
+                    {x.label === '-'
+                        ? <div className="dropdown-divider" />
+                        : (<A to={baseHref + x.href} className={classNames(options!.childNavMenuItemClass, activeClassNav(x, options!.activePath!))}>
+                            {x.label}
+                           </A>)}
+                </div>)
+            )}
+        </li>
+    );
+});
+
+export type NavButtonGroupProps = NavItemsProps & BootstrapSizeProps & BootstrapColorProps & BootstrapModifierProps;
+
+export const NavButtonGroup = withRouter<NavButtonGroupProps>(({ items, options, ...remaining }) => {
+    if (items == null || items.length === 0) {
+        return null;
+    }
+
+    options = Object.assign(NavButtonGroupDefaults.forNavButtonGroup(options), remaining);
+    return (
+        <div className={classNames(remaining.block ? null : remaining.vertical ? 'btn-group-vertical' : options.navClass)}>
+            {items.map(x => <NavLinkButton key={x.href || x.label} item={x} options={options} {...remaining} />)}
+        </div>
+    );
+});
+
+export const NavLinkButton = withRouter<NavItemProps>(({ item, options, activePath, navItemClass, history, ...remaining }) => {
+    options = Object.assign(NavLinkDefaults.forNavLink(options), remaining);
+    if (item == null || !NavDefaults.showNav(item, options.attributes)) {
+        return null;
+    }
+    options.activePath = activePath || options.activePath || history.location.pathname;
+    options.navItemClass = navItemClass || options.navItemClass;
+
+    const baseHref = trimEnd(options.baseHref || '', '/');
+    const parseHtml = NavDefaults.parseIconHtml || parseIconHtml;
+
+    return (
+        <A to={baseHref + item.href} id={item.id}
+            className={classNames(item.className, options.navItemClass, activeClassNav(item, options.activePath), btnClasses(remaining))}>
+            {parseHtml(item.iconHtml)}
+            {item.label}
+        </A>);
+});
+
+type LinkItemProps = RouteComponentProps<any> & BootstrapColorProps & BootstrapSizeProps & BootstrapModifierProps & {
+    href?: string;
+    onClick?:React.MouseEventHandler<HTMLAnchorElement>;
+    id?: string;
+    exact?: boolean;
+    className?: string;
+    navItemClass?: string;
+    options?: NavOptions;
+}
+
+export const LinkButton = withRouter<LinkItemProps>(({ href, exact, className, options, history, children, ...remaining }) => {
+    let activePath = options != null ? options.activePath : '';
+    if (!activePath) {
+        activePath = history.location.pathname;
+    }
+    options = Object.assign(LinkButtonDefaults.forLinkButton(options), remaining);
+    const hashPrefix = trimEnd(options.baseHref || '', '/');
+    const attrs = pick(remaining, ['id','type','name','autofocus','disabled','value','onClick']);
+    return (
+        <A to={hashPrefix + href} {...attrs}
+            className={classNames(className, options.navItemClass, activeClass(href||null, activePath, exact), btnClasses(remaining))}>
+            {children}
+        </A>);
+});
+
+type ButtonProps = BootstrapColorProps & BootstrapSizeProps & BootstrapModifierProps & {
+    type?: string;
+    onClick?:React.MouseEventHandler<HTMLButtonElement>;
+    id?: string;
+    className?: string;
+}
+export const Button : React.FC<ButtonProps> = ({ type, id, className, children, ...remaining }) => {
+    const attrs = pick(remaining, ['id','type','name','autofocus','disabled','value','onClick']);
+    return (<button {...attrs} className={classNames('btn', className, btnClasses(remaining))}>{children}</button>);
+};
+
+export const Fallback = withRouter<any>(({ location }) => {
+    React.useEffect(() => {
+        if (location.pathname.indexOf('://') >= 0) {
+            window.location.href = location.pathname.substring(1); // chop path / prefix
+        }
+    }, []);
+
+    return (<div className="fallback">
+        <h3>No matching <code>Route</code> found for <code>{location.pathname}</code></h3>
+    </div>);
+});
+
+interface ForbiddenProps {
+    message?: string;
+    path?: string;
+    role?: string;
+    permission?: string;
+}
+
+export const Forbidden : React.FC<ForbiddenProps> = ({ message, path, role, permission, ...remaining }) => {
+    return (<div className="forbidden">
+        <h3>You are not authorized to access {path ? <code>{path}</code> : <span>this page</span>}</h3>
+        {message != null
+            ? <p>{message}</p>
+            : role
+                ? <p>Missing role <code>{role}</code></p>
+                : permission
+                    ? <p>Missing permission <code>{permission}</code></p>
+                    : null}
+    </div>);
+};
+
+interface SvgProps {
+    id: string;
+    fill?: string;
+    className?: string;
+    width?: number;
+    height?: number;
+    style?:any;
+    baseUrl?: string;
+}
+export const Svg : React.FC<SvgProps> = ({ id, fill, className, style, baseUrl }) => {
+    let svgSrc = `/metadata/svg/${id}.svg`;
+    if (fill) {
+        svgSrc += `?fill=` + encodeURIComponent(fill);
+    }
+    style = style || {};
+    const src = baseUrl ? combinePaths(baseUrl, svgSrc) : svgSrc;
+    return (<img src={src} className={className} style={style} />);
 };
