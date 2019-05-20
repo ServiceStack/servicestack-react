@@ -32,7 +32,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     Object.defineProperty(exports, "__esModule", { value: true });
     var React = require("react") || window.React;
     var classNames = require("classnames") || window.classNames;
-    var react_router_dom_1 = require("react-router-dom");
+    var react_router_dom_1 = require("react-router-dom") || window.ReactRouterDOM;
     var client_1 = require("@servicestack/client") || window["@servicestack/client"];
     exports.ErrorSummary = function (_a) {
         var responseStatus = _a.responseStatus, except = _a.except;
