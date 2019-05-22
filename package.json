@@ -1,6 +1,6 @@
 {
   "name": "@servicestack/react",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "ServiceStack",
   "description": "React controls for ServiceStack Apps",
   "repository": {
