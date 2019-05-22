@@ -476,12 +476,18 @@ interface SvgProps {
     style?:any;
     baseUrl?: string;
 }
-export const Svg : React.FC<SvgProps> = ({ id, fill, className, style, baseUrl }) => {
+export const Svg : React.FC<SvgProps> = ({ id, fill, className, style, width, height, baseUrl }) => {
     let svgSrc = `/metadata/svg/${id}.svg`;
     if (fill) {
         svgSrc += `?fill=` + encodeURIComponent(fill);
     }
     style = style || {};
+    if (width) {
+        style.width = width;
+    }
+    if (height) {
+        style.height = height;
+    }
     const src = baseUrl ? combinePaths(baseUrl, svgSrc) : svgSrc;
     return (<img src={src} className={className} style={style} />);
 };

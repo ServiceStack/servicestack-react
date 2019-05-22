@@ -286,12 +286,18 @@ exports.Forbidden = function (_a) {
                     : null));
 };
 exports.Svg = function (_a) {
-    var id = _a.id, fill = _a.fill, className = _a.className, style = _a.style, baseUrl = _a.baseUrl;
+    var id = _a.id, fill = _a.fill, className = _a.className, style = _a.style, width = _a.width, height = _a.height, baseUrl = _a.baseUrl;
     var svgSrc = "/metadata/svg/" + id + ".svg";
     if (fill) {
         svgSrc += "?fill=" + encodeURIComponent(fill);
     }
     style = style || {};
+    if (width) {
+        style.width = width;
+    }
+    if (height) {
+        style.height = height;
+    }
     var src = baseUrl ? client_1.combinePaths(baseUrl, svgSrc) : svgSrc;
     return (React.createElement("img", { src: src, className: className, style: style }));
 };
