@@ -295,7 +295,7 @@ var __rest = (this && this.__rest) || function (s, e) {
                             React.createElement("code", null, permission))
                         : null));
     };
-    exports.Svg = function (_a) {
+    exports.SvgImage = function (_a) {
         var id = _a.id, fill = _a.fill, className = _a.className, style = _a.style, width = _a.width, height = _a.height, baseUrl = _a.baseUrl;
         var svgSrc = "/metadata/svg/" + id + ".svg";
         if (fill) {

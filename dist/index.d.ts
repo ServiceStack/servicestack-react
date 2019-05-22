@@ -100,7 +100,7 @@ interface ForbiddenProps {
     permission?: string;
 }
 export declare const Forbidden: React.FC<ForbiddenProps>;
-interface SvgProps {
+interface SvgImageProps {
     id: string;
     fill?: string;
     className?: string;
@@ -109,5 +109,5 @@ interface SvgProps {
     style?: any;
     baseUrl?: string;
 }
-export declare const Svg: React.FC<SvgProps>;
+export declare const SvgImage: React.FC<SvgImageProps>;
 export {};

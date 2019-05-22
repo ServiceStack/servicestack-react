@@ -467,7 +467,7 @@ export const Forbidden : React.FC<ForbiddenProps> = ({ message, path, role, perm
     </div>);
 };
 
-interface SvgProps {
+interface SvgImageProps {
     id: string;
     fill?: string;
     className?: string;
@@ -476,7 +476,7 @@ interface SvgProps {
     style?:any;
     baseUrl?: string;
 }
-export const Svg : React.FC<SvgProps> = ({ id, fill, className, style, width, height, baseUrl }) => {
+export const SvgImage : React.FC<SvgImageProps> = ({ id, fill, className, style, width, height, baseUrl }) => {
     let svgSrc = `/metadata/svg/${id}.svg`;
     if (fill) {
         svgSrc += `?fill=` + encodeURIComponent(fill);
