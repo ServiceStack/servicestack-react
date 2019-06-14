@@ -12,15 +12,12 @@ import {
     combinePaths,
     activeClassNav,
     activeClass,
-    btnColorClass,
-    btnSizeClass,
     btnClasses,
     NavDefaults,
     NavLinkDefaults,
     NavbarDefaults,
     NavButtonGroupDefaults,
     LinkButtonDefaults,
-    UserAttributes,
     NavOptions,
 } from '@servicestack/client';
 
@@ -303,7 +300,7 @@ export const Navbar = withRouter<NavItemsProps>(({ items, options, ...remaining 
     return (<Nav items={items} options={options} />);
 });
 
-export const A : React.FC<any> = ({to, onClick, children, ...attrs}) => {
+export const ALink : React.FC<any> = ({to, onClick, children, ...attrs}) => {
     if (onClick != null) {
         return (<a href="javascript:void(0)" onClick={onClick} {...attrs}>{children}</a>);
     }
@@ -349,16 +346,16 @@ export const NavLink = withRouter<NavItemProps>(({ item, options, activePath, na
 
     return (
         <li className={classNames(item.className, navItemCls)}>
-            <A to={baseHref + item.href} className={classNames(navLinkCls, activeClassNav(item, options.activePath))} id={id} {...childProps}>
+            <ALink to={baseHref + item.href} className={classNames(navLinkCls, activeClassNav(item, options.activePath))} id={id} {...childProps}>
                 {item.label}
-            </A>
+            </ALink>
             {children.map(x =>
                 (<div className={options!.childNavMenuClass} aria-labelledby={id}>
                     {x.label === '-'
                         ? <div className="dropdown-divider" />
-                        : (<A to={baseHref + x.href} className={classNames(options!.childNavMenuItemClass, activeClassNav(x, options!.activePath!))}>
+                        : (<ALink to={baseHref + x.href} className={classNames(options!.childNavMenuItemClass, activeClassNav(x, options!.activePath!))}>
                             {x.label}
-                           </A>)}
+                           </ALink>)}
                 </div>)
             )}
         </li>
@@ -392,11 +389,11 @@ export const NavLinkButton = withRouter<NavItemProps>(({ item, options, activePa
     const parseHtml = NavDefaults.parseIconHtml || parseIconHtml;
 
     return (
-        <A to={baseHref + item.href} id={item.id}
+        <ALink to={baseHref + item.href} id={item.id}
             className={classNames(item.className, options.navItemClass, activeClassNav(item, options.activePath), btnClasses(remaining))}>
             {parseHtml(item.iconHtml)}
             {item.label}
-        </A>);
+        </ALink>);
 });
 
 type LinkItemProps = RouteComponentProps<any> & BootstrapColorProps & BootstrapSizeProps & BootstrapModifierProps & {
@@ -418,10 +415,10 @@ export const LinkButton = withRouter<LinkItemProps>(({ href, exact, className, o
     const hashPrefix = trimEnd(options.baseHref || '', '/');
     const attrs = pick(remaining, ['id','type','name','autofocus','disabled','value','onClick']);
     return (
-        <A to={hashPrefix + href} {...attrs}
+        <ALink to={hashPrefix + href} {...attrs}
             className={classNames(className, options.navItemClass, activeClass(href||null, activePath, exact), btnClasses(remaining))}>
             {children}
-        </A>);
+        </ALink>);
 });
 
 type ButtonProps = BootstrapColorProps & BootstrapSizeProps & BootstrapModifierProps & {

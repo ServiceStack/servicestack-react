@@ -79,7 +79,7 @@ declare type NavItemsProps = RouteComponentProps<any> & {
 };
 export declare const Nav: any;
 export declare const Navbar: any;
-export declare const A: React.FC<any>;
+export declare const ALink: React.FC<any>;
 export declare const NavLink: any;
 export declare type NavButtonGroupProps = NavItemsProps & BootstrapSizeProps & BootstrapColorProps & BootstrapModifierProps;
 export declare const NavButtonGroup: any;
