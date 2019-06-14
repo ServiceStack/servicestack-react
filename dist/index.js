@@ -21,7 +21,6 @@ var __rest = (this && this.__rest) || function (s, e) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = require("react");
-var classNames = require("classnames");
 var react_router_dom_1 = require("react-router-dom");
 var client_1 = require("@servicestack/client");
 exports.ErrorSummary = function (_a) {
@@ -59,22 +58,22 @@ exports.Input = function (props) {
     return (React.createElement("div", null,
         label ? React.createElement("label", { className: isCheck ? 'form-check-label' : 'form-label', htmlFor: id }, label) : null,
         isCheck ?
-            (React.createElement("div", { className: classNames('form-check', { 'is-invalid': hasError, 'form-control': hasError }) },
+            (React.createElement("div", { className: client_1.classNames('form-check', { 'is-invalid': hasError, 'form-control': hasError }) },
                 type == 'radio' ?
                     kvpValues.map(function (kvp) {
-                        return (React.createElement("div", { key: id + "-" + kvp.key, className: classNames('custom-control', 'custom-radio', { 'custom-control-inline': inline }) },
-                            React.createElement("input", { type: "radio", id: id + "-" + kvp.key, name: id, value: kvp.key, className: classNames('custom-control-input', inputClass), checked: value == kvp.key, onChange: onInput }),
+                        return (React.createElement("div", { key: id + "-" + kvp.key, className: client_1.classNames('custom-control', 'custom-radio', { 'custom-control-inline': inline }) },
+                            React.createElement("input", { type: "radio", id: id + "-" + kvp.key, name: id, value: kvp.key, className: client_1.classNames('custom-control-input', inputClass), checked: value == kvp.key, onChange: onInput }),
                             React.createElement("label", { className: "custom-control-label", htmlFor: id + "-" + kvp.key }, kvp.value)));
                     }) : null,
                 type == 'checkbox' ?
                     kvpValues.map(function (kvp) {
-                        return (React.createElement("div", { key: id + "-" + kvp.key, className: classNames('custom-control', 'custom-checkbox', { 'custom-control-inline': inline }) },
+                        return (React.createElement("div", { key: id + "-" + kvp.key, className: client_1.classNames('custom-control', 'custom-checkbox', { 'custom-control-inline': inline }) },
                             React.createElement("input", { type: "checkbox", id: id + "-" + kvp.key, name: id, value: kvp.key, className: "form-check-input", checked: hasValue(kvp.key), onChange: onInputValues }),
                             React.createElement("label", { className: "form-check-label", htmlFor: id + "-" + kvp.key }, kvp.value)));
                     }) : null,
                 help ? React.createElement("small", { className: "text-muted" }, help) : null))
             : null,
-        !isCheck ? React.createElement("input", __assign({ type: type, id: id, name: id, value: value, className: classNames('form-control', { 'is-invalid': errorField }, inputClass), onChange: function (e) { if (fn)
+        !isCheck ? React.createElement("input", __assign({ type: type, id: id, name: id, value: value, className: client_1.classNames('form-control', { 'is-invalid': errorField }, inputClass), onChange: function (e) { if (fn)
                 fn(e.target.value); }, placeholder: placeholder }, remaining)) : null,
         !isCheck && help ? React.createElement("small", { className: "text-muted" }, help) : null,
         errorField ? React.createElement("div", { className: "invalid-feedback" }, errorField) : null));
@@ -112,7 +111,7 @@ exports.Select = function (props) {
         fn(multiple ? selectedOptions(e.target) : e.target.value); };
     return (React.createElement("div", null,
         label ? React.createElement("label", { className: "form-label", htmlFor: id }, label) : null,
-        React.createElement("select", { id: id, name: id, className: classNames('form-control', { 'is-invalid': errorField }, selectClass), multiple: multiple, value: value, onChange: onInputValues }, kvpValues.map(function (kvp) {
+        React.createElement("select", { id: id, name: id, className: client_1.classNames('form-control', { 'is-invalid': errorField }, selectClass), multiple: multiple, value: value, onChange: onInputValues }, kvpValues.map(function (kvp) {
             return (React.createElement("option", { key: kvp.key, value: kvp.key }, kvp.value));
         })),
         help ? React.createElement("small", { className: "text-muted" }, help) : null,
@@ -135,8 +134,8 @@ exports.CheckBox = function (props) {
     var onInput = function (e) { if (fn)
         fn(e.target.checked); };
     return (React.createElement("div", null,
-        React.createElement("div", { className: classNames('form-check', { 'is-invalid': errorField, 'form-control': errorField }) },
-            React.createElement("input", { type: "checkbox", id: id, name: id, onChange: onInput, checked: value, value: "true", className: classNames('form-check-input', { 'is-invalid': errorField }, inputClass) }),
+        React.createElement("div", { className: client_1.classNames('form-check', { 'is-invalid': errorField, 'form-control': errorField }) },
+            React.createElement("input", { type: "checkbox", id: id, name: id, onChange: onInput, checked: value, value: "true", className: client_1.classNames('form-check-input', { 'is-invalid': errorField }, inputClass) }),
             React.createElement("label", { className: "form-check-label", htmlFor: id }, props.children)),
         help ? React.createElement("small", { className: "text-muted" }, help) : null,
         errorField ? React.createElement("div", { className: "invalid-feedback" }, errorField) : null));
@@ -164,7 +163,7 @@ exports.Navbar = react_router_dom_1.withRouter(function (_a) {
     options = Object.assign(client_1.NavbarDefaults.forNavbar(options), remaining);
     return (React.createElement(exports.Nav, { items: items, options: options }));
 });
-exports.A = function (_a) {
+exports.ALink = function (_a) {
     var to = _a.to, onClick = _a.onClick, children = _a.children, attrs = __rest(_a, ["to", "onClick", "children"]);
     if (onClick != null) {
         return (React.createElement("a", __assign({ href: "javascript:void(0)", onClick: onClick }, attrs), children));
@@ -207,12 +206,12 @@ exports.NavLink = react_router_dom_1.withRouter(function (_a) {
         /* tslint:enable:no-string-literal */
     }
     var baseHref = client_1.trimEnd(options.baseHref || '', '/');
-    return (React.createElement("li", { className: classNames(item.className, navItemCls) },
-        React.createElement(exports.A, __assign({ to: baseHref + item.href, className: classNames(navLinkCls, client_1.activeClassNav(item, options.activePath)), id: id }, childProps), item.label),
+    return (React.createElement("li", { className: client_1.classNames(item.className, navItemCls) },
+        React.createElement(exports.ALink, __assign({ to: baseHref + item.href, className: client_1.classNames(navLinkCls, client_1.activeClassNav(item, options.activePath)), id: id }, childProps), item.label),
         children.map(function (x) {
             return (React.createElement("div", { className: options.childNavMenuClass, "aria-labelledby": id }, x.label === '-'
                 ? React.createElement("div", { className: "dropdown-divider" })
-                : (React.createElement(exports.A, { to: baseHref + x.href, className: classNames(options.childNavMenuItemClass, client_1.activeClassNav(x, options.activePath)) }, x.label))));
+                : (React.createElement(exports.ALink, { to: baseHref + x.href, className: client_1.classNames(options.childNavMenuItemClass, client_1.activeClassNav(x, options.activePath)) }, x.label))));
         })));
 });
 exports.NavButtonGroup = react_router_dom_1.withRouter(function (_a) {
@@ -221,7 +220,7 @@ exports.NavButtonGroup = react_router_dom_1.withRouter(function (_a) {
         return null;
     }
     options = Object.assign(client_1.NavButtonGroupDefaults.forNavButtonGroup(options), remaining);
-    return (React.createElement("div", { className: classNames(remaining.block ? null : remaining.vertical ? 'btn-group-vertical' : options.navClass) }, items.map(function (x) { return React.createElement(exports.NavLinkButton, __assign({ key: x.href || x.label, item: x, options: options }, remaining)); })));
+    return (React.createElement("div", { className: client_1.classNames(remaining.block ? null : remaining.vertical ? 'btn-group-vertical' : options.navClass) }, items.map(function (x) { return React.createElement(exports.NavLinkButton, __assign({ key: x.href || x.label, item: x, options: options }, remaining)); })));
 });
 exports.NavLinkButton = react_router_dom_1.withRouter(function (_a) {
     var item = _a.item, options = _a.options, activePath = _a.activePath, navItemClass = _a.navItemClass, history = _a.history, remaining = __rest(_a, ["item", "options", "activePath", "navItemClass", "history"]);
@@ -233,7 +232,7 @@ exports.NavLinkButton = react_router_dom_1.withRouter(function (_a) {
     options.navItemClass = navItemClass || options.navItemClass;
     var baseHref = client_1.trimEnd(options.baseHref || '', '/');
     var parseHtml = client_1.NavDefaults.parseIconHtml || parseIconHtml;
-    return (React.createElement(exports.A, { to: baseHref + item.href, id: item.id, className: classNames(item.className, options.navItemClass, client_1.activeClassNav(item, options.activePath), client_1.btnClasses(remaining)) },
+    return (React.createElement(exports.ALink, { to: baseHref + item.href, id: item.id, className: client_1.classNames(item.className, options.navItemClass, client_1.activeClassNav(item, options.activePath), client_1.btnClasses(remaining)) },
         parseHtml(item.iconHtml),
         item.label));
 });
@@ -246,12 +245,12 @@ exports.LinkButton = react_router_dom_1.withRouter(function (_a) {
     options = Object.assign(client_1.LinkButtonDefaults.forLinkButton(options), remaining);
     var hashPrefix = client_1.trimEnd(options.baseHref || '', '/');
     var attrs = client_1.pick(remaining, ['id', 'type', 'name', 'autofocus', 'disabled', 'value', 'onClick']);
-    return (React.createElement(exports.A, __assign({ to: hashPrefix + href }, attrs, { className: classNames(className, options.navItemClass, client_1.activeClass(href || null, activePath, exact), client_1.btnClasses(remaining)) }), children));
+    return (React.createElement(exports.ALink, __assign({ to: hashPrefix + href }, attrs, { className: client_1.classNames(className, options.navItemClass, client_1.activeClass(href || null, activePath, exact), client_1.btnClasses(remaining)) }), children));
 });
 exports.Button = function (_a) {
     var type = _a.type, id = _a.id, className = _a.className, children = _a.children, remaining = __rest(_a, ["type", "id", "className", "children"]);
     var attrs = client_1.pick(remaining, ['id', 'type', 'name', 'autofocus', 'disabled', 'value', 'onClick']);
-    return (React.createElement("button", __assign({}, attrs, { className: classNames('btn', className, client_1.btnClasses(remaining)) }), children));
+    return (React.createElement("button", __assign({}, attrs, { className: client_1.classNames('btn', className, client_1.btnClasses(remaining)) }), children));
 };
 exports.Fallback = react_router_dom_1.withRouter(function (_a) {
     var location = _a.location;

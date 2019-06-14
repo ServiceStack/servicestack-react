@@ -1,8 +1,8 @@
 import * as React from 'react';
-import * as classNames from "classnames";
 import { ChangeEvent } from "react";
 import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
 import { 
+    classNames,
     errorResponse, 
     errorResponseExcept,
     NavItem,
