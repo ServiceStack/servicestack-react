@@ -15,8 +15,10 @@ var __rest = (this && this.__rest) || function (s, e) {
     for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
         t[p] = s[p];
     if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
-            t[p[i]] = s[p[i]];
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -140,13 +142,6 @@ exports.CheckBox = function (props) {
         help ? React.createElement("small", { className: "text-muted" }, help) : null,
         errorField ? React.createElement("div", { className: "invalid-feedback" }, errorField) : null));
 };
-function parseIconHtml(html) {
-    var match = /class="([^"]+)/.exec(html);
-    if (match != null) {
-        return React.createElement("i", { className: match[1] });
-    }
-    return null;
-}
 exports.Nav = react_router_dom_1.withRouter(function (_a) {
     var items = _a.items, options = _a.options, remaining = __rest(_a, ["items", "options"]);
     if (items == null || items.length === 0) {
@@ -231,9 +226,8 @@ exports.NavLinkButton = react_router_dom_1.withRouter(function (_a) {
     options.activePath = activePath || options.activePath || history.location.pathname;
     options.navItemClass = navItemClass || options.navItemClass;
     var baseHref = client_1.trimEnd(options.baseHref || '', '/');
-    var parseHtml = client_1.NavDefaults.parseIconHtml || parseIconHtml;
     return (React.createElement(exports.ALink, { to: baseHref + item.href, id: item.id, className: client_1.classNames(item.className, options.navItemClass, client_1.activeClassNav(item, options.activePath), client_1.btnClasses(remaining)) },
-        parseHtml(item.iconHtml),
+        item.iconClass ? React.createElement("i", { className: item.iconClass }) : null,
         item.label));
 });
 exports.LinkButton = react_router_dom_1.withRouter(function (_a) {

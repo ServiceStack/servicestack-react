@@ -29,14 +29,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@servicestack/client": "^1.0.27",
+    "@servicestack/client": "^1.0.31",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-router-dom": "^5.0.0"
+    "react-router-dom": "^5.0.1"
   },
   "devDependencies": {
-    "@types/react": "^16.8.14",
+    "@types/react": "^16.8.23",
     "@types/react-dom": "^16.8.4",
-    "typescript": "^3.4.5"
+    "typescript": "^3.5.3"
   }
 }

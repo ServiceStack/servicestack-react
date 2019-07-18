@@ -269,14 +269,6 @@ type NavItemProps = RouteComponentProps<any> & {
     navLinkClass?: string;
 }
 
-function parseIconHtml(html: string) {
-    const match = /class="([^"]+)/.exec(html);
-    if (match != null) {
-        return <i className={match[1]} />
-    }
-    return null;
-}
-
 export const Nav = withRouter<NavItemsProps>(({ items, options, ...remaining }) => {
     if (items == null || items.length === 0) {
         return null;
@@ -386,12 +378,11 @@ export const NavLinkButton = withRouter<NavItemProps>(({ item, options, activePa
     options.navItemClass = navItemClass || options.navItemClass;
 
     const baseHref = trimEnd(options.baseHref || '', '/');
-    const parseHtml = NavDefaults.parseIconHtml || parseIconHtml;
 
     return (
         <ALink to={baseHref + item.href} id={item.id}
             className={classNames(item.className, options.navItemClass, activeClassNav(item, options.activePath), btnClasses(remaining))}>
-            {parseHtml(item.iconHtml)}
+            {item.iconClass ? <i className={item.iconClass}/> : null}
             {item.label}
         </ALink>);
 });
