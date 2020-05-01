@@ -296,7 +296,7 @@ export const ALink : React.FC<any> = ({to, onClick, children, ...attrs}) => {
     if (onClick != null) {
         return (<a href="javascript:void(0)" onClick={onClick} {...attrs}>{children}</a>);
     }
-    if (to.startsWith('http://') || to.startsWith('https://') || to.startsWith('://')) {
+    if (to.startsWith('http://') || to.startsWith('https://') || to.startsWith('//')) {
         return (<a href={to} {...attrs}>{children}</a>);
     } else {
         return (<Link to={to} {...attrs}>{children}</Link>);
@@ -423,7 +423,7 @@ export const Button : React.FC<ButtonProps> = ({ type, id, className, children, 
     return (<button {...attrs} className={classNames('btn', className, btnClasses(remaining))}>{children}</button>);
 };
 
-export const Fallback = withRouter<any>(({ location }) => {
+export const Fallback = withRouter(({ location }) => {
     React.useEffect(() => {
         if (location.pathname.indexOf('://') >= 0) {
             window.location.href = location.pathname.substring(1); // chop path / prefix
