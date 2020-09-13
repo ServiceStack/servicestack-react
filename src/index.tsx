@@ -341,15 +341,14 @@ export const NavLink = withRouter<NavItemProps>(({ item, options, activePath, na
             <ALink to={baseHref + item.href} className={classNames(navLinkCls, activeClassNav(item, options.activePath))} id={id} {...childProps}>
                 {item.label}
             </ALink>
-            {children.map(x =>
-                (<div className={options!.childNavMenuClass} aria-labelledby={id}>
-                    {x.label === '-'
-                        ? <div className="dropdown-divider" />
-                        : (<ALink to={baseHref + x.href} className={classNames(options!.childNavMenuItemClass, activeClassNav(x, options!.activePath!))}>
-                            {x.label}
-                           </ALink>)}
-                </div>)
-            )}
+            <div className={options!.childNavMenuClass} aria-labelledby={id}>
+                {children.map(x => (x.label === '-'
+                    ? <div className="dropdown-divider" />
+                    : (<ALink to={baseHref + x.href} className={classNames(options!.childNavMenuItemClass, activeClassNav(x, options!.activePath!))}>
+                        {x.label}
+                       </ALink>)
+                ))}
+            </div>
         </li>
     );
 });

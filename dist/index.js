@@ -163,7 +163,7 @@ exports.ALink = function (_a) {
     if (onClick != null) {
         return (React.createElement("a", __assign({ href: "javascript:void(0)", onClick: onClick }, attrs), children));
     }
-    if (to.startsWith('http://') || to.startsWith('https://') || to.startsWith('://')) {
+    if (to.startsWith('http://') || to.startsWith('https://') || to.startsWith('//')) {
         return (React.createElement("a", __assign({ href: to }, attrs), children));
     }
     else {
@@ -203,11 +203,9 @@ exports.NavLink = react_router_dom_1.withRouter(function (_a) {
     var baseHref = client_1.trimEnd(options.baseHref || '', '/');
     return (React.createElement("li", { className: client_1.classNames(item.className, navItemCls) },
         React.createElement(exports.ALink, __assign({ to: baseHref + item.href, className: client_1.classNames(navLinkCls, client_1.activeClassNav(item, options.activePath)), id: id }, childProps), item.label),
-        children.map(function (x) {
-            return (React.createElement("div", { className: options.childNavMenuClass, "aria-labelledby": id }, x.label === '-'
-                ? React.createElement("div", { className: "dropdown-divider" })
-                : (React.createElement(exports.ALink, { to: baseHref + x.href, className: client_1.classNames(options.childNavMenuItemClass, client_1.activeClassNav(x, options.activePath)) }, x.label))));
-        })));
+        React.createElement("div", { className: options.childNavMenuClass, "aria-labelledby": id }, children.map(function (x) { return (x.label === '-'
+            ? React.createElement("div", { className: "dropdown-divider" })
+            : (React.createElement(exports.ALink, { to: baseHref + x.href, className: client_1.classNames(options.childNavMenuItemClass, client_1.activeClassNav(x, options.activePath)) }, x.label))); }))));
 });
 exports.NavButtonGroup = react_router_dom_1.withRouter(function (_a) {
     var items = _a.items, options = _a.options, remaining = __rest(_a, ["items", "options"]);
