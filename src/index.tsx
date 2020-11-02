@@ -278,7 +278,9 @@ export const Nav = withRouter<NavItemsProps>(({ items, options, ...remaining }) 
 
     return (
         <div className={options.navClass}>
+        <ul>
             {items.map(x => <NavLink key={x.href || x.label} item={x} options={options} />)}
+        </ul>
         </div>
     );
 });
