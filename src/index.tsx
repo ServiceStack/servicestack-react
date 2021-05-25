@@ -277,11 +277,9 @@ export const Nav = withRouter<NavItemsProps>(({ items, options, ...remaining }) 
     options = Object.assign(NavDefaults.forNav(options), remaining);
 
     return (
-        <div className={options.navClass}>
-        <ul>
+        <ul className={options.navClass}>
             {items.map(x => <NavLink key={x.href || x.label} item={x} options={options} />)}
         </ul>
-        </div>
     );
 });
 

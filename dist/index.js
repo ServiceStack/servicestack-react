@@ -148,8 +148,7 @@ exports.Nav = react_router_dom_1.withRouter(function (_a) {
         return null;
     }
     options = Object.assign(client_1.NavDefaults.forNav(options), remaining);
-    return (React.createElement("div", { className: options.navClass },
-        React.createElement("ul", null, items.map(function (x) { return React.createElement(exports.NavLink, { key: x.href || x.label, item: x, options: options }); }))));
+    return (React.createElement("ul", { className: options.navClass }, items.map(function (x) { return React.createElement(exports.NavLink, { key: x.href || x.label, item: x, options: options }); })));
 });
 exports.Navbar = react_router_dom_1.withRouter(function (_a) {
     var items = _a.items, options = _a.options, remaining = __rest(_a, ["items", "options"]);
