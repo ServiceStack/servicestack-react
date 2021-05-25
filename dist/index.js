@@ -148,7 +148,8 @@ exports.Nav = react_router_dom_1.withRouter(function (_a) {
         return null;
     }
     options = Object.assign(client_1.NavDefaults.forNav(options), remaining);
-    return (React.createElement("div", { className: options.navClass }, items.map(function (x) { return React.createElement(exports.NavLink, { key: x.href || x.label, item: x, options: options }); })));
+    return (React.createElement("div", { className: options.navClass },
+        React.createElement("ul", null, items.map(function (x) { return React.createElement(exports.NavLink, { key: x.href || x.label, item: x, options: options }); }))));
 });
 exports.Navbar = react_router_dom_1.withRouter(function (_a) {
     var items = _a.items, options = _a.options, remaining = __rest(_a, ["items", "options"]);
@@ -161,7 +162,8 @@ exports.Navbar = react_router_dom_1.withRouter(function (_a) {
 exports.ALink = function (_a) {
     var to = _a.to, onClick = _a.onClick, children = _a.children, attrs = __rest(_a, ["to", "onClick", "children"]);
     if (onClick != null) {
-        return (React.createElement("a", __assign({ href: "javascript:void(0)", onClick: onClick }, attrs), children));
+        return (React.createElement("a", __assign({ href: "#", onClick: function (e) { e.preventDefault(); if (onClick)
+                onClick(e); } }, attrs), children));
     }
     if (to.startsWith('http://') || to.startsWith('https://') || to.startsWith('//')) {
         return (React.createElement("a", __assign({ href: to }, attrs), children));

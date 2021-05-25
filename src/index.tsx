@@ -296,7 +296,7 @@ export const Navbar = withRouter<NavItemsProps>(({ items, options, ...remaining 
 
 export const ALink : React.FC<any> = ({to, onClick, children, ...attrs}) => {
     if (onClick != null) {
-        return (<a href="javascript:void(0)" onClick={onClick} {...attrs}>{children}</a>);
+        return (<a href="#" onClick={e => {e.preventDefault(); if (onClick) onClick(e)}} {...attrs}>{children}</a>);
     }
     if (to.startsWith('http://') || to.startsWith('https://') || to.startsWith('//')) {
         return (<a href={to} {...attrs}>{children}</a>);
