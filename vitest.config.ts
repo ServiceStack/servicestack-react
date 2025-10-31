@@ -1,4 +1,4 @@
-import Vue from "@vitejs/plugin-vue";
+import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
 
@@ -8,7 +8,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  plugins: [Vue()],
+  plugins: [react()],
   // @ts-ignore
   test: {
     browser: {
