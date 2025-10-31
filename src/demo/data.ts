@@ -65,7 +65,7 @@ const Coupons = {
 }
 
 let bookingId = 0
-function booking(name, roomType, roomNumber, cost, email, couponId) {
+function booking(name: string, roomType: RoomType, roomNumber: number, cost: number, email: string, couponId: keyof typeof Coupons) {
     bookingId++
     const bookingStartDate = new Date(Date.now() + bookingId * 86400)
     const bookingEndDate = new Date(Date.now() + (bookingId + 7) * 86400)
@@ -138,8 +138,8 @@ export const forecasts = [
 
 
 let trackId = 0
-function track(name, artist, album, year) {
-    return { id:++trackId, name, artist, album, year }   
+function track(name: string, artist: string, album: string, year: number) {
+    return { id:++trackId, name, artist, album, year }
 }
 
 export const tracks = [
@@ -172,11 +172,11 @@ export const allTypesJson = {
 }
 
 let playerId = 0
-function player(firstName, lastName, phoneNumbers, profile) {
+function player(firstName: string, lastName: string, phoneNumbers: any[], profile: any) {
     let email = `${firstName.toLowerCase()}@${lastName.toLowerCase()}.com`
     return { id:++playerId, firstName, lastName, email, phoneNumbers, profile }
 }
-function profile(userName, role, region, highScore, gamesPlayed, coverUrl) {
+function profile(userName: string, role: string, region: string, highScore: number, gamesPlayed: number, coverUrl: string) {
     return { userName, role, region, highScore, gamesPlayed, coverUrl, createdBy:`${userName}@email.com` }
 }
 

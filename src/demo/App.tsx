@@ -5,7 +5,6 @@ import {
   PrimaryButton,
   SecondaryButton,
   OutlineButton,
-  TextLink,
   DarkModeToggle,
   SlideOver,
   ModalDialog,
@@ -18,7 +17,6 @@ import {
   NavListItem,
   Breadcrumbs,
   Breadcrumb,
-  useFormatters,
 } from '../index'
 import { Icons, bookings, forecasts, tracks } from './data'
 
@@ -26,7 +24,6 @@ export default function App() {
   const [show, setShow] = useState(false)
   const [slideOver, setSlideOver] = useState(false)
   const [modal, setModal] = useState(false)
-  const { formatDate, currency, relativeTime } = useFormatters()
 
   const Formats = {
     currency: { method: 'currency' },
