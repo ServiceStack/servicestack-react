@@ -1,6 +1,10 @@
 {
   "name": "@servicestack/react",
   "version": "2.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ServiceStack/servicestack-react"
+  },
   "private": false,
   "files": [
     "dist"
