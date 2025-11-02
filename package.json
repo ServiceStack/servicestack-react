@@ -27,6 +27,7 @@
     "build-only": "vite build -l error",
     "type-check": "tsc --noEmit",
     "test": "vitest",
+    "update-deps": "npx npm-check-updates -u && npm install",
     "release": "bump patch --commit --push --tag && npm publish"
   },
   "dependencies": {
