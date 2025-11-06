@@ -1,6 +1,6 @@
 {
   "name": "@servicestack/react",
-  "version": "3.0.135",
+  "version": "2.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/ServiceStack/servicestack-react"
@@ -45,9 +45,6 @@
     "react-router-dom": "^7.0.0"
   },
   "devDependencies": {
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-router-dom": "^7.9.5",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/postcss": "^4.1.17",
     "@testing-library/react": "^16.3.0",
@@ -63,6 +60,9 @@
     "playwright": "^1.56.1",
     "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.9.5",
     "shx": "^0.4.0",
     "tailwindcss": "^4.1.17",
     "typescript": "~5.9.3",
