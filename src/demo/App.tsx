@@ -14,6 +14,15 @@ import SlideOver from '../components/SlideOver'
 import DataGrid from '../components/DataGrid'
 import { tracks, RoomType } from './data'
 
+class Forecast {
+  public date?: string;
+  public temperatureC?: number;
+  public summary?: string;
+  public temperatureF?: number;
+
+  public constructor(init?: Partial<Forecast>) { (Object as any).assign(this, init); }
+}
+
 export default function App() {
   const [show, setShow] = useState(false)
   const [slideOver, setSlideOver] = useState(false)
@@ -54,6 +63,39 @@ export default function App() {
     { id: 'isoDateOnly', type: 'date' }
   ]
 
+  const forecasts = [
+    {
+      "date": "2025-11-08",
+      "temperatureC": 26,
+      "summary": "Scorching",
+      "temperatureF": 78
+    },
+    {
+      "date": "2025-11-09",
+      "temperatureC": 8,
+      "summary": "Sweltering",
+      "temperatureF": 46
+    },
+    {
+      "date": "2025-11-10",
+      "temperatureC": -14,
+      "summary": "Warm",
+      "temperatureF": 7
+    },
+    {
+      "date": "2025-11-11",
+      "temperatureC": 20,
+      "summary": "Mild",
+      "temperatureF": 67
+    },
+    {
+      "date": "2025-11-12",
+      "temperatureC": 53,
+      "summary": "Cool",
+      "temperatureF": 127
+    }
+  ]
+
   const api = null
 
   return (
@@ -71,6 +113,36 @@ export default function App() {
       <div className="mt-8 mx-auto max-w-4xl flex flex-col gap-y-4">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">DataGrid Example</h2>
         <DataGrid items={tracks} />
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Custom DataGrid</h2>
+        <DataGrid
+          items={forecasts}
+          className="max-w-screen-md"
+          tableStyle={['stripedRows', 'uppercaseHeadings']}
+          headerTitles={{
+            temperatureC: 'TEMP. (C)',
+            temperatureF: 'TEMP. (F)'
+          }}
+          slots={{
+            'date-header': () => (
+              <span className="text-green-600">Date</span>
+            ),
+            'date': ({ date }: Forecast) => (
+              <>{date ? new Intl.DateTimeFormat().format(new Date(date)) : ''}</>
+            ),
+            'temperatureC': ({ temperatureC }: Forecast) => (
+              <>{temperatureC}&deg;</>
+            ),
+            'temperatureF': ({ temperatureF }: Forecast) => (
+              <>{temperatureF}&deg;</>
+            ),
+            'summary': ({ summary }: Forecast) => (
+              <>{summary}</>
+            )
+          }}
+        />
       </div>
 
       <div className="mt-8 mx-auto max-w-4xl flex flex-col gap-y-4">

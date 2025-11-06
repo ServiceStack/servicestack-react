@@ -82,7 +82,7 @@ const TagInput: React.FC<TagInputProps & Omit<React.InputHTMLAttributes<HTMLInpu
     updateValue(modelArray.filter(x => x !== tag))
   }, [modelArray, updateValue])
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (document.activeElement === e.currentTarget) {
       txtInputRef.current?.focus()
     }
@@ -249,7 +249,7 @@ const TagInput: React.FC<TagInputProps & Omit<React.InputHTMLAttributes<HTMLInpu
       )}
       <div className="mt-1 relative">
         <input type="hidden" id={id} name={id} value={modelArray.join(',')} />
-        <button className={cls} onClick={handleClick} onFocus={() => setExpanded(true)} tabIndex={-1} type="button">
+        <div className={cls} onClick={handleClick} onFocus={onFocus} tabIndex={-1}>
           <div className="flex flex-wrap pb-1.5">
             {modelArray.map((tag, idx) => (
               <div key={idx} className="pt-1.5 pl-1">
@@ -257,7 +257,10 @@ const TagInput: React.FC<TagInputProps & Omit<React.InputHTMLAttributes<HTMLInpu
                   {tag}
                   <button
                     type="button"
-                    onClick={() => removeTag(tag)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeTag(tag)
+                    }}
                     className="flex-shrink-0 ml-1 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 dark:text-indigo-500 hover:bg-indigo-200 dark:hover:bg-indigo-800 hover:text-indigo-500 dark:hover:text-indigo-400 focus:outline-none focus:bg-indigo-500 focus:text-white dark:focus:text-black"
                   >
                     <svg className="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
@@ -294,7 +297,7 @@ const TagInput: React.FC<TagInputProps & Omit<React.InputHTMLAttributes<HTMLInpu
               />
             </div>
           </div>
-        </button>
+        </div>
         {expanded && filteredValues.length > 0 && (
           <ul
             className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white dark:bg-black py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm"

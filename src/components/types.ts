@@ -286,6 +286,7 @@ export interface DataGridProps {
     rowStyle?:(model:any,i:number) => CSSProperties | undefined
     onHeaderSelected?: (name:string, ev:React.MouseEvent) => void
     onRowSelected?: (item:any, ev:React.MouseEvent) => void
+    slots?: {[name:string]: React.ReactNode | ((props:any) => React.ReactNode)}
 }
 
 export interface AutoQueryGridProps {

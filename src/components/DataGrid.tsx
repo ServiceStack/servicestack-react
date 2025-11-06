@@ -32,6 +32,7 @@ export default function DataGrid({
     rowStyle,
     onHeaderSelected,
     onRowSelected,
+    slots: slotsProp,
     children,
 }: DataGridProps & { children?: React.ReactNode }) {
 
@@ -43,16 +44,36 @@ export default function DataGrid({
     const metaType = useMemo(() => typeOf(typeName), [typeName, typeOf])
     const typeProps = useMemo(() => typeProperties(metaType), [metaType, typeProperties])
 
-    // Extract slots from children
+    // Extract slots from children or slots prop
     const slots = useMemo(() => {
-        const slotMap: { [key: string]: React.ReactNode } = {}
-        React.Children.forEach(children, child => {
-            if (React.isValidElement(child) && (child.props as any).slot) {
-                slotMap[(child.props as any).slot] = child
+        // If slots prop is provided, use it directly
+        if (slotsProp) {
+            return slotsProp as { [key: string]: React.ReactNode }
+        }
+
+        // If children is an object (slot map), use it directly
+        if (children && typeof children === 'object' && !React.isValidElement(children) && !Array.isArray(children)) {
+            // Check if it's a plain object with string keys (not a Promise, not a React element)
+            const obj = children as any
+            // Plain objects have Object.prototype or null prototype
+            const proto = Object.getPrototypeOf(obj)
+            if (obj && typeof obj === 'object' && (proto === Object.prototype || proto === null)) {
+                return obj as { [key: string]: React.ReactNode }
             }
-        })
+        }
+
+        // Otherwise, extract slots from React children with slot prop
+        const slotMap: { [key: string]: React.ReactNode } = {}
+        // Only use React.Children if we have valid React children
+        if (children && (React.isValidElement(children) || Array.isArray(children))) {
+            React.Children.forEach(children, child => {
+                if (React.isValidElement(child) && (child.props as any).slot) {
+                    slotMap[(child.props as any).slot] = child
+                }
+            })
+        }
         return slotMap
-    }, [children])
+    }, [slotsProp, children])
 
     const slotHeader = (column: string) => {
         const slotName = column.toLowerCase() + '-header'
@@ -162,25 +183,34 @@ export default function DataGrid({
                                         const isOpen = false // You may want to pass this from parent or manage it
 
                                         return (
-                                            <td
+                                            <th
                                                 key={column}
                                                 className={`${cellClass(column)} ${theadCellClass} ${isOpen ? 'text-gray-900 dark:text-gray-50' : 'text-gray-500 dark:text-gray-400'}`}
+                                                onClick={(e) => handleHeaderSelected(column, e)}
                                             >
-                                                <div onClick={(e) => handleHeaderSelected(column, e)}>
-                                                    {slots[column + '-header'] ?
-                                                        slots[column + '-header'] :
-                                                        headerSlotName && slots[headerSlotName] ?
-                                                            slots[headerSlotName] :
-                                                            slots.header ?
-                                                                React.cloneElement(slots.header as React.ReactElement, { column, label: headerFormat(column) } as any) :
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="mr-1 select-none">
-                                                                        {headerFormat(column)}
-                                                                    </span>
-                                                                </div>
+                                                {(() => {
+                                                    const headerSlot = slots[column + '-header'] || (headerSlotName && slots[headerSlotName])
+                                                    if (headerSlot) {
+                                                        if (typeof headerSlot === 'function') {
+                                                            return (headerSlot as any)({ column, label: headerFormat(column) })
+                                                        }
+                                                        return headerSlot
                                                     }
-                                                </div>
-                                            </td>
+                                                    if (slots.header) {
+                                                        if (typeof slots.header === 'function') {
+                                                            return (slots.header as any)({ column, label: headerFormat(column) })
+                                                        }
+                                                        return React.cloneElement(slots.header as React.ReactElement, { column, label: headerFormat(column) } as any)
+                                                    }
+                                                    return (
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="mr-1 select-none">
+                                                                {headerFormat(column)}
+                                                            </span>
+                                                        </div>
+                                                    )
+                                                })()}
+                                            </th>
                                         )
                                     })}
                                 </tr>
@@ -201,14 +231,19 @@ export default function DataGrid({
                                                     key={column}
                                                     className={`${cellClass(column)} ${grid.tableCellClass}`}
                                                 >
-                                                    {slots[column] ?
-                                                        React.cloneElement(slots[column] as React.ReactElement, item) :
-                                                        colSlotName && slots[colSlotName] ?
-                                                            React.cloneElement(slots[colSlotName] as React.ReactElement, item) :
-                                                            columnProp(column) ?
-                                                                <CellFormat type={metaType} propType={columnProp(column)!} value={item} /> :
-                                                                <PreviewFormat value={mapGet(item, column)} format={columnFormat(column)} />
-                                                    }
+                                                    {(() => {
+                                                        const colSlot = slots[column] || (colSlotName && slots[colSlotName])
+                                                        if (colSlot) {
+                                                            if (typeof colSlot === 'function') {
+                                                                return (colSlot as any)(item)
+                                                            }
+                                                            return React.cloneElement(colSlot as React.ReactElement, item)
+                                                        }
+                                                        if (columnProp(column)) {
+                                                            return <CellFormat type={metaType} propType={columnProp(column)!} value={item} />
+                                                        }
+                                                        return <PreviewFormat value={mapGet(item, column)} format={columnFormat(column)} />
+                                                    })()}
                                                 </td>
                                             )
                                         })}
