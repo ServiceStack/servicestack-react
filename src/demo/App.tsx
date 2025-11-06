@@ -1,268 +1,286 @@
-import { useState } from 'react'
-import {
-  Alert,
-  AlertSuccess,
-  PrimaryButton,
-  SecondaryButton,
-  OutlineButton,
-  DarkModeToggle,
-  SlideOver,
-  ModalDialog,
-  DataGrid,
-  PreviewFormat,
-  Icon,
-  Loading,
-  ErrorSummary,
-  NavList,
-  NavListItem,
-  Breadcrumbs,
-  Breadcrumb,
-} from '../index'
-import { Icons, bookings, forecasts, tracks } from './data'
+import React, { useState } from 'react'
+import { DarkModeToggle } from '../components/DarkModeToggle'
+import SecondaryButton from '../components/SecondaryButton'
+import TextInput from '../components/TextInput'
+import TextareaInput from '../components/TextareaInput'
+import SelectInput from '../components/SelectInput'
+import CheckboxInput from '../components/CheckboxInput'
+import TagInput from '../components/TagInput'
+import FileInput from '../components/FileInput'
+import MarkdownInput from '../components/MarkdownInput'
+import DynamicInput from '../components/DynamicInput'
+import ModalDialog from '../components/ModalDialog'
+import SlideOver from '../components/SlideOver'
+import DataGrid from '../components/DataGrid'
+import { tracks, RoomType } from './data'
 
 export default function App() {
   const [show, setShow] = useState(false)
   const [slideOver, setSlideOver] = useState(false)
   const [modal, setModal] = useState(false)
 
-  const Formats = {
-    currency: { method: 'currency' },
-    bytes: { method: 'bytes' },
-    icon: { method: 'icon' },
-    iconRounded: { method: 'iconRounded' },
-    attachment: { method: 'attachment' },
-    link: { method: 'link' },
-    linkMailTo: { method: 'linkMailTo' },
-    linkTel: { method: 'linkTel' },
-  }
+  const [dates, setDates] = useState({
+    isoDate7Z: '2024-01-15T10:30:00.0000000Z',
+    isoDate3Z: '2024-01-15T10:30:00.000Z',
+    isoDateZ: '2024-01-15T10:30:00Z',
+    isoDate: '2024-01-15T10:30:00',
+    isoDateOnly: '2024-01-15'
+  })
+
+  const [modelDateTimes, setModelDateTimes] = useState({})
+  const [modelDates, setModelDates] = useState({})
+
+  // Form inputs state
+  const [formInputs, setFormInputs] = useState({
+    textInput: 'Sample text',
+    emailInput: 'user@example.com',
+    numberInput: 42,
+    textareaInput: 'This is a multi-line\ntext area input',
+    selectInput: RoomType.Queen,
+    checkboxInput: true,
+    tagInput: ['React', 'TypeScript', 'Tailwind'],
+    markdownInput: '# Hello World\n\nThis is **markdown** content with *formatting*.',
+    fileInput: []
+  })
+
+  const dynamicDateTimes = [
+    { id: 'isoDate7Z', type: 'datetime-local' },
+    { id: 'isoDate3Z', type: 'datetime-local' },
+    { id: 'isoDateZ', type: 'datetime-local' }
+  ]
+
+  const dynamicDates = [
+    { id: 'isoDate', type: 'date' },
+    { id: 'isoDateOnly', type: 'date' }
+  ]
+
+  const api = null
 
   return (
-    <div style={{ marginTop: '60px' }}>
+    <>
       <div className="absolute top-2 right-2">
         <DarkModeToggle />
       </div>
 
-      <div className="text-center space-x-3 mb-8">
+      <div className="text-center space-x-3">
         <SecondaryButton onClick={() => setShow(!show)}>Toggle</SecondaryButton>
         <SecondaryButton onClick={() => setSlideOver(!slideOver)}>Slide Over</SecondaryButton>
         <SecondaryButton onClick={() => setModal(!modal)}>Modal Dialog</SecondaryButton>
       </div>
 
-      {show && (
-        <div className="mx-auto max-w-4xl mb-8">
-          <Alert type="info">This is a toggled section!</Alert>
+      <div className="mt-8 mx-auto max-w-4xl flex flex-col gap-y-4">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">DataGrid Example</h2>
+        <DataGrid items={tracks} />
+      </div>
+
+      <div className="mt-8 mx-auto max-w-4xl flex flex-col gap-y-4">
+        <h3>date</h3>
+        <div className="grid grid-cols-6 gap-6">
+          <TextInput
+            className="col-span-2"
+            type="date"
+            id="isoDate7Z"
+            value={dates.isoDate7Z}
+            onChange={(value) => setDates({ ...dates, isoDate7Z: value as string })}
+            label={dates.isoDate7Z}
+          />
+          <TextInput
+            className="col-span-2"
+            type="date"
+            id="isoDate3Z"
+            value={dates.isoDate3Z}
+            onChange={(value) => setDates({ ...dates, isoDate3Z: value as string })}
+            label={dates.isoDate3Z}
+          />
+          <TextInput
+            className="col-span-2"
+            type="date"
+            id="isoDateZ"
+            value={dates.isoDateZ}
+            onChange={(value) => setDates({ ...dates, isoDateZ: value as string })}
+            label={dates.isoDateZ}
+          />
         </div>
-      )}
+
+        <h3>datetime-local</h3>
+        <div className="grid grid-cols-6 gap-6">
+          <TextInput
+            className="col-span-2"
+            type="datetime-local"
+            id="isoDate7Z-dt"
+            value={dates.isoDate7Z}
+            onChange={(value) => setDates({ ...dates, isoDate7Z: value as string })}
+            label={dates.isoDate7Z}
+          />
+          <TextInput
+            className="col-span-2"
+            type="datetime-local"
+            id="isoDate3Z-dt"
+            value={dates.isoDate3Z}
+            onChange={(value) => setDates({ ...dates, isoDate3Z: value as string })}
+            label={dates.isoDate3Z}
+          />
+        </div>
+
+        <h3>Dynamic DateTimes</h3>
+        <div className="grid grid-cols-6 gap-6">
+          {dynamicDateTimes.map(f => (
+            <div key={f.id} className="col-span-2">
+              <DynamicInput
+                input={f}
+                value={modelDateTimes}
+                onChange={setModelDateTimes}
+                api={api}
+              />
+              <div>{modelDateTimes[f.id]}</div>
+            </div>
+          ))}
+        </div>
+        <div>
+          <pre>{JSON.stringify(modelDateTimes, null, 2)}</pre>
+        </div>
+
+        <h3>Dynamic Dates</h3>
+        <div className="grid grid-cols-6 gap-6">
+          {dynamicDates.map(f => (
+            <div key={f.id} className="col-span-2">
+              <DynamicInput
+                input={f}
+                value={modelDates}
+                onChange={setModelDates}
+                api={api}
+              />
+              <div>{modelDates[f.id]}</div>
+            </div>
+          ))}
+        </div>
+        <div>
+          <pre>{JSON.stringify(modelDates, null, 2)}</pre>
+        </div>
+
+        {show && (
+          <div className="p-4 bg-blue-100 dark:bg-blue-900 rounded">
+            Content is visible!
+          </div>
+        )}
+      </div>
+
+      {/* Form Inputs Section */}
+      <div className="mt-8 mx-auto max-w-4xl flex flex-col gap-y-4 pb-8">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Form Input Components</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* TextInput - Text */}
+          <TextInput
+            id="textInput"
+            label="Text Input"
+            placeholder="Enter some text"
+            value={formInputs.textInput}
+            onChange={(value) => setFormInputs({ ...formInputs, textInput: value as string })}
+          />
+
+          {/* TextInput - Email */}
+          <TextInput
+            id="emailInput"
+            type="email"
+            label="Email Input"
+            placeholder="user@example.com"
+            value={formInputs.emailInput}
+            onChange={(value) => setFormInputs({ ...formInputs, emailInput: value as string })}
+          />
+
+          {/* TextInput - Number */}
+          <TextInput
+            id="numberInput"
+            type="number"
+            label="Number Input"
+            placeholder="Enter a number"
+            value={formInputs.numberInput}
+            onChange={(value) => setFormInputs({ ...formInputs, numberInput: value as number })}
+          />
+
+          {/* SelectInput */}
+          <SelectInput
+            id="selectInput"
+            label="Select Input"
+            value={formInputs.selectInput}
+            values={Object.values(RoomType)}
+            onChange={(value) => setFormInputs({ ...formInputs, selectInput: value as RoomType })}
+          />
+        </div>
+
+        {/* TextareaInput */}
+        <TextareaInput
+          id="textareaInput"
+          label="Textarea Input"
+          placeholder="Enter multiple lines of text"
+          value={formInputs.textareaInput}
+          onChange={(value) => setFormInputs({ ...formInputs, textareaInput: value as string })}
+        />
+
+        {/* CheckboxInput */}
+        <CheckboxInput
+          id="checkboxInput"
+          label="Checkbox Input"
+          help="Check or uncheck this option"
+          value={formInputs.checkboxInput}
+          onChange={(value) => setFormInputs({ ...formInputs, checkboxInput: value as boolean })}
+        />
+
+        {/* TagInput */}
+        <TagInput
+          id="tagInput"
+          label="Tag Input"
+          help="Type and press comma or enter to add tags"
+          value={formInputs.tagInput}
+          allowableValues={['React', 'Vue', 'Angular', 'Svelte', 'TypeScript', 'JavaScript', 'Tailwind', 'Bootstrap']}
+          onChange={(value: any) => setFormInputs({ ...formInputs, tagInput: value as string[] })}
+        />
+
+        {/* MarkdownInput */}
+        <MarkdownInput
+          id="markdownInput"
+          label="Markdown Input"
+          help="Enter markdown formatted text"
+          value={formInputs.markdownInput}
+          onChange={(value: any) => setFormInputs({ ...formInputs, markdownInput: value as string })}
+        />
+
+        {/* FileInput */}
+        <FileInput
+          id="fileInput"
+          label="File Input"
+          help="Upload one or more files"
+          multiple
+          files={formInputs.fileInput}
+          onChange={(files: any) => setFormInputs({ ...formInputs, fileInput: files })}
+        />
+
+        {/* Display current values */}
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Current Values:</h3>
+          <pre className="p-4 bg-gray-100 dark:bg-gray-800 rounded text-sm overflow-auto">
+            {JSON.stringify(formInputs, null, 2)}
+          </pre>
+        </div>
+      </div>
 
       {slideOver && (
-        <SlideOver
-          title="Slide Over Example"
-          onDone={() => setSlideOver(false)}
-        >
+        <SlideOver title="Demo Slide Over" onDone={() => setSlideOver(false)}>
           <div className="p-4">
-            <p>This is a slide over panel!</p>
+            <p>This is a slide over panel</p>
           </div>
         </SlideOver>
       )}
 
       {modal && (
-        <ModalDialog
-          onDone={() => setModal(false)}
-        >
+        <ModalDialog onDone={() => setModal(false)}>
           <div className="p-4">
-            <h3 className="text-lg font-semibold mb-4">Modal Dialog Example</h3>
-            <p>This is a modal dialog!</p>
+            <h2 className="text-lg font-semibold mb-4">Modal Dialog</h2>
+            <p>This is a modal dialog</p>
           </div>
         </ModalDialog>
       )}
-
-      <div className="mx-auto max-w-4xl">
-        <h1 className="my-8 text-3xl">Breadcrumbs</h1>
-        <Breadcrumbs>
-          <Breadcrumb href="/">Home</Breadcrumb>
-          <Breadcrumb href="/components">Components</Breadcrumb>
-          <Breadcrumb>Current Page</Breadcrumb>
-        </Breadcrumbs>
-      </div>
-
-      <div className="mx-auto max-w-4xl">
-        <h1 className="my-8 text-3xl">Alerts</h1>
-        <Alert>Default <b>Message</b></Alert>
-        <Alert type="info">Information <b>Message</b></Alert>
-        <Alert type="success">Success <b>Message</b></Alert>
-        <Alert type="warn">Warning <b>Message</b></Alert>
-        <Alert type="error">Error <b>Message</b></Alert>
-      </div>
-
-      <div className="mx-auto max-w-4xl">
-        <h1 className="my-8 text-3xl">AlertSuccess</h1>
-        <AlertSuccess message="Inline Message" />
-        <AlertSuccess>Success <b>Message</b></AlertSuccess>
-      </div>
-
-      <div className="mx-auto max-w-4xl">
-        <h1 className="my-8 text-3xl">Buttons</h1>
-        <div className="space-x-2">
-          <PrimaryButton href="https://blazor-gallery.servicestack.net">
-            Blazor Gallery
-          </PrimaryButton>
-
-          <SecondaryButton href="https://docs.servicestack.net/templates-blazor-tailwind">
-            Blazor Docs
-          </SecondaryButton>
-
-          <OutlineButton>
-            Outline Button
-          </OutlineButton>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-4xl">
-        <h1 className="my-8 text-3xl">Button Colors</h1>
-        <div className="flex flex-wrap gap-2">
-          <PrimaryButton color="blue">Blue</PrimaryButton>
-          <PrimaryButton color="purple">Purple</PrimaryButton>
-          <PrimaryButton color="red">Red</PrimaryButton>
-          <PrimaryButton color="green">Green</PrimaryButton>
-          <PrimaryButton color="sky">Sky</PrimaryButton>
-          <PrimaryButton color="cyan">Cyan</PrimaryButton>
-          <PrimaryButton color="indigo">Indigo</PrimaryButton>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-4xl">
-        <h1 className="my-8 text-3xl">Loading</h1>
-        <Loading />
-        <Loading className="text-purple-600 w-8 h-8" />
-      </div>
-
-      <div className="mx-auto max-w-4xl">
-        <h1 className="my-8 text-3xl">Icons</h1>
-        <div className="flex gap-4">
-          <Icon svg={Icons.DataGrid} />
-          <Icon svg={Icons.AutoQueryGrid} />
-          <Icon svg={Icons.AutoForms} />
-          <Icon svg={Icons.FormInputs} />
-          <Icon svg={Icons.Modals} />
-          <Icon svg={Icons.Navigation} />
-          <Icon svg={Icons.Alerts} />
-          <Icon svg={Icons.Formats} />
-          <Icon svg={Icons.Code} />
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-4xl space-x-2">
-        <h1 className="my-8 text-3xl">Data Grids</h1>
-        <DataGrid items={bookings} />
-
-        <h3 className="my-4 text-xl">Weather</h3>
-        <DataGrid 
-          items={forecasts} 
-          className="max-w-screen-md" 
-          tableStyle={['stripedRows', 'uppercaseHeadings']}
-          headerTitles={{ temperatureC: 'TEMP. (C)', temperatureF: 'TEMP. (F)' }}
-          visibleFrom={{ date: 'lg' }}
-        />
-
-        <h3 className="my-4 text-xl">Responsive Bookings</h3>
-        <DataGrid 
-          items={bookings}
-          visibleFrom={{ name: 'xl', bookingStartDate: 'sm', bookingEndDate: 'xl' }}
-        />
-      </div>
-
-      <div className="mx-auto max-w-4xl">
-        <h1 className="my-8 text-3xl">NavList</h1>
-        <NavList title="Explore React Components">
-          <NavListItem title="DataGrid" href="/gallery/datagrid" iconSvg={Icons.DataGrid}>
-            DataGrid Component Examples for rendering tabular data
-          </NavListItem>
-          <NavListItem title="AutoQuery Grid" href="/gallery/autoquerygrid" iconSvg={Icons.AutoQueryGrid}>
-            Instant customizable UIs for calling AutoQuery CRUD APIs
-          </NavListItem>
-        </NavList>
-
-        <h2 className="mt-8 text-base font-semibold text-gray-500 dark:text-gray-400 flex">
-          <span title="Requires Auth">
-            <Icon className="h-6 w-6 mr-2" svg={Icons.Padlock} />
-          </span>
-          Booking APIs
-        </h2>
-        <NavList>
-          <NavListItem title="Bookings" href="/grid/bookings" iconSvg={Icons.Booking}>
-            Create and manage Bookings
-          </NavListItem>
-          <NavListItem title="Coupons" href="/grid/coupons" iconSvg={Icons.Coupon}>
-            Create and manage discount Coupons
-          </NavListItem>
-        </NavList>
-      </div>
-
-      <div className="mx-auto max-w-4xl space-x-2">
-        <h1 className="my-8 text-3xl">Table Styles</h1>
-
-        <h3 className="my-4 text-lg font-semibold">Default (Striped Rows)</h3>
-        <DataGrid items={tracks} />
-
-        <h3 className="my-4 text-lg font-semibold">Simple</h3>
-        <DataGrid items={tracks} tableStyle="simple" />
-
-        <h3 className="my-4 text-lg font-semibold">Uppercase Headings</h3>
-        <DataGrid items={tracks} tableStyle="uppercaseHeadings" />
-
-        <h3 className="my-4 text-lg font-semibold">Vertical Lines</h3>
-        <DataGrid items={tracks} tableStyle="verticalLines" />
-
-        <h3 className="my-4 text-lg font-semibold">White Background</h3>
-        <DataGrid items={tracks} tableStyle="whiteBackground" />
-
-        <h3 className="my-4 text-lg font-semibold">Full Width</h3>
-        <DataGrid items={tracks} tableStyle="fullWidth" />
-      </div>
-
-      <div className="mx-auto max-w-4xl space-x-2">
-        <h1 className="my-8 text-3xl">Preview Formats</h1>
-        <div>
-          <h3 className="my-4 text-lg font-semibold">Currency</h3>
-          <PreviewFormat value={50} format={Formats.currency} />
-          <p className="text-lg"><PreviewFormat value={50} format={Formats.currency} /></p>
-
-          <h3 className="my-4 text-lg font-semibold">Bytes</h3>
-          <PreviewFormat value={1000000} format={Formats.bytes} />
-
-          <h3 className="my-4 text-lg font-semibold">Link</h3>
-          <PreviewFormat value="https://servicestack.net" format={Formats.link} />
-
-          <h3 className="my-4 text-lg font-semibold">Link with styling</h3>
-          <div className="text-xl text-green-700 font-semibold">
-            <PreviewFormat
-              value="https://servicestack.net/blazor"
-              format={Formats.link}
-            />
-          </div>
-
-          <h3 className="my-4 text-lg font-semibold">Link Email</h3>
-          <PreviewFormat value="user@email.com" format={Formats.linkMailTo} />
-
-          <h3 className="my-4 text-lg font-semibold">Link Phone</h3>
-          <PreviewFormat value="555 123 4567" format={Formats.linkTel} />
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-4xl mb-8">
-        <h1 className="my-8 text-3xl">Error Summary</h1>
-        <ErrorSummary 
-          status={{
-            errorCode: 'ValidationError',
-            message: 'There were validation errors',
-            errors: [
-              { fieldName: 'email', message: 'Email is required' },
-              { fieldName: 'password', message: 'Password must be at least 8 characters' }
-            ]
-          }}
-        />
-      </div>
-    </div>
+    </>
   )
 }
-

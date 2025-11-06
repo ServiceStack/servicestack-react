@@ -1,62 +1,63 @@
-import { useMemo } from 'react'
 import type { AlertProps } from '@/components/types'
 
-export default function Alert({ type = "warn", hideIcon, children }: AlertProps) {
-    const backgroundColor = useMemo(() => 
-        type === "info" ? "bg-blue-50 dark:bg-blue-200"
-        : type === "error" ? "bg-red-50 dark:bg-red-200"
-        : type === "success" ? "bg-green-50 dark:bg-green-200"
-        : "bg-yellow-50 dark:bg-yellow-200"
-    , [type])
+export default function Alert({ type = "warn", hideIcon, className, children }: AlertProps) {
+  const backgroundColor = type === "info"
+    ? "bg-blue-50 dark:bg-blue-200"
+    : type === "error"
+    ? "bg-red-50 dark:bg-red-200"
+    : type === "success"
+    ? "bg-green-50 dark:bg-green-200"
+    : "bg-yellow-50 dark:bg-yellow-200"
 
-    const borderColor = useMemo(() => 
-        type === "info" ? "border-blue-400"
-        : type === "error" ? "border-red-400"
-        : type === "success" ? "border-green-400"
-        : "border-yellow-400"
-    , [type])
+  const borderColor = type === "info"
+    ? "border-blue-400"
+    : type === "error"
+    ? "border-red-400"
+    : type === "success"
+    ? "border-green-400"
+    : "border-yellow-400"
 
-    const textColor = useMemo(() => 
-        type === "info" ? "text-blue-700"
-        : type === "error" ? "text-red-700"
-        : type === "success" ? "text-green-700"
-        : "text-yellow-700"
-    , [type])
+  const textColor = type === "info"
+    ? "text-blue-700"
+    : type === "error"
+    ? "text-red-700"
+    : type === "success"
+    ? "text-green-700"
+    : "text-yellow-700"
 
-    return (
-        <div className={`${backgroundColor} ${borderColor} border-l-4 p-4`}>
-            <div className="flex items-center">
-                {!hideIcon && (
-                    <div className="flex-shrink-0 mr-3">
-                        {type === 'warn' && (
-                            <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                        )}
-                        {type === 'error' && (
-                            <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-                            </svg>
-                        )}
-                        {type === 'info' && (
-                            <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fillRule="evenodd" d="M19 10.5a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0zM8.25 9.75A.75.75 0 019 9h.253a1.75 1.75 0 011.709 2.13l-.46 2.066a.25.25 0 00.245.304H11a.75.75 0 010 1.5h-.253a1.75 1.75 0 01-1.709-2.13l.46-2.066a.25.25 0 00-.245-.304H9a.75.75 0 01-.75-.75zM10 7a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                            </svg>
-                        )}
-                        {type === 'success' && (
-                            <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-                            </svg>
-                        )}
-                    </div>
-                )}
-                <div>
-                    <p className={`${textColor} text-sm`}>
-                        {children}
-                    </p>
-                </div>
-            </div>
+  return (
+    <div className={`${backgroundColor} ${borderColor} border-l-4 p-4 ${className || ''}`}>
+      <div className="flex items-center">
+        {!hideIcon && (
+          <div className="flex-shrink-0 mr-3">
+            {type === "warn" && (
+              <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            )}
+            {type === "error" && (
+              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+              </svg>
+            )}
+            {type === "info" && (
+              <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M19 10.5a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0zM8.25 9.75A.75.75 0 019 9h.253a1.75 1.75 0 011.709 2.13l-.46 2.066a.25.25 0 00.245.304H11a.75.75 0 010 1.5h-.253a1.75 1.75 0 01-1.709-2.13l.46-2.066a.25.25 0 00-.245-.304H9a.75.75 0 01-.75-.75zM10 7a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+            )}
+            {type === "success" && (
+              <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+              </svg>
+            )}
+          </div>
+        )}
+        <div>
+          <p className={`${textColor} text-sm`}>
+            {children}
+          </p>
         </div>
-    )
+      </div>
+    </div>
+  )
 }
-

@@ -1,18 +1,18 @@
 import type { ApiRequest, IReturn, IReturnVoid, ApiState, IResponseError, IResponseStatus } from "@/types"
 import type { JsonServiceClient } from "@servicestack/client"
-import { useState, useEffect, useContext, createContext } from "react"
+import { useState, useContext, useEffect, useRef as useReactRef } from "react"
 import { ResponseError, ResponseStatus, ApiResult } from "@servicestack/client"
-import { unRefs, setRef, swrApi, fromCache, swrCacheKey, createDebounce } from "./utils"
-
-export const ClientContext = createContext<JsonServiceClient | undefined>(undefined)
+import { unRefs, swrApi, fromCache, swrCacheKey, createDebounce } from "./utils"
+import { ClientContext } from "./context"
 
 export function useClient(use?:JsonServiceClient) {
     /** Maintain loading state whilst API Request is in transit */
     const [loading, setLoading] = useState(false)
-    /** Maintain API Error */
+    /** Maintain API Error in reactive state */
     const [error, setError] = useState<ResponseStatus | undefined>()
-    const [_response, setResponse] = useState<any>()
-    const client = use ?? useContext(ClientContext)!
+    const [response, setResponse] = useState<any>()
+    const contextClient = useContext(ClientContext)
+    const client = use ?? contextClient!
 
     /** Set error state with summary or field validation error */
     function setErrorState({ message, errorCode, fieldName, errors }: IResponseStatus) {
@@ -31,14 +31,19 @@ export function useClient(use?:JsonServiceClient) {
     /** Add field error to API error state */
     function addFieldError({ fieldName, message, errorCode }: IResponseError) {
         if (!errorCode) errorCode = 'Exception'
-        if (!error) {
-            setErrorState({ fieldName, message, errorCode })
-        } else {
-            let copy = new ResponseStatus(error)
-            copy.errors = [...(copy.errors || []).filter(x => x.fieldName?.toLowerCase() !== fieldName?.toLowerCase()),
-                new ResponseError({ fieldName, message, errorCode })]
-            setError(copy)
-        }
+        setError(prevError => {
+            if (!prevError) {
+                return new ResponseStatus({
+                    errorCode, message,
+                    errors: [new ResponseError({ fieldName, errorCode, message })]
+                })
+            } else {
+                let copy = new ResponseStatus(prevError)
+                copy.errors = [...(copy.errors || []).filter(x => x.fieldName?.toLowerCase() !== fieldName?.toLowerCase()),
+                    new ResponseError({ fieldName, message, errorCode })]
+                return copy
+            }
+        })
     }
 
     /** Send a typed API request and return results in an ApiResult<TResponse> */
@@ -87,48 +92,33 @@ export function useClient(use?:JsonServiceClient) {
 
     function swrEffect<TResponse>(requestFn: () => IReturn<TResponse> | ApiRequest,
             options?:{ args?:any, method?:string, delayMs?:number }) {
-        const [apiResult, setApiResult] = useState(new ApiResult<TResponse>())
+        const [api, setApi] = useState(new ApiResult<TResponse>())
+        const debounceApi = useReactRef(createDebounce(async (request:IReturn<TResponse> | ApiRequest) => {
+            const result = await client.api(request)
+            setApi(result)
+        }, options?.delayMs))
 
         useEffect(() => {
-            const debounceApi = createDebounce(async (request:IReturn<TResponse> | ApiRequest) => {
-                const result = await client.api(request)
-                setApiResult(result)
-            }, options?.delayMs)
-
             const request = requestFn()
             const cachedResponse = fromCache(swrCacheKey(request))
             if (cachedResponse) {
-                setApiResult(new ApiResult({ response: cachedResponse }))
+                setApi(new ApiResult({ response: cachedResponse }))
             }
             if (options?.delayMs === 0) {
-                client.api(request).then(setApiResult)
+                client.api(request).then(result => setApi(result))
             } else {
-                debounceApi(request)
+                debounceApi.current(request)
             }
+        }, [requestFn, options?.args, options?.method, options?.delayMs])
 
-            // Initial fetch
-            client.api(requestFn(), options?.args, options?.method).then(setApiResult)
+        // Initial fetch
+        useEffect(() => {
+            client.api(requestFn(), options?.args, options?.method).then(result => setApi(result))
         }, [])
 
-        return { current: apiResult }
+        return api
     }
 
-    const loadingRef = { current: loading }
-    const errorRef = { current: error }
-
-    let ctx:ApiState = {
-        setError: setErrorState,
-        addFieldError,
-        loading: loadingRef as any,
-        error: errorRef as any,
-        api,
-        apiVoid,
-        apiForm,
-        apiFormVoid,
-        swr,
-        swrEffect,
-        unRefs,
-        setRef
-    }
+    const ctx:ApiState = { setError: setErrorState, addFieldError, loading, error, api, apiVoid, apiForm, apiFormVoid, swr, swrEffect, unRefs }
     return ctx
 }

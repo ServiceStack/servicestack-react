@@ -1,13 +1,10 @@
 import { ApiResult as ApiResult_2 } from '@servicestack/client';
-import { ComponentType } from 'react';
-import { Context } from 'react';
 import { CSSProperties } from 'react';
-import { ForwardRefExoticComponent } from 'react';
+import { default as default_2 } from 'react';
 import { JsonServiceClient } from '@servicestack/client';
-import { JSX as JSX_2 } from 'react/jsx-runtime';
+import { JSX } from 'react/jsx-runtime';
 import { MutableRefObject } from 'react';
 import { ReactNode } from 'react';
-import { RefAttributes } from 'react';
 
 declare const a: {
     blue: string;
@@ -56,21 +53,18 @@ export declare interface AdminUsersInfo {
     };
 }
 
-export declare function Alert({ type, hideIcon, children }: AlertProps): JSX_2.Element;
+export declare function Alert({ type, hideIcon, className, children }: AlertProps): JSX.Element;
 
 export declare interface AlertProps {
     type?: "warn" | "info" | "error" | "success";
     hideIcon?: boolean;
     className?: string;
-    dangerouslySetInnerHTML?: {
-        __html: string;
-    };
     children?: ReactNode;
 }
 
 export declare function AlertSuccess({ message, children }: AlertSuccessProps & {
     children?: React.ReactNode;
-}): JSX_2.Element | null;
+}): JSX.Element;
 
 export declare interface AlertSuccessProps {
     message?: string;
@@ -90,7 +84,7 @@ export declare interface ApiFormat {
 }
 
 /** Resolve Request DTO {MetadataOperationType} by name */
-declare function apiOf(name: string): MetadataOperationType | null | undefined;
+declare function apiOf(name: string): MetadataOperationType;
 
 export declare type ApiPrefs = {
     take?: number;
@@ -147,9 +141,9 @@ declare class Apis implements AutoQueryApis {
     Update?: MetadataOperationType;
     Patch?: MetadataOperationType;
     Delete?: MetadataOperationType;
-    get AnyQuery(): MetadataOperationType | undefined;
-    get AnyUpdate(): MetadataOperationType | undefined;
-    get dataModel(): MetadataTypeName | undefined;
+    get AnyQuery(): MetadataOperationType;
+    get AnyUpdate(): MetadataOperationType;
+    get dataModel(): MetadataTypeName;
     toArray(): MetadataOperationType[];
     get empty(): boolean;
     add(op: MetadataOperationType): void;
@@ -158,12 +152,11 @@ declare class Apis implements AutoQueryApis {
 }
 
 export declare type ApiState = {
-    unRefs: (o: any) => any;
-    setRef: ($ref: Ref<any>, $item: any) => void;
+    unRefs: <T extends Record<string, any>>(o: T) => T;
     setError: ({ message, errorCode, fieldName, errors }: IResponseStatus) => ResponseStatus;
     addFieldError: ({ fieldName, message, errorCode }: IResponseError) => void;
-    loading: Ref<boolean>;
-    error: Ref<any>;
+    loading: boolean;
+    error: ResponseStatus | undefined;
     api: <TResponse>(request: IReturn<TResponse> | ApiRequest, args?: any, method?: string) => Promise<ApiResult<TResponse>>;
     apiVoid: (request: IReturnVoid | ApiRequest, args?: any, method?: string) => Promise<ApiResult<EmptyResponse>>;
     apiForm: <TResponse>(request: ApiRequest | IReturn<TResponse>, body: FormData, args?: any, method?: string) => Promise<ApiResult<TResponse>>;
@@ -173,10 +166,8 @@ export declare type ApiState = {
         args?: any;
         method?: string;
         delayMs?: number;
-    }) => Ref<ApiResult<UnwrapRef<TResponse>>>;
+    }) => ApiResult<TResponse>;
 };
-
-export declare const ApiStateContext: Context<ApiState | undefined>;
 
 export declare interface ApiUiInfo {
     locodeCss: ApiCss;
@@ -239,14 +230,14 @@ export declare interface AppTags {
 /** Convert string dictionary to [{ key:string, value:string }] */
 declare function asKvps(options?: {
     [k: string]: string;
-} | null): KeyValuePair<string, string>[] | undefined;
+} | null): KeyValuePair<string, string>[];
 
 declare function asOptions(all: string[], exclude?: null | string | string[]): {
     [k: string]: boolean;
 };
 
 /** Resolve Absolute URL to use for relative paths */
-declare function assetsPathResolver(src?: string): string | undefined;
+declare function assetsPathResolver(src?: string): string;
 
 declare function asStrings(o?: string | string[] | null): string[];
 
@@ -284,11 +275,7 @@ export declare interface AuthInfo {
     };
 }
 
-export declare const Autocomplete: ForwardRefExoticComponent<AutocompleteProps & {
-children?: any;
-} & RefAttributes<    {
-toggle: (expand: boolean) => void;
-}>>;
+export declare const Autocomplete: default_2.ForwardRefExoticComponent<AutocompleteProps & Omit<default_2.InputHTMLAttributes<HTMLInputElement>, keyof AutocompleteProps> & default_2.RefAttributes<AutocompleteRef>>;
 
 export declare interface AutocompleteProps {
     status?: ResponseStatus | null;
@@ -301,51 +288,75 @@ export declare interface AutocompleteProps {
     required?: boolean;
     options?: any[];
     value?: any;
-    onChange?: (value: any[] | any) => void;
     match: (item: any, value: string) => boolean;
     viewCount?: number;
     pageSize?: number;
+    onChange?: (value: any[] | any) => void;
+    children?: ((item: any) => ReactNode) | ReactNode;
 }
 
-export declare const AutoCreateForm: ForwardRefExoticComponent<AutoCreateFormProps & {
-headingSlot?: React.ReactNode;
-subheadingSlot?: React.ReactNode;
-headerSlot?: React.ReactNode;
-footerSlot?: React.ReactNode;
-} & RefAttributes<any>>;
+declare interface AutocompleteRef {
+    toggle(expand: boolean): void;
+}
+
+export declare const AutoCreateForm: default_2.ForwardRefExoticComponent<AutoCreateFormProps & AutoCreateFormSlots & default_2.RefAttributes<AutoCreateFormRef>>;
 
 export declare interface AutoCreateFormProps extends AutoFormBaseProps {
-    onDone?: OnDone;
-    onSave?: OnSave;
-    onError?: OnError;
 }
 
-export declare const AutoEditForm: ForwardRefExoticComponent<AutoEditFormProps & {
-headingSlot?: React.ReactNode;
-subheadingSlot?: React.ReactNode;
-headerSlot?: React.ReactNode;
-footerSlot?: React.ReactNode;
-} & RefAttributes<any>>;
+declare interface AutoCreateFormRef {
+    forceUpdate: () => void;
+    props: AutoCreateFormProps;
+    setModel: (args: any) => void;
+    formFields: any;
+    model: any;
+}
+
+declare interface AutoCreateFormSlots {
+    heading?: ReactNode;
+    subheading?: ReactNode;
+    header?: (props: {
+        formInstance: AutoCreateFormRef | null;
+        model: any;
+    }) => ReactNode;
+    footer?: (props: {
+        formInstance: AutoCreateFormRef | null;
+        model: any;
+    }) => ReactNode;
+    children?: ReactNode;
+}
+
+export declare const AutoEditForm: default_2.ForwardRefExoticComponent<AutoEditFormProps & AutoEditFormSlots & default_2.RefAttributes<AutoEditFormRef>>;
 
 export declare interface AutoEditFormProps extends AutoFormBaseProps {
     value: any;
-    onChange?: (value: any) => void;
     deleteType?: string | InstanceType<any> | Function;
-    onDone?: OnDone;
-    onSave?: OnSave;
-    onDelete?: OnDelete;
-    onError?: OnError;
+    onDelete?: (response: any) => void;
 }
 
-export declare const AutoForm: ForwardRefExoticComponent<AutoFormProps & {
-headingSlot?: React.ReactNode;
-subheadingSlot?: React.ReactNode;
-headerSlot?: React.ReactNode;
-footerSlot?: React.ReactNode;
-buttonsSlot?: React.ReactNode;
-leftbuttonsSlot?: React.ReactNode;
-rightbuttonsSlot?: React.ReactNode;
-} & RefAttributes<any>>;
+declare interface AutoEditFormRef {
+    forceUpdate: () => void;
+    props: AutoEditFormProps;
+    setModel: (args: any) => void;
+    formFields: any;
+    model: any;
+}
+
+declare interface AutoEditFormSlots {
+    heading?: ReactNode;
+    subheading?: ReactNode;
+    header?: (props: {
+        formInstance: AutoEditFormRef | null;
+        model: any;
+    }) => ReactNode;
+    footer?: (props: {
+        formInstance: AutoEditFormRef | null;
+        model: any;
+    }) => ReactNode;
+    children?: ReactNode;
+}
+
+export declare const AutoForm: default_2.ForwardRefExoticComponent<AutoFormProps & AutoFormSlots & default_2.RefAttributes<AutoFormRef>>;
 
 export declare interface AutoFormBaseProps {
     type: string | InstanceType<any> | Function;
@@ -362,17 +373,15 @@ export declare interface AutoFormBaseProps {
     showCancel?: boolean;
     configureField?: (field: InputProp) => void;
     configureFormLayout?: (field: InputProp[]) => void;
+    onDone?: () => void;
+    onSave?: (response: any) => void;
+    onError?: (error: ResponseStatus) => void;
 }
 
-export declare const AutoFormFields: ForwardRefExoticComponent<AutoFormFieldsProps & RefAttributes<    {
-forceUpdate: () => void;
-props: AutoFormFieldsProps;
-updateValue: (id: string, value: any) => void;
-}>>;
+export declare const AutoFormFields: default_2.ForwardRefExoticComponent<AutoFormFieldsProps & default_2.RefAttributes<AutoFormFieldsRef>>;
 
 export declare interface AutoFormFieldsProps {
     value: ApiRequest;
-    onChange?: (value: any) => void;
     type?: string;
     metaType?: MetadataType;
     api: {
@@ -386,15 +395,18 @@ export declare interface AutoFormFieldsProps {
     divideClass?: string;
     spaceClass?: string;
     fieldsetClass?: string;
+    onChange?: (value: any) => void;
+}
+
+declare interface AutoFormFieldsRef {
+    forceUpdate: () => void;
+    props: AutoFormFieldsProps;
+    updateValue: (id: string, value: any) => void;
 }
 
 export declare interface AutoFormProps {
     type: string | InstanceType<any> | Function;
     value?: ApiRequest | any;
-    onChange?: (value: any) => void;
-    onSuccess?: OnSuccess;
-    onError?: OnError;
-    onDone?: OnDone;
     heading?: string;
     subHeading?: string;
     showLoading?: boolean;
@@ -413,6 +425,42 @@ export declare interface AutoFormProps {
     subHeadingClass?: string;
     submitLabel?: string;
     allowSubmit?: (model: any) => boolean;
+    onSuccess?: (response: any) => void;
+    onError?: (error: ResponseStatus) => void;
+    onDone?: () => void;
+    onChange?: (value: any) => void;
+}
+
+declare interface AutoFormRef {
+    forceUpdate: () => void;
+    props: AutoFormProps;
+    setModel: (args: any) => Promise<void>;
+    formFields: any;
+    submit: () => Promise<void>;
+    close: () => void;
+    model: any;
+}
+
+declare interface AutoFormSlots {
+    heading?: ReactNode;
+    subheading?: ReactNode;
+    header?: (props: {
+        instance: AutoFormRef | null;
+        model: any;
+    }) => ReactNode;
+    footer?: (props: {
+        instance: AutoFormRef | null;
+        model: any;
+    }) => ReactNode;
+    buttons?: ReactNode;
+    leftbuttons?: (props: {
+        instance: AutoFormRef | null;
+        model: any;
+    }) => ReactNode;
+    rightbuttons?: (props: {
+        instance: AutoFormRef | null;
+        model: any;
+    }) => ReactNode;
 }
 
 export declare interface AutoQueryApis {
@@ -431,9 +479,57 @@ export declare interface AutoQueryConvention {
     valueType?: string;
 }
 
-export declare const AutoQueryGrid: ForwardRefExoticComponent<AutoQueryGridProps & {
-children?: any;
-} & RefAttributes<any>>;
+export declare const AutoQueryGrid: default_2.ForwardRefExoticComponent<AutoQueryGridComponentProps & default_2.RefAttributes<AutoQueryGridRef>>;
+
+declare interface AutoQueryGridComponentProps extends AutoQueryGridProps {
+    onHeaderSelected?: (name: string, e: default_2.MouseEvent) => void;
+    onRowSelected?: (item: any, ev: default_2.MouseEvent) => void;
+    onNav?: (args: any) => void;
+    children?: ReactNode;
+    toolbar?: ReactNode;
+    toolbarButtons?: (props: {
+        toolbarButtonClass: string;
+    }) => ReactNode;
+    createForm?: (props: {
+        type: string;
+        configure: (field: any) => void;
+        done: () => void;
+        save: () => Promise<void>;
+    }) => ReactNode;
+    editForm?: (props: {
+        model: any;
+        type: string;
+        deleteType: string | null;
+        configure: (field: any) => void;
+        done: () => void;
+        save: () => Promise<void>;
+    }) => ReactNode;
+    viewForm?: (props: {
+        model: any;
+        apis: Apis;
+        done: () => void;
+    }) => ReactNode;
+    formHeader?: (props: {
+        form: 'create' | 'edit';
+        formInstance: any;
+        apis: Apis;
+        type?: string;
+        model?: any;
+        id?: any;
+        updateModel: (props: any) => void;
+    }) => ReactNode;
+    formFooter?: (props: {
+        form: 'create' | 'edit';
+        formInstance: any;
+        apis: Apis;
+        type?: string;
+        model?: any;
+        id?: any;
+        updateModel: (props: any) => void;
+    }) => ReactNode;
+    columnSlots?: Record<string, (props: any) => ReactNode>;
+    headerSlots?: Record<string, (props: any) => ReactNode>;
+}
 
 export declare type AutoQueryGridDefaults = {
     deny?: GridAllowOptions[];
@@ -472,7 +568,7 @@ export declare interface AutoQueryGridProps {
         [name: string]: Breakpoint | "never";
     };
     rowClass?: (model: any, i: number) => string;
-    rowStyle?: (model: any, i: number) => StyleValue | undefined;
+    rowStyle?: (model: any, i: number) => CSSProperties | undefined;
     modelTitle?: string;
     newButtonLabel?: string;
     apiPrefs?: ApiPrefs;
@@ -483,9 +579,30 @@ export declare interface AutoQueryGridProps {
     create?: boolean;
     edit?: string | number;
     filters?: any;
-    onHeaderSelected?: (name: string, ev: Event) => void;
-    onRowSelected?: (item: any, ev: Event) => void;
+    onHeaderSelected?: (name: string, ev: React.MouseEvent) => void;
+    onRowSelected?: (item: any, ev: React.MouseEvent) => void;
     onNav?: (args: any) => void;
+}
+
+declare interface AutoQueryGridRef {
+    update: () => Promise<void>;
+    search: (args: any) => Promise<void>;
+    createRequestArgs: () => Record<string, any>;
+    reset: () => void;
+    createDone: () => void;
+    createSave: () => Promise<void>;
+    editDone: () => void;
+    editSave: () => Promise<void>;
+    forceUpdate: () => void;
+    setEdit: (props: any) => void;
+    edit: any;
+    createForm: any;
+    editForm: any;
+    apiPrefs: ApiPrefs;
+    results: any[];
+    skip: number;
+    take: number;
+    total: number;
 }
 
 export declare interface AutoQueryInfo {
@@ -505,19 +622,13 @@ export declare interface AutoQueryInfo {
     };
 }
 
-export declare function AutoViewForm({ formStyle, typeName: typeNameProp, apis, model, heading, subHeading, panelClass: panelClassProp, formClass: formClassProp, headingClass: headingClassProp, subHeadingClass: subHeadingClassProp, deleteType, showLoading, onDone: doneProp, onDelete: onDeleteProp, onError, headingSlot, subheadingSlot }: AutoViewFormProps & {
-    headingSlot?: React.ReactNode;
-    subheadingSlot?: React.ReactNode;
-}): JSX_2.Element;
+export declare const AutoViewForm: default_2.FC<AutoViewFormProps & AutoViewFormSlots>;
 
 export declare interface AutoViewFormProps {
     model: any;
     apis?: Apis;
     typeName?: string;
-    onDone?: OnDone;
-    onSave?: OnSave;
-    onDelete?: OnDelete;
-    onError?: OnError;
+    done?: Function;
     formStyle?: "slideOver" | "card";
     panelClass?: string;
     formClass?: string;
@@ -527,11 +638,18 @@ export declare interface AutoViewFormProps {
     subHeading?: string;
     showLoading?: boolean;
     deleteType?: string | InstanceType<any> | Function;
+    onDone?: () => void;
+    onSave?: (response: any) => void;
+    onDelete?: (response: any) => void;
+    onError?: (error: ResponseStatus) => void;
 }
 
-export declare function Breadcrumb({ href, title, children }: BreadcrumbProps & {
-    children?: React.ReactNode;
-}): JSX_2.Element;
+declare interface AutoViewFormSlots {
+    heading?: ReactNode;
+    subheading?: ReactNode;
+}
+
+export declare function Breadcrumb({ href, title, children }: BreadcrumbProps): JSX.Element;
 
 export declare interface BreadcrumbProps {
     href?: string;
@@ -539,9 +657,7 @@ export declare interface BreadcrumbProps {
     children?: ReactNode;
 }
 
-export declare function Breadcrumbs({ homeHref, homeLabel, children }: BreadcrumbsProps & {
-    children?: React.ReactNode;
-}): JSX_2.Element;
+export declare function Breadcrumbs({ homeHref, homeLabel, children }: BreadcrumbsProps): JSX.Element;
 
 export declare interface BreadcrumbsProps {
     homeHref?: string;
@@ -567,7 +683,7 @@ declare const card: {
     subHeadingClass: string;
 };
 
-export declare function CellFormat({ type, propType, value, ...attrs }: CellFormatProps): JSX_2.Element;
+export declare function CellFormat(props: CellFormatProps): JSX.Element;
 
 export declare interface CellFormatProps {
     type: MetadataType;
@@ -575,13 +691,10 @@ export declare interface CellFormatProps {
     value: Object;
 }
 
-export declare function CheckboxInput({ id, label, help, value: modelValue, onChange, status, inputClass, labelClass, filterClass, className, ...attrs }: CheckboxInputProps & {
-    className?: string;
-}): JSX_2.Element;
+export declare const CheckboxInput: default_2.FC<CheckboxInputProps & default_2.HTMLAttributes<HTMLInputElement>>;
 
 export declare interface CheckboxInputProps {
     value?: boolean;
-    onChange?: (value: boolean) => void;
     status?: ResponseStatus;
     id: string;
     inputClass?: string;
@@ -589,19 +702,18 @@ export declare interface CheckboxInputProps {
     label?: string;
     labelClass?: string;
     help?: string;
+    onChange?: (value: boolean) => void;
 }
 
 /** Delete AppMetadata and remove from localStorage */
 declare function clearMetadata(): void;
 
-export declare const ClientContext: Context<JsonServiceClient | undefined>;
-
-export declare function CloseButton({ buttonClass, title, onClose }: CloseButtonProps): JSX_2.Element;
+export declare function CloseButton({ buttonClass, title, onClose }: CloseButtonProps): JSX.Element;
 
 export declare interface CloseButtonProps {
     buttonClass?: string;
     title?: string;
-    onClose?: OnClose;
+    onClose?: () => void;
 }
 
 export declare type Column = {
@@ -622,14 +734,11 @@ export declare type ColumnSettings = {
     sort?: "ASC" | "DESC";
 };
 
-export declare const Combobox: ForwardRefExoticComponent<ComboboxProps & RefAttributes<    {
-toggle: (expand: boolean) => void;
-}>>;
+export declare const Combobox: default_2.ForwardRefExoticComponent<ComboboxProps & Omit<default_2.HTMLAttributes<HTMLDivElement>, keyof ComboboxProps> & default_2.RefAttributes<ComboboxRef>>;
 
 export declare interface ComboboxProps {
     id: string;
     value?: any;
-    onChange?: (value: any[] | any) => void;
     multiple?: boolean;
     options?: any;
     values?: string[];
@@ -637,6 +746,8 @@ export declare interface ComboboxProps {
         key: string;
         value: string;
     }[];
+    onChange?: (value: any[] | any) => void;
+    children?: ((item: any) => ReactNode) | ReactNode;
 }
 
 export declare interface ComboboxRef {
@@ -650,13 +761,16 @@ export declare interface ConfigInfo {
     };
 }
 
-export declare function ConfirmDelete({ onDelete, children, ...attrs }: ConfirmDeleteProps & {
-    children?: React.ReactNode;
-}): JSX_2.Element;
+export declare const ConfirmDelete: default_2.FC<ConfirmDeleteComponentProps>;
+
+declare interface ConfirmDeleteComponentProps extends ConfirmDeleteProps {
+    children?: default_2.ReactNode;
+    className?: string;
+    [key: string]: any;
+}
 
 export declare interface ConfirmDeleteProps {
     onDelete?: () => void;
-    children?: ReactNode;
 }
 
 declare function copyText(text: string): void;
@@ -698,11 +812,7 @@ export declare interface CustomPluginInfo {
     };
 }
 
-export declare function DarkModeToggle({ className }: DarkModeToggleProps): JSX_2.Element;
-
-export declare interface DarkModeToggleProps {
-    className?: string;
-}
+export declare function DarkModeToggle(): JSX.Element;
 
 export declare interface DatabaseInfo {
     alias: string;
@@ -710,9 +820,9 @@ export declare interface DatabaseInfo {
     schemas: SchemaInfo[];
 }
 
-export declare function DataGrid({ id: _id, items, type, tableStyle, selectedColumns, gridClass: gridClassProp, grid2Class: grid2ClassProp, grid3Class: grid3ClassProp, grid4Class: grid4ClassProp, tableClass: tableClassProp, tbodyClass: tbodyClassProp, theadClass: theadClassProp, theadRowClass: theadRowClassProp, theadCellClass: theadCellClassProp, headerTitles, headerTitle, visibleFrom, rowClass, rowStyle, isSelected, onHeaderSelected, onRowSelected, children }: DataGridProps & {
-    children?: any;
-}): JSX_2.Element | null;
+export declare function DataGrid({ id, items, tableStyle, type, selectedColumns, className, gridClass: gridClassProp, grid2Class: grid2ClassProp, grid3Class: grid3ClassProp, grid4Class: grid4ClassProp, tableClass: tableClassProp, theadClass: theadClassProp, tbodyClass: tbodyClassProp, theadRowClass: theadRowClassProp, theadCellClass: theadCellClassProp, isSelected, headerTitle, headerTitles, visibleFrom, rowClass, rowStyle, onHeaderSelected, onRowSelected, children, }: DataGridProps & {
+    children?: default_2.ReactNode;
+}): JSX.Element;
 
 export declare interface DataGridProps {
     items: any[];
@@ -739,9 +849,9 @@ export declare interface DataGridProps {
         [name: string]: Breakpoint | "never";
     };
     rowClass?: (model: any, i: number) => string;
-    rowStyle?: (model: any, i: number) => StyleValue | undefined;
-    onHeaderSelected?: (name: string, ev: Event) => void;
-    onRowSelected?: (item: any, ev: Event) => void;
+    rowStyle?: (model: any, i: number) => CSSProperties | undefined;
+    onHeaderSelected?: (name: string, ev: React.MouseEvent) => void;
+    onRowSelected?: (item: any, ev: React.MouseEvent) => void;
 }
 
 /** Format Date into required input[type=date] format */
@@ -761,13 +871,13 @@ declare const dummy: {
     colspans: string;
 };
 
-export declare function DynamicInput({ input, value: modelValue, onChange: onUpdateModelValue, api }: DynamicInputProps): JSX_2.Element;
+export declare const DynamicInput: default_2.FC<DynamicInputProps>;
 
 export declare interface DynamicInputProps {
     input: InputProp | InputInfo;
     value: ApiRequest;
-    onChange?: (value: any) => void;
     api: ApiResponseType | null;
+    onChange?: (value: any) => void;
 }
 
 export declare interface EmptyResponse {
@@ -777,23 +887,23 @@ export declare interface EmptyResponse {
 /** Encode SVG XML for usage in Data URIs */
 declare function encodeSvg(s: string): string;
 
-export declare function EnsureAccess({ invalidAccess }: EnsureAccessProps): JSX_2.Element | null;
+export declare function EnsureAccess({ invalidAccess, alertClass, children }: EnsureAccessProps): JSX.Element;
 
-export declare function EnsureAccessDialog({ title, subtitle, alertClass, invalidAccess, onDone }: EnsureAccessDialogProps): JSX_2.Element | null;
+export declare function EnsureAccessDialog({ title, subtitle, invalidAccess, alertClass, onDone }: EnsureAccessDialogProps): JSX.Element;
 
 export declare interface EnsureAccessDialogProps {
     title?: string;
     subtitle?: string;
     invalidAccess?: string;
     alertClass?: string;
-    onDone?: OnDone;
+    onDone?: () => void;
 }
 
 export declare interface EnsureAccessProps {
     invalidAccess?: string;
     alertClass?: string;
-    onDone?: OnDone;
     children?: ReactNode;
+    onDone?: () => void;
 }
 
 /** Format Enum Flags into expanded enum strings */
@@ -804,22 +914,21 @@ declare function enumFlagsConverter(type: string): (x: number | any) => any;
 /** Resolve Enum entries for Enum Type by name */
 declare function enumOptions(name: string): {
     [name: string]: string;
-} | null;
+};
 
 export declare interface ErrorResponse {
     responseStatus?: ResponseStatus;
 }
 
-export declare function ErrorSummary({ status, except, className }: ErrorSummaryProps): JSX_2.Element | null;
+export declare function ErrorSummary({ status, except, className }: ErrorSummaryProps): JSX.Element;
 
 export declare interface ErrorSummaryProps {
     status?: ResponseStatus | undefined;
     except?: string | string[];
     className?: string;
-    errorSummary?: string;
 }
 
-declare function expandEnumFlags(value: number, options: any): string[];
+declare function expandEnumFlags(value: number, options: any): any[];
 
 export declare interface ExplorerUi {
     css: ApiCss;
@@ -827,13 +936,13 @@ export declare interface ExplorerUi {
 }
 
 /** Resolve SVG URI for file extension */
-declare function extSrc(ext: string): string | null;
+declare function extSrc(ext: string): string;
 
 /** Resolve SVG XML for file extension */
-declare function extSvg(ext: string): string | null;
+declare function extSvg(ext: string): string;
 
 /** Resolve fallback URL to use if primary URL fails */
-declare function fallbackPathResolver(src?: string): string | undefined;
+declare function fallbackPathResolver(src?: string): string;
 
 export declare interface FieldCss {
     field: string;
@@ -844,11 +953,9 @@ export declare interface FieldCss {
 /** Resolve image preview URL for file */
 declare function fileImageUri(file: any | {
     name: string;
-}): string | null;
+}): string;
 
-export declare function FileInput({ id, label, labelClass, help, placeholder, value: modelValue, values, files, multiple, status, inputClass, filterClass, className, ...attrs }: FileInputProps & {
-    className?: string;
-}): JSX_2.Element;
+export declare const FileInput: default_2.FC<FileInputProps & Omit<default_2.InputHTMLAttributes<HTMLInputElement>, keyof FileInputProps>>;
 
 export declare interface FileInputProps {
     multiple?: boolean;
@@ -861,13 +968,13 @@ export declare interface FileInputProps {
     help?: string;
     placeholder?: string;
     value?: string;
-    onChange?: (value: string) => void;
     values?: string[];
     files?: UploadedFile[];
+    onChange?: (value: string) => void;
 }
 
 /** Resolve the Icon URI to use for file */
-declare function filePathUri(path?: string): string | null;
+declare function filePathUri(path?: string): string;
 
 export declare interface FilesUploadInfo {
     basePath: string;
@@ -897,7 +1004,7 @@ export declare type Filter = {
 
 declare function filterClass(cls: (string | undefined)[], type: string, fn?: ((cls: string) => string)): string;
 
-export declare function FilterColumn({ definitions, column, topLeft, onDone, onSave }: FilterColumnProps): JSX_2.Element;
+export declare function FilterColumn({ definitions, column, topLeft, onDone, onSave }: FilterColumnProps): JSX.Element;
 
 export declare interface FilterColumnProps {
     definitions: AutoQueryConvention[];
@@ -906,19 +1013,23 @@ export declare interface FilterColumnProps {
         x: number;
         y: number;
     };
-    onDone?: OnDone;
+    onDone?: () => void;
     onSave?: (settings: ColumnSettings) => void;
 }
 
-export declare function FilterViews({ definitions, columns, onDone, onChange }: FilterViewsProps & {
-    onDone?: () => void;
-    onChange?: (column: Column) => void;
-}): JSX_2.Element;
+export declare function FilterViews({ definitions, columns, className, onDone, onChange }: FilterViewsProps_2): JSX.Element;
 
 export declare interface FilterViewsProps {
     definitions?: any[];
     columns?: any[];
+}
+
+declare interface FilterViewsProps_2 {
+    definitions: AutoQueryConvention[];
+    columns: Column[];
     className?: string;
+    onDone?: () => void;
+    onChange?: (column: Column) => void;
 }
 
 /** Filter Apis by different filtering conditions */
@@ -977,12 +1088,12 @@ declare class Formats {
     static enumFlags: FormatInfo;
 }
 
-declare function formatter(format: FormatInfo): Function | null;
+declare function formatter(format: FormatInfo): Function;
 
 /** Format any value or object graph */
 declare function formatValue(value: any, format?: FormatInfo | null, attrs?: any): any;
 
-export declare function FormLoading({ icon, text }: FormLoadingProps): JSX_2.Element;
+export declare const FormLoading: default_2.FC<FormLoadingProps>;
 
 export declare interface FormLoadingProps {
     icon?: boolean;
@@ -999,10 +1110,10 @@ declare function formValues(form: HTMLFormElement, props?: MetadataPropertyType[
 declare function fromCache(key: string): any;
 
 /** Resolve File extension from file name or path */
-declare function getExt(path?: string | null): string | null;
+declare function getExt(path?: string | null): string;
 
 /** Resolve file name from /file/path */
-declare function getFileName(path?: string | null): string | null;
+declare function getFileName(path?: string | null): string;
 
 declare function getFormatters(): {
     [k: string]: Function;
@@ -1020,15 +1131,15 @@ declare function getMetadata(opt?: {
 declare function getMimeType(fileNameOrExt: string): string;
 
 /** Resolve PrimaryKey {MetadataPropertyType} for {MetadataType} */
-declare function getPrimaryKey(type?: MetadataType | null): MetadataPropertyType | null;
+declare function getPrimaryKey(type?: MetadataType | null): MetadataPropertyType;
 
 declare function getPrimaryKeyByProps(type: MetadataType, props: MetadataPropertyType[]): MetadataPropertyType | null;
 
 /** Resolve Request DTO name from a Request DTO instance */
-declare function getTypeName(type?: string | InstanceType<any> | Function): string | null;
+declare function getTypeName(type?: string | InstanceType<any> | Function): string;
 
 declare const grid: {
-    getGridClass(_style?: TableStyleOptions): string;
+    getGridClass(style?: TableStyleOptions): string;
     getGrid2Class(style?: TableStyleOptions): string;
     getGrid3Class(style?: TableStyleOptions): string;
     getGrid4Class(style?: TableStyleOptions): string;
@@ -1037,7 +1148,7 @@ declare const grid: {
     getTheadRowClass(style?: TableStyleOptions): string;
     getTheadCellClass(style?: TableStyleOptions): string;
     getTbodyClass(style?: TableStyleOptions): string;
-    getTableRowClass(style: TableStyleOptions | undefined, i: number, selected: boolean, allowSelection: boolean): string;
+    getTableRowClass(style: TableStyleOptions, i: number, selected: boolean, allowSelection: boolean): string;
     gridClass: string;
     grid2Class: string;
     grid3Class: string;
@@ -1061,12 +1172,12 @@ declare function hasPermission(permission: string): boolean;
 declare function hasRole(role: string): boolean;
 
 /** Format as empty string */
-declare function hidden(_o: any): string;
+declare function hidden(o: any): string;
 
 /** Convert object dictionary into encoded HTML attributes */
 declare function htmlAttrs(attrs: any): string;
 
-export declare function HtmlFormat({ value, fieldAttrs, depth, classes }: HtmlFormatProps): JSX_2.Element;
+export declare function HtmlFormat(props: HtmlFormatProps): JSX.Element;
 
 export declare interface HtmlFormatProps {
     value?: any;
@@ -1084,15 +1195,13 @@ declare function humanifyMs(ms: number): string;
 /** Format human readable number */
 declare function humanifyNumber(n: number): string;
 
-export declare function Icon({ image, svg: svgProp, src, alt, type, className, ...attrs }: IconProps & {
-    className?: string;
-}): JSX_2.Element;
+export declare function Icon({ image, svg, src, alt, type, className }: IconProps): JSX.Element;
 
 /** Format Image URL as an Icon */
 declare function icon(url: string, attrs?: any): string;
 
 /** Resolve the fallback URL for a broken Image URL */
-declare function iconFallbackSrc(src: string, fallbackSrc?: string): string | null;
+declare function iconFallbackSrc(src: string, fallbackSrc?: string): string;
 
 /** Error handler for broken images to return a fallbackSrc */
 declare function iconOnError(img: HTMLImageElement, fallbackSrc?: string): void;
@@ -1103,6 +1212,7 @@ export declare interface IconProps {
     src?: string;
     alt?: string;
     type?: string;
+    className?: string;
 }
 
 /** Format Image URL as a full rounded Icon */
@@ -1124,7 +1234,7 @@ declare const input: {
     valid: string;
 };
 
-export declare function InputDescription({ id, description }: InputDescriptionProps): JSX_2.Element | null;
+export declare function InputDescription({ id, description }: InputDescriptionProps): JSX.Element;
 
 export declare interface InputDescriptionProps {
     id: string;
@@ -1135,8 +1245,8 @@ export declare interface InputDescriptionProps {
 declare function inputFiles(input: HTMLInputElement): {
     fileName: string;
     contentLength: number;
-    filePath: string | null;
-}[] | null;
+    filePath: string;
+}[];
 
 export declare interface InputInfo {
     id: string;
@@ -1177,17 +1287,16 @@ export declare interface InputProp extends InputInfo {
     op?: MetadataOperationType;
 }
 
-declare class Interceptors {
-    callbacks: {
-        [key: string]: (key: string, value: any) => void;
-    };
-    register(key: string, callback: (key: string, value: any) => void): void;
-    has(key: string): boolean;
-    invoke(key: string, value: any): void;
+declare interface InsertOptions {
+    selectionAtEnd?: boolean;
+    offsetStart?: number;
+    offsetEnd?: number;
+    filterValue?: (value: string, opt: any) => string;
+    filterSelection?: (selection: string) => string;
 }
 
 /** Return error message if Authenticated User cannot access API */
-declare function invalidAccessMessage(op: MetadataOperationType): string | null;
+declare function invalidAccessMessage(op: MetadataOperationType): string;
 
 export declare interface IResponseError {
     errorCode?: string;
@@ -1217,6 +1326,12 @@ declare function isComplexType(value: any): boolean;
 
 /** Check if value is a scalar type */
 declare function isPrimitive(value: any): boolean;
+
+declare interface Item {
+    value: string;
+    selectionStart?: number;
+    selectionEnd?: number;
+}
 
 export declare interface KeyValuePair<TKey, TValue> {
     key: TKey;
@@ -1272,25 +1387,13 @@ declare function linkTel(tel: string, opt?: {
     rel?: string;
 }): string;
 
-export declare function Loading({ imageClass, children }: LoadingProps & {
-    children?: React.ReactNode;
-}): JSX_2.Element;
+export declare function Loading({ imageClass, className, children }: LoadingProps): JSX.Element;
 
 export declare interface LoadingProps {
     imageClass?: string;
     className?: string;
+    children?: ReactNode;
 }
-
-/** Load {AppMetadata} if needed
- * @param olderThan   - Reload metadata if age exceeds ms
- * @param resolvePath - Override `/metadata/app.json` path use to fetch metadata
- * @param resolve     - Use a custom fetch to resolve AppMetadata
- */
-declare function loadMetadata(args: {
-    olderThan?: number;
-    resolvePath?: string;
-    resolve?: () => Promise<Response>;
-}): Promise<any>;
 
 export declare interface LocodeUi {
     css: ApiCss;
@@ -1300,7 +1403,7 @@ export declare interface LocodeUi {
     maxNestedFieldLength: number;
 }
 
-export declare function LookupInput({ id: idProp, input, metadataType, value: modelValue, onChange: onUpdateModelValue, status, label, labelClass, help }: LookupInputProps): JSX_2.Element;
+export declare const LookupInput: default_2.FC<LookupInputProps>;
 
 export declare interface LookupInputProps {
     id?: string;
@@ -1308,10 +1411,10 @@ export declare interface LookupInputProps {
     input: InputProp | InputInfo;
     metadataType: MetadataType;
     value: any;
-    onChange?: (value: any) => void;
     label?: string;
     labelClass?: string;
     help?: string;
+    onChange?: (value: any) => void;
 }
 
 /** Create a Request DTO instance for Request DTO name */
@@ -1320,11 +1423,7 @@ declare function makeDto(requestDto: string, obj?: any, ctx?: {
     method?: string;
 }): any;
 
-export declare const MarkdownInput: ForwardRefExoticComponent<MarkdownInputProps & {
-headerSlot?: React.ReactNode;
-toolbarbuttonsSlot?: React.ReactNode;
-footerSlot?: React.ReactNode;
-} & RefAttributes<any>>;
+export declare const MarkdownInput: default_2.ForwardRefExoticComponent<MarkdownInputProps & default_2.RefAttributes<MarkdownInputRef>>;
 
 export declare type MarkdownInputOptions = "bold" | "italics" | "link" | "image" | "blockquote" | "code" | "heading" | "orderedList" | "unorderedList" | "strikethrough" | "undo" | "redo" | "help";
 
@@ -1338,8 +1437,6 @@ export declare interface MarkdownInputProps {
     help?: string;
     placeholder?: string;
     value?: string;
-    onChange?: (value: string) => void;
-    onClose?: OnClose;
     counter?: boolean;
     rows?: number;
     errorMessages?: string[];
@@ -1348,16 +1445,28 @@ export declare interface MarkdownInputProps {
     disabled?: boolean;
     helpUrl?: string;
     hide?: string | MarkdownInputOptions | MarkdownInputOptions[];
+    onChange?: (value: string) => void;
+    onClose?: () => void;
 }
 
-export declare function MarkupFormat({ value, imageClass }: MarkupFormatProps): JSX_2.Element;
+declare interface MarkdownInputRef {
+    textarea: default_2.RefObject<HTMLTextAreaElement>;
+    updateModelValue: (value: string) => void;
+    selection: () => string;
+    hasSelection: () => boolean;
+    selectionInfo: () => any;
+    insert: (prefix: string, suffix: string, placeholder?: string, options?: InsertOptions) => void;
+    replace: (item: Item) => void;
+}
+
+export declare function MarkupFormat(props: MarkupFormatProps): JSX.Element;
 
 export declare interface MarkupFormatProps {
     value: any;
     imageClass?: string;
 }
 
-export declare function MarkupModel({ value }: MarkupModelProps): JSX_2.Element;
+export declare function MarkupModel(props: MarkupModelProps): JSX.Element;
 
 export declare interface MarkupModelProps {
     value: any;
@@ -1553,11 +1662,10 @@ declare const modal: {
     sizeClass: string;
 };
 
-export declare function ModalDialog({ id, modalClass, sizeClass, closeButtonClass, configureField, children, closeButton, bottom, onDone }: ModalDialogProps & {
-    children?: React.ReactNode;
-    closeButton?: React.ReactNode;
-    bottom?: React.ReactNode;
-}): JSX_2.Element;
+export declare function ModalDialog({ id, modalClass, sizeClass, closeButtonClass, configureField, children, onDone }: ModalDialogProps & {
+    closeButton?: ReactNode;
+    bottom?: ReactNode;
+}): JSX.Element;
 
 export declare interface ModalDialogProps {
     id?: string;
@@ -1565,11 +1673,11 @@ export declare interface ModalDialogProps {
     sizeClass?: string;
     closeButtonClass?: string;
     configureField?: (field: InputProp) => void;
-    onDone?: OnDone;
     children?: ReactNode;
+    onDone?: () => void;
 }
 
-export declare function ModalLookup({ id, refInfo, skip: skipProp, prefs: prefsProp, selectedColumns: selectedColumnsProp, allowFiltering, showPreferences, showPagingNav, showPagingInfo, showResetPreferences, showFiltersView, toolbarButtonClass: toolbarButtonClassProp, canFilter: canFilterProp, modelTitle: modelTitleProp, newButtonLabel: newButtonLabelProp, configureField, onDone }: ModalLookupProps): JSX_2.Element;
+export declare function ModalLookup({ id, refInfo, skip: initialSkip, prefs, selectedColumns: propSelectedColumns, allowFiltering, showPreferences, showPagingNav, showPagingInfo, showResetPreferences, showFiltersView, toolbarButtonClass: propToolbarButtonClass, canFilter: propCanFilter, modelTitle: propModelTitle, newButtonLabel: propNewButtonLabel, configureField, onDone }: ModalLookupProps): JSX.Element;
 
 export declare interface ModalLookupProps {
     id?: string;
@@ -1614,13 +1722,11 @@ export declare interface NavItem {
     };
 }
 
-export declare function NavList({ title, children }: NavListProps & {
-    children?: React.ReactNode;
-}): JSX_2.Element;
+export declare function NavList({ title, children }: NavListProps): JSX.Element;
 
-export declare function NavListItem({ href, title, icon, iconSrc, iconSvg, iconAlt, children }: NavListItemProps & {
+export declare function NavListItem({ title, href, icon, iconSvg, iconSrc, iconAlt, children }: NavListItemProps & {
     children?: React.ReactNode;
-}): JSX_2.Element;
+}): JSX.Element;
 
 export declare interface NavListItemProps {
     title: string;
@@ -1639,27 +1745,15 @@ export declare interface NavListProps {
 /** Create and track Image URL for an uploaded file */
 declare function objectUrl(file: Blob | MediaSource): string;
 
-export declare type OnClose = () => void;
-
-export declare type OnDelete = (response: any) => void;
-
-export declare type OnDone = () => void;
-
-export declare type OnError = (error: ResponseStatus) => void;
-
-export declare type OnSave = (response: any) => void;
-
-export declare type OnSuccess = (response: any) => void;
-
-export declare type OnUpdateModelValue<T> = (value: T) => void;
-
-export declare function OutlineButton({ type, href, onClick, children, ...attrs }: OutlineButtonProps): JSX_2.Element;
+export declare const OutlineButton: default_2.FC<OutlineButtonProps>;
 
 export declare interface OutlineButtonProps {
     type?: "submit" | "button" | "reset";
     href?: string;
     onClick?: () => void;
     children?: ReactNode;
+    className?: string;
+    disabled?: boolean;
 }
 
 export declare interface Pair {
@@ -1687,7 +1781,7 @@ export declare interface PluginInfo {
 /** Prettify & scrub an API JSON Response for human readability */
 declare function prettyJson(o: any): string;
 
-export declare function PreviewFormat({ value, format, includeIcon, includeCount, maxFieldLength, maxNestedFields, maxNestedFieldLength, ...attrs }: PreviewFormatProps): JSX_2.Element;
+export declare function PreviewFormat(props: PreviewFormatProps): JSX.Element;
 
 export declare interface PreviewFormatProps {
     value: any;
@@ -1699,16 +1793,16 @@ export declare interface PreviewFormatProps {
     maxNestedFieldLength?: number;
 }
 
-export declare function PrimaryButton({ type, color, href, onClick, children, ...attrs }: PrimaryButtonProps): JSX_2.Element;
+export declare const PrimaryButton: default_2.FC<PrimaryButtonProps>;
 
 export declare interface PrimaryButtonProps {
     type?: "submit" | "button" | "reset";
     href?: string;
     color?: "blue" | "purple" | "red" | "green" | "sky" | "cyan" | "indigo";
     onClick?: () => void;
-    disabled?: boolean;
-    className?: string;
     children?: ReactNode;
+    className?: string;
+    disabled?: boolean;
 }
 
 export declare interface ProfilingInfo {
@@ -1722,33 +1816,24 @@ export declare interface ProfilingInfo {
 }
 
 /** Resolve {MetadataPropertyType} by Type and Property name */
-declare function property(typeName: string, name: string): MetadataPropertyType | null | undefined;
+declare function property(typeName: string, name: string): MetadataPropertyType;
 
 /** Resolve allowable entries for property by {MetadataPropertyType} */
 declare function propertyOptions(prop: MetadataPropertyType): {
     [name: string]: string;
-} | null;
+};
 
 declare function pushState(args: Record<string, any>, clear?: boolean): void;
 
-export declare function QueryPrefs({ id, columns, prefs: prefsProp, maxLimit, onDone, onSave }: QueryPrefsProps): JSX_2.Element;
+export declare function QueryPrefs({ id, columns, prefs: prefsProp, maxLimit, onDone, onSave }: QueryPrefsProps): JSX.Element;
 
 export declare interface QueryPrefsProps {
     id?: string;
     columns: MetadataPropertyType[];
     prefs: ApiPrefs;
     maxLimit?: number;
-    onDone?: OnDone;
+    onDone?: () => void;
     onSave?: (prefs: ApiPrefs) => void;
-}
-
-declare class ReactiveValue<T> {
-    private _value;
-    private listeners;
-    constructor(initialValue: T);
-    get value(): T;
-    set value(newValue: T);
-    subscribe(listener: (value: T) => void): () => void;
 }
 
 export declare interface RedisEndpointInfo {
@@ -1760,8 +1845,6 @@ export declare interface RedisEndpointInfo {
     password: string;
 }
 
-export declare type Ref<T> = MutableRefObject<T>;
-
 export declare interface RefInfo {
     model: string;
     selfId: string;
@@ -1772,13 +1855,13 @@ export declare interface RefInfo {
 declare function registerInterceptor(key: string, callback: (key: string, value: any) => void): void;
 
 /** Format Date as Relative Time from now */
-declare function relativeTime(val: string | Date | number, rtf?: Intl.RelativeTimeFormat): string | undefined;
+declare function relativeTime(val: string | Date | number, rtf?: Intl.RelativeTimeFormat): string;
 
 /** Format difference between dates as Relative Time */
-declare function relativeTimeFromDate(d: Date, from?: Date): string | undefined;
+declare function relativeTimeFromDate(d: Date, from?: Date): string;
 
 /** Format time in ms as Relative Time from now */
-declare function relativeTimeFromMs(elapsedMs: number, rtf?: Intl.RelativeTimeFormat): string | undefined;
+declare function relativeTimeFromMs(elapsedMs: number, rtf?: Intl.RelativeTimeFormat): string;
 
 export declare interface RequestLogsInfo {
     accessRole: string;
@@ -1812,12 +1895,6 @@ export declare interface ResponseStatus {
     };
 }
 
-export declare function RouterLink({ to, children, ...attrs }: {
-    to?: string;
-    children?: ReactNode;
-    [key: string]: any;
-}): JSX_2.Element;
-
 export declare interface SchemaInfo {
     alias: string;
     name: string;
@@ -1836,37 +1913,34 @@ export declare interface ScriptMethodType {
 /** Traverse object and replace API values with readable formatted values */
 declare function scrub(o: any): any;
 
-export declare function SecondaryButton({ type, href, onClick, children, ...attrs }: SecondaryButtonProps): JSX_2.Element;
+export declare const SecondaryButton: default_2.FC<SecondaryButtonProps>;
 
 export declare interface SecondaryButtonProps {
     type?: "submit" | "button" | "reset";
     href?: string;
     onClick?: () => void;
-    disabled?: boolean;
-    className?: string;
     children?: ReactNode;
+    className?: string;
+    disabled?: boolean;
 }
 
-export declare function SelectInput({ id, label, value: modelValue, onChange, status, entries, values, options, inputClass, labelClass, filterClass, className, ...attrs }: SelectInputProps & {
-    className?: string;
-}): JSX_2.Element;
+export declare const SelectInput: default_2.FC<SelectInputProps & default_2.HTMLAttributes<HTMLSelectElement>>;
 
 export declare interface SelectInputProps {
     status?: ResponseStatus;
     id: string;
     value?: string;
-    onChange?: (value: string) => void;
     inputClass?: string;
     filterClass?: (cls: string) => string;
     label?: string;
     labelClass?: string;
-    placeholder?: string;
     options?: any;
     values?: string[];
     entries?: {
         key: string;
         value: string;
     }[];
+    onChange?: (value: string) => void;
 }
 
 declare function setAutoQueryGridDefaults(config: AutoQueryGridDefaults): void;
@@ -1885,10 +1959,10 @@ declare function setFormatters(formatters: {
 /** Explicitly set AppMetadata and save to localStorage */
 declare function setMetadata(metadata: AppMetadata | null | undefined): boolean;
 
-/** Double set reactive Ref<T> to force triggering updates */
-declare function setRef<T>($ref: MutableRefObject<T>, value: T, setValue?: (value: T) => void): void;
+/** Set React ref or state value - for React compatibility, just sets the value directly */
+declare function setRef<T>($ref: MutableRefObject<T> | ((value: T) => void), value: T): void;
 
-export declare function SettingsIcons({ column, isOpen }: SettingsIconsProps): JSX_2.Element;
+export declare function SettingsIcons({ column, isOpen }: SettingsIconsProps): JSX.Element;
 
 export declare interface SettingsIconsProps {
     column: Column;
@@ -1906,18 +1980,11 @@ export declare interface SharpPagesInfo {
     };
 }
 
-export declare const SidebarLayout: ForwardRefExoticComponent<SidebarLayoutProps & {
-children?: React.ReactNode;
-mobiletitlebar?: React.ReactNode;
-} & RefAttributes<    {
-show: () => void;
-hide: () => void;
-toggle: (show: boolean) => void;
-}>>;
+export declare const SidebarLayout: default_2.ForwardRefExoticComponent<SidebarLayoutProps & default_2.RefAttributes<SidebarLayoutRef>>;
 
-export declare interface SidebarLayoutProps {
+declare interface SidebarLayoutProps {
     children?: ReactNode;
-    className?: string;
+    mobileTitlebar?: ReactNode;
 }
 
 export declare interface SidebarLayoutRef {
@@ -1926,7 +1993,7 @@ export declare interface SidebarLayoutRef {
     toggle(show: boolean): void;
 }
 
-export declare function SignIn({ title, tabs, oauth, provider: initialProvider, onLogin }: SignInProps): JSX_2.Element;
+export declare const SignIn: default_2.FC<SignInProps>;
 
 /** Sign In the currently Authenticated User */
 declare function signIn(user: AuthenticateResponse): void;
@@ -1943,9 +2010,10 @@ export declare interface SignInProps {
 declare function signOut(): void;
 
 export declare function SlideOver({ id, title, subtitle, contentClass, children, onDone }: SlideOverProps & {
-    children?: React.ReactNode;
-    subtitle?: React.ReactNode;
-}): JSX_2.Element;
+    title?: ReactNode;
+    subtitle?: ReactNode;
+    footer?: ReactNode;
+}): JSX.Element;
 
 declare const slideOver: {
     panelClass: string;
@@ -1959,30 +2027,11 @@ declare const slideOver: {
 export declare interface SlideOverProps {
     id?: string;
     title?: string;
+    subtitle?: string;
     contentClass?: string;
-    onDone?: OnDone;
     children?: ReactNode;
+    onDone?: () => void;
 }
-
-export declare class Sole {
-    static config: UiConfig;
-    static autoQueryGridDefaults: AutoQueryGridDefaults;
-    static events: {
-        subscribe: (type: string, callback: Function) => {
-            unsubscribe: () => void;
-        };
-        publish: (eventType: string, arg: any) => void;
-    };
-    static user: ReactiveValue<AuthenticateResponse | null>;
-    static metadata: ReactiveValue<AppMetadata | null>;
-    static components: {
-        [k: string]: ComponentType<any>;
-    };
-    static component(name: string): ComponentType<any> | null;
-    static interceptors: Interceptors;
-}
-
-export declare type StyleValue = CSSProperties | string;
 
 /** Check if a supported HTML Input exists for {MetadataPropertyType} */
 declare function supportsProp(prop?: MetadataPropertyType): boolean;
@@ -2003,11 +2052,11 @@ export declare type TableStyle = "simple" | "fullWidth" | "stripedRows" | "white
 
 export declare type TableStyleOptions = TableStyle | TableStyle[] | string;
 
-export declare function Tabs({ id, tabs, selected: initialSelected, param, label: labelFn, tabClass, bodyClass, url, clearQuery }: TabsProps): JSX_2.Element;
+export declare function Tabs(props: TabsProps): JSX.Element;
 
 export declare interface TabsProps {
     tabs: {
-        [name: string]: ComponentType<any>;
+        [name: string]: React.ComponentType;
     };
     id?: string;
     param?: string;
@@ -2019,9 +2068,7 @@ export declare interface TabsProps {
     clearQuery?: boolean;
 }
 
-export declare function TagInput({ id, type, label, labelClass, help, value: modelValue, onChange, status, inputClass, filterClass, className, allowableValues, string, converter, delimiters, maxVisibleItems, ...attrs }: TagInputProps & {
-    className?: string;
-}): JSX_2.Element;
+export declare const TagInput: default_2.FC<TagInputProps & Omit<default_2.InputHTMLAttributes<HTMLInputElement>, keyof TagInputProps>>;
 
 export declare interface TagInputProps {
     status?: ResponseStatus | null;
@@ -2033,17 +2080,15 @@ export declare interface TagInputProps {
     labelClass?: string;
     help?: string;
     value?: string | string[];
-    onChange?: (value: string | string[]) => void;
     delimiters?: string[];
     allowableValues?: string[];
     string?: boolean;
     maxVisibleItems?: number;
     converter?: (value: any) => string | string[];
+    onChange?: (value: string | string[]) => void;
 }
 
-export declare function TextareaInput({ id, label, placeholder, help, value: modelValue, onChange, status, inputClass, labelClass, filterClass, className, ...attrs }: TextareaInputProps & {
-    className?: string;
-}): JSX_2.Element;
+export declare const TextareaInput: default_2.FC<TextareaInputProps & default_2.HTMLAttributes<HTMLTextAreaElement>>;
 
 export declare interface TextareaInputProps {
     status?: ResponseStatus | null;
@@ -2058,9 +2103,7 @@ export declare interface TextareaInputProps {
     onChange?: (value: string) => void;
 }
 
-export declare const TextInput: ForwardRefExoticComponent<TextInputProps & {
-className?: string;
-} & RefAttributes<TextInputRef>>;
+export declare const TextInput: default_2.ForwardRefExoticComponent<TextInputProps & default_2.HTMLAttributes<HTMLInputElement> & default_2.RefAttributes<TextInputRef>>;
 
 export declare interface TextInputProps {
     status?: ResponseStatus | null;
@@ -2082,13 +2125,10 @@ export declare interface TextInputRef {
 
 declare function textInputValue(type: string, value: any): any;
 
-export declare function TextLink({ color, href, children, ...attrs }: TextLinkProps & {
-    children?: React.ReactNode;
-}): JSX_2.Element;
+export declare const TextLink: default_2.FC<TextLinkProps & default_2.AnchorHTMLAttributes<HTMLAnchorElement>>;
 
 export declare interface TextLinkProps {
     color?: "blue" | "purple" | "red" | "green" | "sky" | "cyan" | "indigo";
-    href?: string;
     children?: ReactNode;
 }
 
@@ -2104,14 +2144,14 @@ declare function time(o: any, attrs?: any): string;
 declare function timeInputFormat(s?: string | number | Date | null): string;
 
 /** Resolve Absolute URL from relative path */
-declare function toAppUrl(url: string): string | undefined;
+declare function toAppUrl(url: string): string;
 
 declare function toAuth(auth?: AuthenticateResponse): any;
 
 /** Mutates Request DTO values to supported HTML Input values */
-declare function toFormValues(dto: any, _metaType?: MetadataType | null): any;
+declare function toFormValues(dto: any, metaType?: MetadataType | null): any;
 
-/** Update reactive `transition` class based on Tailwind animation transition rule-set */
+/** Update transition class based on Tailwind animation transition rule-set */
 declare function transition(rule: TransitionRules, setTransition: (value: string) => void, show: boolean): void;
 
 export declare type TransitionRule = {
@@ -2129,9 +2169,9 @@ export declare type TransitionRules = {
 declare function truncate(str: string, maxLength: number): string;
 
 /** Metadata Types refer to same type */
-declare function typeEquals(a?: MetadataType | MetadataTypeName | null, b?: MetadataType | MetadataTypeName | null): boolean | null | undefined;
+declare function typeEquals(a?: MetadataType | MetadataTypeName | null, b?: MetadataType | MetadataTypeName | null): boolean;
 
-declare function typeName(metaType?: MetadataTypeName): string | undefined;
+declare function typeName(metaType?: MetadataTypeName): string;
 
 /** @param {string} name
  * @param {string[]} genericArgs
@@ -2144,13 +2184,13 @@ declare function typeName2(name: string, genericArgs?: string[]): string;
  * @param name        - Find MetadataType by name
  * @param [namespace] - Find MetadataType by name and namespace
  */
-declare function typeOf(name?: string | null, namespace?: string | null): MetadataType | null;
+declare function typeOf(name?: string | null, namespace?: string | null): MetadataType;
 
 /** Resolve {MetadataType} by {MetadataTypeName} */
 declare function typeOfRef(ref?: {
     name: string;
     namespace?: string;
-}): MetadataType | null;
+}): MetadataType;
 
 /** Return all properties (inc. inherited) for {MetadataType} */
 declare function typeProperties(type?: MetadataType | null): MetadataPropertyType[];
@@ -2192,10 +2232,8 @@ export declare interface UiInfo {
 
 declare function uniqueIgnoreCase(list: string[]): string[];
 
-/** Returns a dto with all values unwrapped (no-op in React) */
-declare function unRefs(o: any): any;
-
-export declare type UnwrapRef<T> = T;
+/** Returns a dto with all properties unwrapped - for React, just returns a shallow copy */
+declare function unRefs<T extends Record<string, any>>(o: T): T;
 
 export declare interface UploadedFile {
     fileName?: string;
@@ -2207,7 +2245,7 @@ export declare interface UploadedFile {
 export declare function useAuth(): {
     signIn: typeof signIn;
     signOut: typeof signOut;
-    user: AuthenticateResponse | null;
+    user: AuthenticateResponse;
     toAuth: typeof toAuth;
     isAuthenticated: boolean;
     hasRole: typeof hasRole;
@@ -2290,12 +2328,16 @@ export declare function useFormatters(): {
 };
 
 export declare function useMetadata(): {
-    loadMetadata: typeof loadMetadata;
+    loadMetadata: (args?: {
+        olderThan?: number;
+        resolvePath?: string;
+        resolve?: () => Promise<Response>;
+    }) => Promise<any>;
     getMetadata: typeof getMetadata;
     setMetadata: typeof setMetadata;
     clearMetadata: typeof clearMetadata;
-    metadataApp: AppInfo | null;
-    metadataApi: MetadataTypes | null;
+    metadataApp: AppInfo;
+    metadataApi: MetadataTypes;
     filterDefinitions: AutoQueryConvention[];
     typeOf: typeof typeOf;
     typeOfRef: typeof typeOfRef;
@@ -2320,12 +2362,12 @@ export declare function useMetadata(): {
         isAnyQuery: (op: MetadataOperationType) => any;
         isQuery: (op: MetadataOperationType) => any;
         isQueryInto: (op: MetadataOperationType) => any;
-        isCrud: (op: MetadataOperationType) => boolean | undefined;
+        isCrud: (op: MetadataOperationType) => boolean;
         isCreate: (op: MetadataOperationType) => boolean;
         isUpdate: (op: MetadataOperationType) => boolean;
         isPatch: (op: MetadataOperationType) => boolean;
         isDelete: (op: MetadataOperationType) => boolean;
-        model: (type?: MetadataType | null) => string | null | undefined;
+        model: (type?: MetadataType | null) => string;
     };
     Apis: typeof Apis;
     getPrimaryKey: typeof getPrimaryKey;

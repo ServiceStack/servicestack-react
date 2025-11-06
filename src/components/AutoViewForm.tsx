@@ -1,66 +1,76 @@
-import { useState, useEffect, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useCallback, ReactNode } from 'react'
 import type { ApiResponse } from '@/types'
 import type { AutoViewFormProps } from '@/components/types'
-import { useMetadata } from '@/use/metadata'
+import { useMetadata, toFormValues } from '@/use/metadata'
 import { form } from './css'
-import { transition } from '@/use/utils'
+import { transition as doTransition } from '@/use/utils'
 import { Sole } from '@/use/config'
 import { useClient } from '@/use/client'
 import { ApiResult, humanize, map, mapGet } from '@servicestack/client'
 import MarkupModel from './MarkupModel'
+import FormLoading from './FormLoading'
 import CloseButton from './CloseButton'
 import ConfirmDelete from './ConfirmDelete'
-import FormLoading from './FormLoading'
 
-export default function AutoViewForm({
-  formStyle = "slideOver",
-  typeName: typeNameProp,
-  apis,
-  model,
-  heading,
-  subHeading,
-  panelClass: panelClassProp,
-  formClass: formClassProp,
-  headingClass: headingClassProp,
-  subHeadingClass: subHeadingClassProp,
-  deleteType,
-  showLoading,
-  onDone: doneProp,
-  onDelete: onDeleteProp,
-  onError,
-  headingSlot,
-  subheadingSlot
-}: AutoViewFormProps & {
-  headingSlot?: React.ReactNode,
-  subheadingSlot?: React.ReactNode
-}) {
-  const { typeOf, getPrimaryKey, createDto } = useMetadata()
+interface AutoViewFormSlots {
+  heading?: ReactNode
+  subheading?: ReactNode
+}
+
+const AutoViewForm: React.FC<AutoViewFormProps & AutoViewFormSlots> = (props) => {
+  const {
+    model,
+    apis,
+    typeName: typeNameProp,
+    done: doneFn,
+    formStyle = "slideOver",
+    panelClass: panelClassProp,
+    formClass: formClassProp,
+    headingClass: headingClassProp,
+    subHeadingClass: subHeadingClassProp,
+    heading: headingProp,
+    subHeading,
+    showLoading,
+    deleteType,
+    onDone,
+    onSave,
+    onDelete,
+    onError,
+    // Slots
+    heading: headingSlot,
+    subheading: subheadingSlot,
+  } = props
+
+  const { typeOf, getPrimaryKey, Crud, createDto } = useMetadata()
 
   const typeName = useMemo(() => typeNameProp ?? apis!.dataModel!.name, [typeNameProp, apis])
-  const metaType = useMemo(() => typeOf(typeName), [typeName])
+  const metaType = useMemo(() => typeOf(typeName), [typeName, typeOf])
   const panelClass = useMemo(() => panelClassProp || form.panelClass(formStyle), [panelClassProp, formStyle])
   const formClass = useMemo(() => formClassProp || form.formClass(formStyle), [formClassProp, formStyle])
   const headingClass = useMemo(() => headingClassProp || form.headingClass(formStyle), [headingClassProp, formStyle])
   const subHeadingClass = useMemo(() => subHeadingClassProp || form.subHeadingClass(formStyle), [subHeadingClassProp, formStyle])
 
-  const title = useMemo(() => heading || typeOf(typeName)?.description ||
-    (model?.id ? `${humanize(typeName)} ${model.id}` : 'View ' + humanize(typeName)),
-    [heading, typeName, model])
+  const title = useMemo(() =>
+    headingProp || typeOf(typeName)?.description || (model?.id ? `${humanize(typeName)} ${model.id}` : 'View ' + humanize(typeName)),
+    [headingProp, typeName, typeOf, model]
+  )
 
-  const [_api, setApi] = useState<ApiResponse>(new ApiResult<any>())
+  const [api, setApi] = useState<ApiResponse>(new ApiResult<any>())
+  const [origModel] = useState(() => Object.assign({}, toFormValues(model)))
+
+  const client = useClient()
+  const loading = useMemo(() => client.loading, [client.loading])
+
+  const getPk = useCallback(() => map(metaType, (dataModel: any) => getPrimaryKey(dataModel)), [metaType, getPrimaryKey])
+  const dataModel = useMemo(() => metaType, [metaType])
 
   useEffect(() => {
     if (Sole.interceptors.has('AutoViewForm.new')) {
-      Sole.interceptors.invoke('AutoViewForm.new', { props: { formStyle, typeName: typeNameProp, apis, model, heading, subHeading, panelClass: panelClassProp, formClass: formClassProp, headingClass: headingClassProp, subHeadingClass: subHeadingClassProp, deleteType, showLoading, onDone: doneProp, onDelete: onDeleteProp, onError } })
+      Sole.interceptors.invoke('AutoViewForm.new', { props })
     }
   }, [])
 
-  const client = useClient()
-  const loading = useMemo(() => client.loading.current, [client.loading.current])
-  const getPk = () => map(metaType, dataModel => getPrimaryKey(dataModel))
-  const dataModel = useMemo(() => metaType, [metaType])
-
-  async function onDelete() {
+  const handleDelete = useCallback(async () => {
     let pk = getPk()
     const id = pk ? mapGet(model, pk.name) : null
     if (!id) {
@@ -68,33 +78,36 @@ export default function AutoViewForm({
       return
     }
     const args = { [pk!.name]: id }
-    const request = typeof deleteType == 'string'
+    const request = typeof deleteType === 'string'
       ? createDto(deleteType, args)
-      : (deleteType ? new deleteType(args) : null)
+      : (deleteType ? new (deleteType as any)(args) : null)
 
-    let returnsVoid = map((request as any)['createResponse'], (fn: any) => typeof fn == 'function' ? fn() : null) == null
-    let result
+    let returnsVoid = map(request['createResponse'], (fn: any) => typeof fn === 'function' ? fn() : null) == null
+    let apiResult: ApiResult<any>
+
     if (!returnsVoid) {
-      result = await client.api(request)
+      apiResult = await client.api(request)
     } else {
-      result = await client.apiVoid(request)
+      apiResult = await client.apiVoid(request)
     }
-    setApi(result)
 
-    if (result.succeeded) {
-      onDeleteProp?.(result.response)
+    setApi(apiResult)
+
+    if (apiResult.succeeded) {
+      onDelete?.(apiResult.response)
     } else {
-      onError?.(result.error!)
+      onError?.(apiResult.error!)
     }
-  }
+  }, [getPk, model, typeName, dataModel, deleteType, createDto, client, onDelete, onError])
 
-  function done() {
-    if (doneProp) {
-      doneProp()
+  const done = useCallback(() => {
+    if (doneFn) {
+      doneFn()
     }
-  }
+    onDone?.()
+  }, [doneFn, onDone])
 
-  /* SlideOver */
+  // SlideOver transition
   const [show, setShow] = useState(false)
   const [transition1, setTransition1] = useState('')
   const rule1 = {
@@ -103,30 +116,32 @@ export default function AutoViewForm({
   }
 
   useEffect(() => {
-    transition(rule1, setTransition1, show)
+    doTransition(rule1, { value: transition1 } as any, show)
     if (!show) {
       const timer = setTimeout(done, 700)
       return () => clearTimeout(timer)
     }
-  }, [show])
+  }, [show, done])
 
   useEffect(() => {
     setShow(true)
   }, [])
 
-  function close() {
-    if (formStyle == 'slideOver') {
+  const close = useCallback(() => {
+    if (formStyle === 'slideOver') {
       setShow(false)
     } else {
       done()
     }
-  }
+  }, [formStyle, done])
 
   useEffect(() => {
-    const globalKeyHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    const globalKeyHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close()
+    }
     window.addEventListener('keydown', globalKeyHandler)
     return () => window.removeEventListener('keydown', globalKeyHandler)
-  }, [])
+  }, [close])
 
   if (!typeName) {
     return (
@@ -136,67 +151,68 @@ export default function AutoViewForm({
     )
   }
 
-  if (formStyle == 'card') {
-    return (
-      <div className={panelClass}>
-        <div className={formClass}>
-          <div>
-            {headingSlot || <h3 className={headingClass}>{title}</h3>}
-
-            {subheadingSlot || (subHeading && <p className={subHeadingClass}>{subHeading}</p>)}
-            {!subheadingSlot && !subHeading && metaType?.notes && (
-              <p className={`notes ${subHeadingClass}`} dangerouslySetInnerHTML={{ __html: metaType.notes }} />
-            )}
-          </div>
-          <MarkupModel value={model} />
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="relative z-10" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
-      <div className="fixed inset-0"></div>
-      <div className="fixed inset-0 overflow-hidden">
-        <div onMouseDown={close} className="absolute inset-0 overflow-hidden">
-          <div onMouseDown={(e) => e.stopPropagation()} className="pointer-events-none fixed inset-y-0 right-0 flex pl-10">
-            <div className={`pointer-events-auto w-screen xl:max-w-3xl md:max-w-xl max-w-lg ${transition1}`}>
-              <div className={formClass}>
-                <div className="flex min-h-0 flex-1 flex-col overflow-auto">
-                  <div className="flex-1">
-                    {/* Header */}
-                    <div className="bg-gray-50 dark:bg-gray-900 px-4 py-6 sm:px-6">
-                      <div className="flex items-start justify-between space-x-3">
-                        <div className="space-y-1">
-                          {headingSlot || <h3 className={headingClass}>{title}</h3>}
-
-                          {subheadingSlot || (subHeading && <p className={subHeadingClass}>{subHeading}</p>)}
-                          {!subheadingSlot && !subHeading && metaType?.notes && (
-                            <p className={`notes ${subHeadingClass}`} dangerouslySetInnerHTML={{ __html: metaType.notes }} />
-                          )}
+    <div>
+      {formStyle === 'card' ? (
+        <div className={panelClass}>
+          <div className={formClass}>
+            <div>
+              {headingSlot || <h3 className={headingClass}>{title}</h3>}
+              {subheadingSlot || (subHeading && <p className={subHeadingClass}>{subHeading}</p>)}
+              {!subheadingSlot && !subHeading && metaType?.notes && (
+                <p className={`notes ${subHeadingClass}`} dangerouslySetInnerHTML={{ __html: metaType.notes }} />
+              )}
+            </div>
+            <MarkupModel value={model} />
+          </div>
+        </div>
+      ) : (
+        <div className="relative z-10" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+          <div className="fixed inset-0"></div>
+          <div className="fixed inset-0 overflow-hidden">
+            <div onMouseDown={close} className="absolute inset-0 overflow-hidden">
+              <div onMouseDown={(e) => e.stopPropagation()} className="pointer-events-none fixed inset-y-0 right-0 flex pl-10">
+                <div className={`pointer-events-auto w-screen xl:max-w-3xl md:max-w-xl max-w-lg ${transition1}`}>
+                  <div className={formClass}>
+                    <div className="flex min-h-0 flex-1 flex-col overflow-auto">
+                      <div className="flex-1">
+                        <div className="bg-gray-50 dark:bg-gray-900 px-4 py-6 sm:px-6">
+                          <div className="flex items-start justify-between space-x-3">
+                            <div className="space-y-1">
+                              {headingSlot || <h3 className={headingClass}>{title}</h3>}
+                              {subheadingSlot || (subHeading && <p className={subHeadingClass}>{subHeading}</p>)}
+                              {!subheadingSlot && !subHeading && metaType?.notes && (
+                                <p className={`notes ${subHeadingClass}`} dangerouslySetInnerHTML={{ __html: metaType.notes }} />
+                              )}
+                            </div>
+                            <div className="flex h-7 items-center">
+                              <CloseButton buttonClass="bg-gray-50 dark:bg-gray-900" onClose={close} />
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex h-7 items-center">
-                          <CloseButton buttonClass="bg-gray-50 dark:bg-gray-900" onClose={close} />
-                        </div>
+                        <MarkupModel value={model} />
                       </div>
                     </div>
-                    <MarkupModel value={model} />
+                    <div className={form.buttonsClass}>
+                      <div>
+                        {deleteType && <ConfirmDelete onDelete={handleDelete} />}
+                      </div>
+                      <div>
+                        {showLoading && loading && <FormLoading />}
+                      </div>
+                      <div className="flex justify-end"></div>
+                    </div>
                   </div>
-                </div>
-                <div className={form.buttonsClass}>
-                  <div>
-                    {deleteType && <ConfirmDelete onDelete={onDelete} />}
-                  </div>
-                  <div>
-                    {showLoading && loading && <FormLoading />}
-                  </div>
-                  <div className="flex justify-end"></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
+
+AutoViewForm.displayName = 'AutoViewForm'
+
+export default AutoViewForm

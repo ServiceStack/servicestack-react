@@ -1,12 +1,7 @@
-/**
- * ServiceStack React Component Library
- *
- * A comprehensive React component library for ServiceStack applications
- */
-
+// React library main entry point
 import { useUtils } from './use/utils'
-import { Sole, useConfig } from './use/config'
-import { useClient, ClientContext } from './use/client'
+import { useConfig } from './use/config'
+import { useClient } from './use/client'
 import { useAuth } from './use/auth'
 import { useFiles } from './use/files'
 import { useMetadata } from './use/metadata'
@@ -17,14 +12,12 @@ import * as css from './components/css'
 export * from './components/types'
 export * from './types'
 
-// Export hooks
+// Export hooks and utilities
 export { useUtils, useConfig, useClient, useAuth, useMetadata, useFiles, useFormatters, css }
 
-// Export contexts
-export { ClientContext }
-export { ApiStateContext } from './components/TextInput'
+// Import components (this will be excluded from type generation)
 
-// Export all components
+// Export all components as named exports
 export {
     Alert,
     AlertSuccess,
@@ -87,8 +80,4 @@ export {
     SignIn,
     MarkdownInput,
     SidebarLayout,
-    RouterLink,
 } from './components'
-
-// Export Sole for global configuration
-export { Sole }

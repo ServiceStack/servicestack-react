@@ -1,77 +1,99 @@
-import { useState, useEffect, useMemo, useRef, useImperativeHandle, forwardRef } from 'react'
+import React, { useMemo, useRef, useCallback, useEffect, forwardRef, useImperativeHandle, useState } from 'react'
 import type { Pair } from '@/types'
-import type { ComboboxProps } from '@/components/types'
-import Autocomplete from './Autocomplete'
+import type { ComboboxProps, ComboboxRef } from '@/components/types'
+import Autocomplete, { AutocompleteRef } from './Autocomplete'
 
-const Combobox = forwardRef<{ toggle: (expand: boolean) => void }, ComboboxProps>(
-  ({ id, value, entries, values, options, multiple: multipleProp, onChange, ...attrs }, ref) => {
-    const inputRef = useRef<{ toggle: (expand: boolean) => void }>(null)
+const Combobox = forwardRef<ComboboxRef, ComboboxProps & Omit<React.HTMLAttributes<HTMLDivElement>, keyof ComboboxProps>>(({
+  id,
+  value,
+  multiple: multipleProp,
+  options,
+  values,
+  entries,
+  onChange,
+  children,
+  ...attrs
+}, ref) => {
+  const inputRef = useRef<AutocompleteRef>(null)
+  const [model, setModel] = useState<Pair | Pair[] | null>(null)
 
-    useImperativeHandle(ref, () => ({
-      toggle(expand: boolean) {
-        inputRef.current?.toggle(expand)
-      }
-    }))
+  const multiple = useMemo(() =>
+    multipleProp != null ? multipleProp : Array.isArray(value),
+    [multipleProp, value]
+  )
 
-    const multiple = useMemo(() =>
-      multipleProp != null ? multipleProp : Array.isArray(value),
-      [multipleProp, value])
+  const match = useCallback((item: { key: string, value: string }, val: string) => {
+    const ret = !val || item.value.toLowerCase().includes(val.toLowerCase())
+    return ret
+  }, [])
 
-    function match(item: { key: string, value: string }, val: string) {
-      return !val || item.value.toLowerCase().includes(val.toLowerCase())
-    }
-
-    const kvpValues = useMemo<Pair[]>(() => entries || (values
+  const kvpValues = useMemo<Pair[]>(() =>
+    entries || (values
       ? values.map(x => ({ key: x, value: x }))
       : options
         ? Object.keys(options).map(key => ({ key, value: options[key] }))
-        : []), [entries, values, options])
+        : []),
+    [entries, values, options]
+  )
 
-    const [model, setModel] = useState<Pair | Pair[] | null>(multiple ? [] : null)
+  const updateModelValue = useCallback((newModel: any[] | any) => {
+    onChange?.(newModel)
+  }, [onChange])
 
-    function update() {
-      // Can be {key,value} when updated with setModel()
-      let modelVal = value && typeof value == 'object' && !Array.isArray(value)
-        ? (value as any).key
-        : value
-      if (modelVal == null || modelVal === '') {
-        setModel(multiple ? [] : null)
-      } else if (typeof modelVal == 'string') {
-        setModel(kvpValues.find(x => x.key === modelVal) || null)
-      } else if (Array.isArray(modelVal)) {
-        setModel(kvpValues.filter(x => modelVal.includes(x.key)))
-      }
+  const update = useCallback(() => {
+    // Can be {key,value} when updated with setModel()
+    let modelValue = value && typeof value === 'object' && !Array.isArray(value)
+      ? (value as any).key
+      : value
+
+    if (modelValue == null || modelValue === '') {
+      setModel(multiple ? [] : null)
+    } else if (typeof modelValue === 'string') {
+      setModel(kvpValues.find(x => x.key === modelValue) || null)
+    } else if (Array.isArray(modelValue)) {
+      setModel(kvpValues.filter(x => modelValue.includes(x.key)))
     }
+  }, [value, multiple, kvpValues])
 
-    useEffect(() => {
-      update()
-    }, [value, kvpValues])
+  useEffect(() => {
+    update()
+  }, [update])
 
-    const formValue = useMemo(() => model == null ? '' : (Array.isArray(model)
+  const formValue = useMemo(() =>
+    model == null ? '' : (Array.isArray(model)
       ? model.map(x => encodeURIComponent(x.key)).join(',')
-      : model.key), [model])
+      : model.key),
+    [model]
+  )
 
-    function updateModelValue(newModel: any[] | any) {
-      onChange?.(newModel)
-    }
+  const toggle = useCallback((expand: boolean) => {
+    inputRef.current?.toggle(expand)
+  }, [])
 
-    return (
-      <>
-        <input type="hidden" id={id} name={id} value={formValue} />
-        <Autocomplete
-          ref={inputRef}
-          id={id}
-          options={kvpValues}
-          match={match}
-          multiple={multiple}
-          value={model}
-          onChange={updateModelValue}
-          {...attrs}
-        />
-      </>
-    )
-  }
-)
+  useImperativeHandle(ref, () => ({
+    toggle
+  }), [toggle])
+
+  return (
+    <>
+      <input type="hidden" id={id} name={id} value={formValue} />
+      <Autocomplete
+        ref={inputRef}
+        id={id}
+        options={kvpValues}
+        match={match}
+        multiple={multiple}
+        value={model}
+        onChange={updateModelValue}
+        {...attrs}
+      >
+        {({ key, value }: { key: string, value: string }) => (
+          <span className="block truncate">{value}</span>
+        )}
+      </Autocomplete>
+    </>
+  )
+})
 
 Combobox.displayName = 'Combobox'
 

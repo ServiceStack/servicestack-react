@@ -1,96 +1,110 @@
-import { useState, useEffect, useMemo, useRef, useImperativeHandle, forwardRef, createContext } from 'react'
+import React, { useState, useMemo, useEffect, useRef, useCallback, useImperativeHandle, forwardRef, ReactNode } from 'react'
 import type { ApiRequest, ApiResponse, ModalProvider } from '@/types'
 import type { AutoCreateFormProps } from '@/components/types'
 import { useClient } from '@/use/client'
 import { useMetadata } from '@/use/metadata'
 import { form } from './css'
-import { getTypeName, transition } from '@/use/utils'
+import { getTypeName, transition as doTransition } from '@/use/utils'
 import { Sole } from '@/use/config'
 import { ApiResult, HttpMethods, humanize, map } from '@servicestack/client'
+import { ModalProviderContext } from '@/use/context'
 import AutoFormFields from './AutoFormFields'
-import CloseButton from './CloseButton'
-import FormLoading from './FormLoading'
-import SecondaryButton from './SecondaryButton'
 import PrimaryButton from './PrimaryButton'
+import SecondaryButton from './SecondaryButton'
+import FormLoading from './FormLoading'
+import CloseButton from './CloseButton'
 import ModalLookup from './ModalLookup'
 
-export const ModalContext = createContext<ModalProvider | null>(null)
+export interface AutoCreateFormRef {
+  forceUpdate: () => void
+  props: AutoCreateFormProps
+  setModel: (args: any) => void
+  formFields: any
+  model: any
+}
 
-const AutoCreateForm = forwardRef<any, AutoCreateFormProps & {
-  headingSlot?: React.ReactNode,
-  subheadingSlot?: React.ReactNode,
-  headerSlot?: React.ReactNode,
-  footerSlot?: React.ReactNode
-}>(({
-  formStyle = "slideOver",
-  autosave = true,
-  showLoading = true,
-  showCancel = true,
-  type,
-  panelClass: panelClassProp,
-  formClass: formClassProp,
-  headingClass: headingClassProp,
-  subHeadingClass: subHeadingClassProp,
-  buttonsClass: buttonsClassProp,
-  heading,
-  subHeading,
-  configureField,
-  configureFormLayout,
-  onSave,
-  onError,
-  onDone,
-  headingSlot,
-  subheadingSlot,
-  headerSlot,
-  footerSlot
-}, ref) => {
-  const formFieldsRef = useRef<any>()
+interface AutoCreateFormSlots {
+  heading?: ReactNode
+  subheading?: ReactNode
+  header?: (props: { formInstance: AutoCreateFormRef | null, model: any }) => ReactNode
+  footer?: (props: { formInstance: AutoCreateFormRef | null, model: any }) => ReactNode
+  children?: ReactNode
+}
+
+const AutoCreateForm = forwardRef<AutoCreateFormRef, AutoCreateFormProps & AutoCreateFormSlots>((props, ref) => {
+  const {
+    type,
+    formStyle = "slideOver",
+    panelClass: panelClassProp,
+    formClass: formClassProp,
+    headingClass: headingClassProp,
+    subHeadingClass: subHeadingClassProp,
+    buttonsClass: buttonsClassProp,
+    heading: headingProp,
+    subHeading,
+    autosave = true,
+    showLoading = true,
+    showCancel = true,
+    configureField,
+    configureFormLayout,
+    onDone,
+    onSave,
+    onError,
+    // Slots
+    heading: headingSlot,
+    subheading: subheadingSlot,
+    header: headerSlot,
+    footer: footerSlot,
+    children: _children,
+  } = props
+
+  const formFieldsRef = useRef<any>(null)
   const [formFieldsKey, setFormFieldsKey] = useState(1)
-
-  function forceUpdate() {
-    setFormFieldsKey(prev => prev + 1)
-    formFieldsRef.current?.forceUpdate()
-  }
+  const [modal, setModal] = useState<{ name: string } & any>()
+  const [modalDone, setModalDone] = useState<((result: any) => any) | undefined>()
 
   const { typeOf, typeProperties, Crud, createDto, formValues } = useMetadata()
 
   const typeName = useMemo(() => getTypeName(type), [type])
-  const metaType = useMemo(() => typeOf(typeName), [typeName])
-  const resolveModel = () => typeof type == 'string' ? createDto(type) : type ? new type() : null
+  const metaType = useMemo(() => typeOf(typeName), [typeName, typeOf])
+
+  const resolveModel = useCallback(() =>
+    typeof type === 'string' ? createDto(type) : type ? new (type as any)() : null,
+    [type, createDto]
+  )
+
   const [model, setModel] = useState(resolveModel())
 
-  function setModelFn(args: any) {
-    setModel((prev: any) => ({ ...prev, ...args }))
+  const forceUpdate = useCallback(() => {
+    setFormFieldsKey(prev => prev + 1)
+    formFieldsRef.current?.forceUpdate?.()
+  }, [])
+
+  const setModelFn = useCallback((args: any) => {
+    setModel(prev => ({ ...prev, ...args }))
     forceUpdate()
-  }
+  }, [forceUpdate])
 
-  useImperativeHandle(ref, () => ({
-    forceUpdate,
-    props: { formStyle, autosave, showLoading, showCancel, type, panelClass: panelClassProp, formClass: formClassProp, headingClass: headingClassProp, subHeadingClass: subHeadingClassProp, buttonsClass: buttonsClassProp, heading, subHeading, configureField, configureFormLayout, onSave, onError, onDone },
-    setModel: setModelFn,
-    formFields: formFieldsRef,
-    model
-  }))
+  const update = useCallback((value: ApiRequest) => {
+    // Model update handled internally
+  }, [])
 
-  const [modal, setModal] = useState<{ name: string } & any>()
-  const [modalDone, setModalDone] = useState<((result: any) => any) | undefined>()
-
-  function openModal(info: { name: string } & any, done: (result: any) => any) {
+  const openModal = useCallback((info: { name: string } & any, done: (result: any) => any) => {
     setModal(info)
     setModalDone(() => done)
-  }
+  }, [])
 
-  async function openModalDone(result: any) {
+  const openModalDone = useCallback(async (result: any) => {
     if (modalDone) {
       modalDone(result)
     }
     setModal(undefined)
     setModalDone(undefined)
-  }
+  }, [modalDone])
 
-  const modalProvider: ModalProvider = {
+  const modalProvider: ModalProvider = useMemo(() => ({
     openModal
-  }
+  }), [openModal])
 
   const panelClass = useMemo(() => panelClassProp || form.panelClass(formStyle), [panelClassProp, formStyle])
   const formClass = useMemo(() => formClassProp || form.formClass(formStyle), [formClassProp, formStyle])
@@ -98,70 +112,70 @@ const AutoCreateForm = forwardRef<any, AutoCreateFormProps & {
   const subHeadingClass = useMemo(() => subHeadingClassProp || form.subHeadingClass(formStyle), [subHeadingClassProp, formStyle])
   const buttonsClass = useMemo(() => buttonsClassProp || form.buttonsClass, [buttonsClassProp])
 
-  const dataModel = useMemo(() => Crud.model(metaType), [metaType])
-  const title = useMemo(() => heading || typeOf(typeName)?.description ||
-    (dataModel ? `New ${humanize(dataModel)}` : humanize(typeName)),
-    [heading, typeName, dataModel])
+  const dataModel = useMemo(() => Crud.model(metaType), [metaType, Crud])
+  const title = useMemo(() =>
+    headingProp || typeOf(typeName)?.description || (dataModel ? `New ${humanize(dataModel)}` : humanize(typeName)),
+    [headingProp, typeName, typeOf, dataModel]
+  )
 
   const [api, setApi] = useState<ApiResponse>(new ApiResult<any>())
 
   const client = useClient()
-  const loading = useMemo(() => client.loading.current, [client.loading.current])
+  const loading = useMemo(() => client.loading, [client.loading])
 
   useEffect(() => {
     if (Sole.interceptors.has('AutoCreateForm.new')) {
-      Sole.interceptors.invoke('AutoCreateForm.new', { props: { formStyle, autosave, showLoading, showCancel, type, panelClass: panelClassProp, formClass: formClassProp, headingClass: headingClassProp, subHeadingClass: subHeadingClassProp, buttonsClass: buttonsClassProp, heading, subHeading, configureField, configureFormLayout, onSave, onError, onDone }, model })
+      Sole.interceptors.invoke('AutoCreateForm.new', { props, model })
     }
   }, [])
 
-  async function save(e: React.FormEvent) {
+  const save = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    let formEl = e.target as HTMLFormElement
+    const form = e.target as HTMLFormElement
+
     if (!autosave) {
-      onSave?.(new (model as any).constructor(formValues(formEl, typeProperties(metaType))))
+      onSave?.(new (model as any).constructor(formValues(form, typeProperties(metaType))))
       return
     }
 
-    let method = map((model as any)?.['getMethod'], (fn: any) => typeof fn == 'function' ? fn() : null) || 'POST'
-    let returnsVoid = map((model as any)?.['createResponse'], (fn: any) => typeof fn == 'function' ? fn() : null) == null
+    let method = map(model?.['getMethod'], (fn: any) => typeof fn === 'function' ? fn() : null) || 'POST'
+    let returnsVoid = map(model?.['createResponse'], (fn: any) => typeof fn === 'function' ? fn() : null) == null
 
-    let result
+    let apiResult: ApiResult<any>
+
     if (HttpMethods.hasRequestBody(method)) {
       let requestDto = new (model as any).constructor()
-      let formData = new FormData(formEl)
+      let formData = new FormData(form)
       if (!returnsVoid) {
-        result = await client.apiForm(requestDto, formData, { jsconfig: 'eccn' })
+        apiResult = await client.apiForm(requestDto, formData, { jsconfig: 'eccn' })
       } else {
-        result = await client.apiFormVoid(requestDto, formData, { jsconfig: 'eccn' })
+        apiResult = await client.apiFormVoid(requestDto, formData, { jsconfig: 'eccn' })
       }
     } else {
-      let fieldValues = formValues(formEl, typeProperties(metaType))
+      let fieldValues = formValues(form, typeProperties(metaType))
       let requestDto = new (model as any).constructor(fieldValues)
       if (!returnsVoid) {
-        result = await client.api(requestDto, { jsconfig: 'eccn' })
+        apiResult = await client.api(requestDto, { jsconfig: 'eccn' })
       } else {
-        result = await client.apiVoid(requestDto, { jsconfig: 'eccn' })
+        apiResult = await client.apiVoid(requestDto, { jsconfig: 'eccn' })
       }
     }
-    setApi(result)
 
-    if (result.succeeded) {
-      formEl.reset()
-      onSave?.(result.response)
+    setApi(apiResult)
+
+    if (apiResult.succeeded) {
+      form.reset()
+      onSave?.(apiResult.response)
     } else {
-      onError?.(result.error!)
+      onError?.(apiResult.error!)
     }
-  }
+  }, [autosave, model, client, metaType, typeProperties, formValues, onSave, onError])
 
-  function update(_value: ApiRequest) {
-    // Update handler
-  }
-
-  function done() {
+  const done = useCallback(() => {
     onDone?.()
-  }
+  }, [onDone])
 
-  /* SlideOver */
+  // SlideOver transition
   const [show, setShow] = useState(false)
   const [transition1, setTransition1] = useState('')
   const rule1 = {
@@ -170,30 +184,48 @@ const AutoCreateForm = forwardRef<any, AutoCreateFormProps & {
   }
 
   useEffect(() => {
-    transition(rule1, setTransition1, show)
+    doTransition(rule1, { value: transition1 } as any, show)
     if (!show) {
       const timer = setTimeout(done, 700)
       return () => clearTimeout(timer)
     }
-  }, [show])
+  }, [show, done])
 
   useEffect(() => {
     setShow(true)
   }, [])
 
-  function close() {
-    if (formStyle == 'slideOver') {
+  const close = useCallback(() => {
+    if (formStyle === 'slideOver') {
       setShow(false)
     } else {
       done()
     }
-  }
+  }, [formStyle, done])
 
   useEffect(() => {
-    const globalKeyHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    const globalKeyHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close()
+    }
     window.addEventListener('keydown', globalKeyHandler)
     return () => window.removeEventListener('keydown', globalKeyHandler)
-  }, [])
+  }, [close])
+
+  useImperativeHandle(ref, () => ({
+    forceUpdate,
+    props,
+    setModel: setModelFn,
+    formFields: formFieldsRef.current,
+    model
+  }), [forceUpdate, props, setModelFn, model])
+
+  const formInstance = useMemo(() => ({
+    forceUpdate,
+    props,
+    setModel: setModelFn,
+    formFields: formFieldsRef.current,
+    model
+  }), [forceUpdate, props, setModelFn, model])
 
   if (!metaType) {
     return (
@@ -203,116 +235,107 @@ const AutoCreateForm = forwardRef<any, AutoCreateFormProps & {
     )
   }
 
-  if (formStyle == 'card') {
-    return (
-      <ModalContext.Provider value={modalProvider}>
-        <div className={panelClass}>
-          <form onSubmit={save}>
-            <div className={formClass}>
-              <div>
-                {headingSlot || <h3 className={headingClass}>{title}</h3>}
+  const formContent = (isSlideOver: boolean) => (
+    <form onSubmit={save} className={isSlideOver ? formClass : undefined}>
+      {!isSlideOver && (
+        <div className={formClass}>
+          <div>
+            {headingSlot || <h3 className={headingClass}>{title}</h3>}
+            {subheadingSlot || (subHeading && <p className={subHeadingClass}>{subHeading}</p>)}
+            {!subheadingSlot && !subHeading && metaType?.notes && (
+              <p className={`notes ${subHeadingClass}`} dangerouslySetInnerHTML={{ __html: metaType.notes }} />
+            )}
+          </div>
 
-                {subheadingSlot || (subHeading && <p className={subHeadingClass}>{subHeading}</p>)}
-                {!subheadingSlot && !subHeading && metaType?.notes && (
-                  <p className={`notes ${subHeadingClass}`} dangerouslySetInnerHTML={{ __html: metaType.notes }} />
-                )}
-              </div>
-
-              {headerSlot}
-              <AutoFormFields
-                ref={formFieldsRef}
-                key={formFieldsKey}
-                value={model}
-                onChange={update}
-                api={api}
-                configureField={configureField}
-                configureFormLayout={configureFormLayout}
-              />
-              {footerSlot}
-
-            </div>
-            <div className={buttonsClass}>
-              <div>
-                {showLoading && loading && <FormLoading />}
-              </div>
-              <div className="flex justify-end">
-                {showCancel && <SecondaryButton onClick={close} disabled={loading}>Cancel</SecondaryButton>}
-                <PrimaryButton type="submit" className="ml-4" disabled={loading}>Save</PrimaryButton>
-              </div>
-            </div>
-          </form>
+          {headerSlot?.({ formInstance, model })}
+          <AutoFormFields
+            ref={formFieldsRef}
+            key={formFieldsKey}
+            value={model}
+            onChange={update}
+            api={api}
+            configureField={configureField}
+            configureFormLayout={configureFormLayout}
+          />
+          {footerSlot?.({ formInstance, model })}
         </div>
+      )}
 
-        {modal?.name == 'ModalLookup' && modal.ref && (
-          <ModalLookup refInfo={modal.ref} onDone={openModalDone} configureField={configureField} />
-        )}
-      </ModalContext.Provider>
-    )
-  }
+      {isSlideOver && (
+        <div className="flex min-h-0 flex-1 flex-col overflow-auto">
+          <div className="flex-1">
+            <div className="bg-gray-50 dark:bg-gray-900 px-4 py-6 sm:px-6">
+              <div className="flex items-start justify-between space-x-3">
+                <div className="space-y-1">
+                  {headingSlot || <h3 className={headingClass}>{title}</h3>}
+                  {subheadingSlot || (subHeading && <p className={subHeadingClass}>{subHeading}</p>)}
+                  {!subheadingSlot && !subHeading && metaType?.notes && (
+                    <p className={`notes ${subHeadingClass}`} dangerouslySetInnerHTML={{ __html: metaType.notes }} />
+                  )}
+                </div>
+                <div className="flex h-7 items-center">
+                  <CloseButton buttonClass="bg-gray-50 dark:bg-gray-900" onClose={close} />
+                </div>
+              </div>
+            </div>
+
+            {headerSlot?.({ formInstance, model })}
+            <AutoFormFields
+              ref={formFieldsRef}
+              key={formFieldsKey}
+              value={model}
+              onChange={update}
+              api={api}
+              configureField={configureField}
+              configureFormLayout={configureFormLayout}
+            />
+            {footerSlot?.({ formInstance, model })}
+          </div>
+        </div>
+      )}
+
+      <div className={buttonsClass}>
+        <div>
+          {showLoading && loading && <FormLoading />}
+        </div>
+        <div className="flex justify-end">
+          {showCancel && <SecondaryButton onClick={close} disabled={loading}>Cancel</SecondaryButton>}
+          <PrimaryButton type="submit" className="ml-4" disabled={loading}>Save</PrimaryButton>
+        </div>
+      </div>
+    </form>
+  )
 
   return (
-    <ModalContext.Provider value={modalProvider}>
-      <div className="relative z-10" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
-        <div className="fixed inset-0"></div>
-        <div className="fixed inset-0 overflow-hidden">
-          <div onMouseDown={close} className="absolute inset-0 overflow-hidden">
-            <div onMouseDown={(e) => e.stopPropagation()} className="pointer-events-none fixed inset-y-0 right-0 flex pl-10">
-              <div className={`pointer-events-auto w-screen xl:max-w-3xl md:max-w-xl max-w-lg ${transition1}`}>
-                <form className={formClass} onSubmit={save}>
-                  <div className="flex min-h-0 flex-1 flex-col overflow-auto">
-                    <div className="flex-1">
-                      {/* Header */}
-                      <div className="bg-gray-50 dark:bg-gray-900 px-4 py-6 sm:px-6">
-                        <div className="flex items-start justify-between space-x-3">
-                          <div className="space-y-1">
-                            {headingSlot || <h3 className={headingClass}>{title}</h3>}
-
-                            {subheadingSlot || (subHeading && <p className={subHeadingClass}>{subHeading}</p>)}
-                            {!subheadingSlot && !subHeading && metaType?.notes && (
-                              <p className={`notes ${subHeadingClass}`} dangerouslySetInnerHTML={{ __html: metaType.notes }} />
-                            )}
-                          </div>
-                          <div className="flex h-7 items-center">
-                            <CloseButton buttonClass="bg-gray-50 dark:bg-gray-900" onClose={close} />
-                          </div>
-                        </div>
-                      </div>
-
-                      {headerSlot}
-                      <AutoFormFields
-                        ref={formFieldsRef}
-                        key={formFieldsKey}
-                        value={model}
-                        onChange={update}
-                        api={api}
-                        configureField={configureField}
-                        configureFormLayout={configureFormLayout}
-                      />
-                      {footerSlot}
-
-                    </div>
+    <ModalProviderContext.Provider value={modalProvider}>
+      <div>
+        {formStyle === 'card' ? (
+          <div className={panelClass}>
+            {formContent(false)}
+          </div>
+        ) : (
+          <div className="relative z-10" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+            <div className="fixed inset-0"></div>
+            <div className="fixed inset-0 overflow-hidden">
+              <div onMouseDown={close} className="absolute inset-0 overflow-hidden">
+                <div onMouseDown={(e) => e.stopPropagation()} className="pointer-events-none fixed inset-y-0 right-0 flex pl-10">
+                  <div className={`pointer-events-auto w-screen xl:max-w-3xl md:max-w-xl max-w-lg ${transition1}`}>
+                    {formContent(true)}
                   </div>
-                  <div className={buttonsClass}>
-                    <div>
-                      {showLoading && loading && <FormLoading />}
-                    </div>
-                    <div className="flex justify-end">
-                      {showCancel && <SecondaryButton onClick={close} disabled={loading}>Cancel</SecondaryButton>}
-                      <PrimaryButton type="submit" className="ml-4" disabled={loading}>Save</PrimaryButton>
-                    </div>
-                  </div>
-                </form>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        )}
 
-      {modal?.name == 'ModalLookup' && modal.ref && (
-        <ModalLookup refInfo={modal.ref} onDone={openModalDone} configureField={configureField} />
-      )}
-    </ModalContext.Provider>
+        {modal?.name === 'ModalLookup' && modal.ref && (
+          <ModalLookup refInfo={modal.ref} onDone={openModalDone} configureField={configureField} />
+        )}
+      </div>
+    </ModalProviderContext.Provider>
   )
 })
+
+AutoCreateForm.displayName = 'AutoCreateForm'
 
 export default AutoCreateForm

@@ -1,6 +1,7 @@
+import React from 'react'
 import type { FormLoadingProps } from '@/components/types'
 
-export default function FormLoading({ icon = true, text = "loading..." }: FormLoadingProps) {
+const FormLoading: React.FC<FormLoadingProps> = ({ icon = true, text = "loading..." }) => {
   return (
     <div className="flex" title="loading...">
       {icon && (
@@ -27,3 +28,4 @@ export default function FormLoading({ icon = true, text = "loading..." }: FormLo
   )
 }
 
+export default FormLoading

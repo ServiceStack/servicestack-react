@@ -1,4 +1,4 @@
-import { lastRightPart, leftPart } from "@servicestack/client"
+import { lastRightPart, leftPart, map } from "@servicestack/client"
 
 const web = 'png,jpg,jpeg,jfif,gif,svg,webp'.split(',')
 const Ext:{[name:string]:string[]} = {

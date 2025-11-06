@@ -16,13 +16,13 @@ export default function AlertSuccess({ message, children }: AlertSuccessProps & 
         </div>
         <div className="ml-3">
           <h3 className="text-sm font-medium text-green-800">
-            {message || children}
+            {message ? <span>{message}</span> : children}
           </h3>
-        </div>            
+        </div>
         <div className="ml-auto pl-3">
           <div className="-mx-1.5 -my-1.5">
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="inline-flex rounded-md bg-green-50 dark:bg-green-200 p-1.5 text-green-500 dark:text-green-600 hover:bg-green-100 dark:hover:bg-green-800 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-green-600 dark:focus:ring-green-300 focus:ring-offset-2 focus:ring-offset-green-50 dark:ring-offset-green-900"
               onClick={() => setDismissed(true)}
             >
@@ -37,4 +37,3 @@ export default function AlertSuccess({ message, children }: AlertSuccessProps & 
     </div>
   )
 }
-

@@ -1,6 +1,6 @@
 import type { FormatInfo, ApiFormat } from '@/types'
-import { fromXsdDuration, indexOfAny, isDate, toDate, dateFmt, enc, apiValue, timeFmt12, appendQueryString, omit } from "@servicestack/client"
-import { formatBytes, getFileName, getExt, canPreview, iconFallbackSrc, iconOnError } from './files'
+import { fromXsdDuration, indexOfAny, isDate, toDate, dateFmt, enc, lastRightPart, apiValue, timeFmt12, appendQueryString, omit } from "@servicestack/client"
+import { formatBytes, getFileName, getExt, canPreview, extSrc, iconFallbackSrc, iconOnError } from './files'
 import { toAppUrl, htmlTag, linkAttrs, isPrimitive, dateInputFormat, scopedExpr } from './utils'
 import { expandEnumFlags } from './metadata'
 
@@ -152,7 +152,7 @@ export function attachment(url:string,attrs?:any) {
 }
 
 /** Format as empty string */
-export function hidden(_o:any) { return '' }
+export function hidden(o:any) { return '' }
 
 /** Format duration in time format */
 export function time(o:any, attrs?:any) {
@@ -403,7 +403,7 @@ export function scrub(o:any):any {
     return o
 }
 
-export function formatObject(val:any, _format?:FormatInfo|null, attrs?:any) {
+export function formatObject(val:any, format?:FormatInfo|null, attrs?:any) {
     let obj = val
     if (Array.isArray(val)) {
         if (isPrimitive(val[0])) {

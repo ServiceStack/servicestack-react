@@ -1,26 +1,23 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import './tailwind.css'
 import App from './demo/App'
-import { ClientContext } from './use/client'
-import { JsonApiClient } from '@servicestack/client'
+import './tailwind.css'
 
+// Initialize dark mode from localStorage
 const colorScheme = localStorage.getItem('color-scheme')
+console.log('Initial color-scheme from localStorage:', colorScheme)
+console.log('HTML classList before:', document.documentElement.classList.toString())
+
 if (colorScheme === 'dark') {
-    document.querySelector('html')?.classList.add('dark')
+  document.documentElement.classList.add('dark')
 } else {
-    document.querySelector('html')?.classList.remove('dark')
+  document.documentElement.classList.remove('dark')
 }
 
-const client = JsonApiClient.create('http://localhost:5000')
+console.log('HTML classList after:', document.documentElement.classList.toString())
 
 ReactDOM.createRoot(document.getElementById('app')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <ClientContext.Provider value={client}>
-        <App />
-      </ClientContext.Provider>
-    </BrowserRouter>
-  </React.StrictMode>
+    <App />
+  </React.StrictMode>,
 )

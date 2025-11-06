@@ -1,102 +1,115 @@
-import { useState, useEffect, useMemo, useRef, useImperativeHandle, forwardRef, createContext } from 'react'
+import React, { useState, useMemo, useEffect, useRef, useCallback, useImperativeHandle, forwardRef, ReactNode } from 'react'
 import type { ApiRequest, ApiResponse, ModalProvider, InputProp } from '@/types'
 import type { AutoEditFormProps } from '@/components/types'
 import { useClient } from '@/use/client'
 import { toFormValues, useMetadata } from '@/use/metadata'
 import { form } from './css'
-import { getTypeName, transition } from '@/use/utils'
+import { getTypeName, transition as doTransition } from '@/use/utils'
 import { Sole } from '@/use/config'
 import { ApiResult, HttpMethods, humanize, map, mapGet } from '@servicestack/client'
+import { ModalProviderContext } from '@/use/context'
 import AutoFormFields from './AutoFormFields'
-import CloseButton from './CloseButton'
-import FormLoading from './FormLoading'
-import SecondaryButton from './SecondaryButton'
 import PrimaryButton from './PrimaryButton'
+import SecondaryButton from './SecondaryButton'
+import FormLoading from './FormLoading'
+import CloseButton from './CloseButton'
 import ConfirmDelete from './ConfirmDelete'
 import ModalLookup from './ModalLookup'
 
-export const ModalContext = createContext<ModalProvider | null>(null)
+export interface AutoEditFormRef {
+  forceUpdate: () => void
+  props: AutoEditFormProps
+  setModel: (args: any) => void
+  formFields: any
+  model: any
+}
 
-const AutoEditForm = forwardRef<any, AutoEditFormProps & {
-  headingSlot?: React.ReactNode,
-  subheadingSlot?: React.ReactNode,
-  headerSlot?: React.ReactNode,
-  footerSlot?: React.ReactNode
-}>(({
-  formStyle = "slideOver",
-  autosave = true,
-  showLoading = true,
-  showCancel,
-  type,
-  value: modelValue,
-  panelClass: panelClassProp,
-  formClass: formClassProp,
-  headingClass: headingClassProp,
-  subHeadingClass: subHeadingClassProp,
-  buttonsClass: buttonsClassProp,
-  heading,
-  subHeading,
-  configureField,
-  configureFormLayout,
-  deleteType,
-  onSave,
-  onDelete: onDeleteProp,
-  onError,
-  onDone,
-  headingSlot,
-  subheadingSlot,
-  headerSlot,
-  footerSlot
-}, ref) => {
-  const formFieldsRef = useRef<any>()
+interface AutoEditFormSlots {
+  heading?: ReactNode
+  subheading?: ReactNode
+  header?: (props: { formInstance: AutoEditFormRef | null, model: any }) => ReactNode
+  footer?: (props: { formInstance: AutoEditFormRef | null, model: any }) => ReactNode
+  children?: ReactNode
+}
+
+const AutoEditForm = forwardRef<AutoEditFormRef, AutoEditFormProps & AutoEditFormSlots>((props, ref) => {
+  const {
+    type,
+    value: modelValue,
+    formStyle = "slideOver",
+    panelClass: panelClassProp,
+    formClass: formClassProp,
+    headingClass: headingClassProp,
+    subHeadingClass: subHeadingClassProp,
+    buttonsClass: buttonsClassProp,
+    heading: headingProp,
+    subHeading,
+    autosave = true,
+    showLoading = true,
+    showCancel,
+    configureField,
+    configureFormLayout,
+    deleteType,
+    onDone,
+    onSave,
+    onDelete,
+    onError,
+    // Slots
+    heading: headingSlot,
+    subheading: subheadingSlot,
+    header: headerSlot,
+    footer: footerSlot,
+    children: _children,
+  } = props
+
+  const formFieldsRef = useRef<any>(null)
   const [formFieldsKey, setFormFieldsKey] = useState(1)
+  const [modal, setModal] = useState<{ name: string } & any>()
+  const [modalDone, setModalDone] = useState<((result: any) => any) | undefined>()
 
   const { typeOf, apiOf, typeProperties, createFormLayout, getPrimaryKey, Crud, createDto, formValues } = useMetadata()
 
   const typeName = useMemo(() => getTypeName(type), [type])
-  const metaType = useMemo(() => typeOf(typeName), [typeName])
+  const metaType = useMemo(() => typeOf(typeName), [typeName, typeOf])
 
-  const resolveModel = () => typeof type == 'string'
-    ? createDto(type, toFormValues(modelValue))
-    : (type ? new type(toFormValues(modelValue)) : null)
+  const resolveModel = useCallback(() =>
+    typeof type === 'string'
+      ? createDto(type, toFormValues(modelValue))
+      : (type ? new (type as any)(toFormValues(modelValue)) : null),
+    [type, modelValue, createDto]
+  )
+
   const [model, setModel] = useState(resolveModel())
 
-  function forceUpdate() {
+  const forceUpdate = useCallback(() => {
     setFormFieldsKey(prev => prev + 1)
     setModel(resolveModel())
-  }
+  }, [resolveModel])
 
-  function setModelFn(args: any) {
-    setModel((prev: any) => ({ ...prev, ...args }))
-  }
+  const setModelFn = useCallback((args: any) => {
+    setModel(prev => ({ ...prev, ...args }))
+  }, [])
 
-  useImperativeHandle(ref, () => ({
-    forceUpdate,
-    props: { formStyle, autosave, showLoading, showCancel, type, modelValue, panelClass: panelClassProp, formClass: formClassProp, headingClass: headingClassProp, subHeadingClass: subHeadingClassProp, buttonsClass: buttonsClassProp, heading, subHeading, configureField, configureFormLayout, deleteType, onSave, onDelete: onDeleteProp, onError, onDone },
-    setModel: setModelFn,
-    formFields: formFieldsRef,
-    model
-  }))
+  const update = useCallback((value: ApiRequest) => {
+    // Model update handled internally
+  }, [])
 
-  const [modal, setModal] = useState<{ name: string } & any>()
-  const [modalDone, setModalDone] = useState<((result: any) => any) | undefined>()
-
-  function openModal(info: { name: string } & any, done: (result: any) => any) {
+  const openModal = useCallback((info: { name: string } & any, done: (result: any) => any) => {
     setModal(info)
     setModalDone(() => done)
-  }
+  }, [])
 
-  async function openModalDone(result: any) {
+  const openModalDone = useCallback(async (result: any) => {
     if (modalDone) {
       modalDone(result)
     }
     setModal(undefined)
     setModalDone(undefined)
-  }
+  }, [modalDone])
 
-  const modalProvider: ModalProvider = {
+  const modalProvider: ModalProvider = useMemo(() => ({
     openModal
-  }
+  }), [openModal])
 
   const panelClass = useMemo(() => panelClassProp || form.panelClass(formStyle), [panelClassProp, formStyle])
   const formClass = useMemo(() => formClassProp || form.formClass(formStyle), [formClassProp, formStyle])
@@ -104,25 +117,27 @@ const AutoEditForm = forwardRef<any, AutoEditFormProps & {
   const subHeadingClass = useMemo(() => subHeadingClassProp || form.subHeadingClass(formStyle), [subHeadingClassProp, formStyle])
   const buttonsClass = useMemo(() => buttonsClassProp || form.buttonsClass, [buttonsClassProp])
 
-  const dataModel = useMemo(() => Crud.model(metaType), [metaType])
-  const title = useMemo(() => heading || typeOf(typeName)?.description ||
-    (dataModel ? `Update ${humanize(dataModel)}` : humanize(typeName)),
-    [heading, typeName, dataModel])
+  const dataModel = useMemo(() => Crud.model(metaType), [metaType, Crud])
+  const title = useMemo(() =>
+    headingProp || typeOf(typeName)?.description || (dataModel ? `Update ${humanize(dataModel)}` : humanize(typeName)),
+    [headingProp, typeName, typeOf, dataModel]
+  )
 
   const [api, setApi] = useState<ApiResponse>(new ApiResult<any>())
-  const origModel = useRef(Object.assign({}, toFormValues(modelValue)))
+  const [origModel] = useState(() => Object.assign({}, toFormValues(modelValue)))
+
+  const client = useClient()
+  const loading = useMemo(() => client.loading, [client.loading])
+
+  const getPk = useCallback(() => map(typeOf(Crud.model(metaType)), (dataModel: any) => getPrimaryKey(dataModel)), [metaType, typeOf, Crud, getPrimaryKey])
 
   useEffect(() => {
     if (Sole.interceptors.has('AutoEditForm.new')) {
-      Sole.interceptors.invoke('AutoEditForm.new', { props: { formStyle, autosave, showLoading, showCancel, type, modelValue, panelClass: panelClassProp, formClass: formClassProp, headingClass: headingClassProp, subHeadingClass: subHeadingClassProp, buttonsClass: buttonsClassProp, heading, subHeading, configureField, configureFormLayout, deleteType, onSave, onDelete: onDeleteProp, onError, onDone }, model, origModel: origModel.current })
+      Sole.interceptors.invoke('AutoEditForm.new', { props, model, origModel })
     }
   }, [])
 
-  const client = useClient()
-  const loading = useMemo(() => client.loading.current, [client.loading.current])
-  const getPk = () => map(typeOf(Crud.model(metaType)), dataModel => getPrimaryKey(dataModel))
-
-  function configure(inputProp: InputProp) {
+  const configure = useCallback((inputProp: InputProp) => {
     const { op, prop } = inputProp
     if (op && (Crud.isPatch(op) || Crud.isUpdate(op))) {
       inputProp.disabled = prop?.isPrimaryKey
@@ -130,30 +145,28 @@ const AutoEditForm = forwardRef<any, AutoEditFormProps & {
     if (configureField) {
       configureField(inputProp)
     }
-  }
+  }, [configureField, Crud])
 
-  function update(_value: ApiRequest) {
-    // Update handler
-  }
-
-  async function save(e: React.FormEvent) {
+  const save = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    let formEl = e.target as HTMLFormElement
+    const form = e.target as HTMLFormElement
+
     if (!autosave) {
-      onSave?.(new (model as any).constructor(formValues(formEl, typeProperties(metaType))))
+      onSave?.(new (model as any).constructor(formValues(form, typeProperties(metaType))))
       return
     }
 
-    let method = map((model as any)?.['getMethod'], (fn: any) => typeof fn == 'function' ? fn() : null) || 'POST'
-    let returnsVoid = map((model as any)?.['createResponse'], (fn: any) => typeof fn == 'function' ? fn() : null) == null
+    let method = map(model?.['getMethod'], (fn: any) => typeof fn === 'function' ? fn() : null) || 'POST'
+    let returnsVoid = map(model?.['createResponse'], (fn: any) => typeof fn === 'function' ? fn() : null) == null
     let pk = getPk()
 
-    let result
+    let apiResult: ApiResult<any>
+
     if (HttpMethods.hasRequestBody(method)) {
       let requestDto = new (model as any).constructor()
       let pkValue = mapGet(modelValue, pk.name)
-      let formData = new FormData(formEl)
-      if (pk && !Array.from(formData.keys()).some(k => k.toLowerCase() == pk.name.toLowerCase())) {
+      let formData = new FormData(form)
+      if (pk && !Array.from(formData.keys()).some(k => k.toLowerCase() === pk.name.toLowerCase())) {
         formData.append(pk.name, pkValue)
       }
 
@@ -166,7 +179,7 @@ const AutoEditForm = forwardRef<any, AutoEditFormProps & {
 
         formLayout.forEach(input => {
           let id = input.id
-          let origValue = mapGet(origModel.current, id)
+          let origValue = mapGet(origModel, id)
           if (pk && pk.name.toLowerCase() === id.toLowerCase()) {
             return
           }
@@ -194,12 +207,12 @@ const AutoEditForm = forwardRef<any, AutoEditFormProps & {
         })
 
         if (Sole.interceptors.has('AutoEditForm.save'))
-          Sole.interceptors.invoke('AutoEditForm.save', { origModel: origModel.current, formLayout, dirtyValues })
+          Sole.interceptors.invoke('AutoEditForm.save', { origModel, formLayout, dirtyValues })
 
         Array.from(formData.keys()).filter(k => !dirtyValues[k]).forEach(k => formData.delete(k))
 
-        let keys = Array.from(formData.keys()).filter(k => k.toLowerCase() != pk.name.toLowerCase())
-        if (keys.length == 0 && reset.length == 0) {
+        let keys = Array.from(formData.keys()).filter(k => k.toLowerCase() !== pk.name.toLowerCase())
+        if (keys.length === 0 && reset.length === 0) {
           close()
           return
         }
@@ -207,34 +220,35 @@ const AutoEditForm = forwardRef<any, AutoEditFormProps & {
 
       const args = reset.length > 0 ? { jsconfig: 'eccn', reset } : { jsconfig: 'eccn' }
       if (!returnsVoid) {
-        result = await client.apiForm(requestDto, formData, args)
+        apiResult = await client.apiForm(requestDto, formData, args)
       } else {
-        result = await client.apiFormVoid(requestDto, formData, args)
+        apiResult = await client.apiFormVoid(requestDto, formData, args)
       }
     } else {
-      let fieldValues = formValues(formEl, typeProperties(metaType))
+      let fieldValues = formValues(form, typeProperties(metaType))
       if (pk && !mapGet(fieldValues, pk.name)) {
         fieldValues[pk.name] = mapGet(modelValue, pk.name)
       }
 
       let requestDto = new (model as any).constructor(fieldValues)
       if (!returnsVoid) {
-        result = await client.api(requestDto, { jsconfig: 'eccn' })
+        apiResult = await client.api(requestDto, { jsconfig: 'eccn' })
       } else {
-        result = await client.apiVoid(requestDto, { jsconfig: 'eccn' })
+        apiResult = await client.apiVoid(requestDto, { jsconfig: 'eccn' })
       }
     }
-    setApi(result)
 
-    if (result.succeeded) {
-      formEl.reset()
-      onSave?.(result.response)
+    setApi(apiResult)
+
+    if (apiResult.succeeded) {
+      form.reset()
+      onSave?.(apiResult.response)
     } else {
-      onError?.(result.error!)
+      onError?.(apiResult.error!)
     }
-  }
+  }, [autosave, model, client, metaType, typeProperties, formValues, onSave, onError, modelValue, getPk, typeName, apiOf, Crud, createFormLayout, origModel])
 
-  async function onDelete() {
+  const handleDelete = useCallback(async () => {
     let pk = getPk()
     const id = pk ? mapGet(modelValue, pk.name) : null
     if (!id) {
@@ -242,31 +256,33 @@ const AutoEditForm = forwardRef<any, AutoEditFormProps & {
       return
     }
     const args = { [pk!.name]: id }
-    const request = typeof deleteType == 'string'
+    const request = typeof deleteType === 'string'
       ? createDto(deleteType, args)
-      : (deleteType ? new deleteType(args) : null)
+      : (deleteType ? new (deleteType as any)(args) : null)
 
-    let returnsVoid = map((request as any)['createResponse'], (fn: any) => typeof fn == 'function' ? fn() : null) == null
-    let result
+    let returnsVoid = map(request['createResponse'], (fn: any) => typeof fn === 'function' ? fn() : null) == null
+    let apiResult: ApiResult<any>
+
     if (!returnsVoid) {
-      result = await client.api(request)
+      apiResult = await client.api(request)
     } else {
-      result = await client.apiVoid(request)
+      apiResult = await client.apiVoid(request)
     }
-    setApi(result)
 
-    if (result.succeeded) {
-      onDeleteProp?.(result.response)
+    setApi(apiResult)
+
+    if (apiResult.succeeded) {
+      onDelete?.(apiResult.response)
     } else {
-      onError?.(result.error!)
+      onError?.(apiResult.error!)
     }
-  }
+  }, [getPk, modelValue, typeName, dataModel, deleteType, createDto, client, onDelete, onError])
 
-  function done() {
+  const done = useCallback(() => {
     onDone?.()
-  }
+  }, [onDone])
 
-  /* SlideOver */
+  // SlideOver transition
   const [show, setShow] = useState(false)
   const [transition1, setTransition1] = useState('')
   const rule1 = {
@@ -275,30 +291,48 @@ const AutoEditForm = forwardRef<any, AutoEditFormProps & {
   }
 
   useEffect(() => {
-    transition(rule1, setTransition1, show)
+    doTransition(rule1, { value: transition1 } as any, show)
     if (!show) {
       const timer = setTimeout(done, 700)
       return () => clearTimeout(timer)
     }
-  }, [show])
+  }, [show, done])
 
   useEffect(() => {
     setShow(true)
   }, [])
 
-  function close() {
-    if (formStyle == 'slideOver') {
+  const close = useCallback(() => {
+    if (formStyle === 'slideOver') {
       setShow(false)
     } else {
       done()
     }
-  }
+  }, [formStyle, done])
 
   useEffect(() => {
-    const globalKeyHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    const globalKeyHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close()
+    }
     window.addEventListener('keydown', globalKeyHandler)
     return () => window.removeEventListener('keydown', globalKeyHandler)
-  }, [])
+  }, [close])
+
+  useImperativeHandle(ref, () => ({
+    forceUpdate,
+    props,
+    setModel: setModelFn,
+    formFields: formFieldsRef.current,
+    model
+  }), [forceUpdate, props, setModelFn, model])
+
+  const formInstance = useMemo(() => ({
+    forceUpdate,
+    props,
+    setModel: setModelFn,
+    formFields: formFieldsRef.current,
+    model
+  }), [forceUpdate, props, setModelFn, model])
 
   if (!metaType) {
     return (
@@ -308,122 +342,110 @@ const AutoEditForm = forwardRef<any, AutoEditFormProps & {
     )
   }
 
-  if (formStyle == 'card') {
-    return (
-      <ModalContext.Provider value={modalProvider}>
-        <div className={panelClass}>
-          <form onSubmit={save}>
-            <div className={formClass}>
-              <div>
-                {headingSlot || <h3 className={headingClass}>{title}</h3>}
+  const formContent = (isSlideOver: boolean) => (
+    <form onSubmit={save} className={isSlideOver ? formClass : undefined}>
+      {!isSlideOver && (
+        <div className={formClass}>
+          <div>
+            {headingSlot || <h3 className={headingClass}>{title}</h3>}
+            {subheadingSlot || (subHeading && <p className={subHeadingClass}>{subHeading}</p>)}
+            {!subheadingSlot && !subHeading && metaType?.notes && (
+              <p className={`notes ${subHeadingClass}`} dangerouslySetInnerHTML={{ __html: metaType.notes }} />
+            )}
+          </div>
 
-                {subheadingSlot || (subHeading && <p className={subHeadingClass}>{subHeading}</p>)}
-                {!subheadingSlot && !subHeading && metaType?.notes && (
-                  <p className={`notes ${subHeadingClass}`} dangerouslySetInnerHTML={{ __html: metaType.notes }} />
-                )}
-              </div>
-
-              {headerSlot}
-              <AutoFormFields
-                ref={formFieldsRef}
-                key={formFieldsKey}
-                value={model}
-                onChange={update}
-                api={api}
-                configureField={configure}
-                configureFormLayout={configureFormLayout}
-              />
-              {footerSlot}
-
-            </div>
-            <div className={buttonsClass}>
-              <div>
-                {deleteType && <ConfirmDelete onDelete={onDelete} />}
-              </div>
-              <div>
-                {showLoading && loading && <FormLoading />}
-              </div>
-              <div className="flex justify-end">
-                {showCancel && <SecondaryButton onClick={close} disabled={loading}>Cancel</SecondaryButton>}
-                <PrimaryButton type="submit" className="ml-4" disabled={loading}>Save</PrimaryButton>
-              </div>
-            </div>
-          </form>
+          {headerSlot?.({ formInstance, model })}
+          <AutoFormFields
+            ref={formFieldsRef}
+            key={formFieldsKey}
+            value={model}
+            onChange={update}
+            api={api}
+            configureField={configure}
+            configureFormLayout={configureFormLayout}
+          />
+          {footerSlot?.({ formInstance, model })}
         </div>
+      )}
 
-        {modal?.name == 'ModalLookup' && modal.ref && (
-          <ModalLookup refInfo={modal.ref} onDone={openModalDone} configureField={configureField} />
-        )}
-      </ModalContext.Provider>
-    )
-  }
+      {isSlideOver && (
+        <div className="flex min-h-0 flex-1 flex-col overflow-auto">
+          <div className="flex-1">
+            <div className="bg-gray-50 dark:bg-gray-900 px-4 py-6 sm:px-6">
+              <div className="flex items-start justify-between space-x-3">
+                <div className="space-y-1">
+                  {headingSlot || <h3 className={headingClass}>{title}</h3>}
+                  {subheadingSlot || (subHeading && <p className={subHeadingClass}>{subHeading}</p>)}
+                  {!subheadingSlot && !subHeading && metaType?.notes && (
+                    <p className={`notes ${subHeadingClass}`} dangerouslySetInnerHTML={{ __html: metaType.notes }} />
+                  )}
+                </div>
+                <div className="flex h-7 items-center">
+                  <CloseButton buttonClass="bg-gray-50 dark:bg-gray-900" onClose={close} />
+                </div>
+              </div>
+            </div>
+
+            {headerSlot?.({ formInstance, model })}
+            <AutoFormFields
+              ref={formFieldsRef}
+              key={formFieldsKey}
+              value={model}
+              onChange={update}
+              api={api}
+              configureField={configure}
+              configureFormLayout={configureFormLayout}
+            />
+            {footerSlot?.({ formInstance, model })}
+          </div>
+        </div>
+      )}
+
+      <div className={buttonsClass}>
+        <div>
+          {deleteType && <ConfirmDelete onDelete={handleDelete} />}
+        </div>
+        <div>
+          {showLoading && loading && <FormLoading />}
+        </div>
+        <div className="flex justify-end">
+          {showCancel && <SecondaryButton onClick={close} disabled={loading}>Cancel</SecondaryButton>}
+          <PrimaryButton type="submit" className="ml-4" disabled={loading}>Save</PrimaryButton>
+        </div>
+      </div>
+    </form>
+  )
 
   return (
-    <ModalContext.Provider value={modalProvider}>
-      <div className="relative z-10" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
-        <div className="fixed inset-0"></div>
-        <div className="fixed inset-0 overflow-hidden">
-          <div onMouseDown={close} className="absolute inset-0 overflow-hidden">
-            <div onMouseDown={(e) => e.stopPropagation()} className="pointer-events-none fixed inset-y-0 right-0 flex pl-10">
-              <div className={`pointer-events-auto w-screen xl:max-w-3xl md:max-w-xl max-w-lg ${transition1}`}>
-                <form className={formClass} onSubmit={save}>
-                  <div className="flex min-h-0 flex-1 flex-col overflow-auto">
-                    <div className="flex-1">
-                      {/* Header */}
-                      <div className="bg-gray-50 dark:bg-gray-900 px-4 py-6 sm:px-6">
-                        <div className="flex items-start justify-between space-x-3">
-                          <div className="space-y-1">
-                            {headingSlot || <h3 className={headingClass}>{title}</h3>}
-
-                            {subheadingSlot || (subHeading && <p className={subHeadingClass}>{subHeading}</p>)}
-                            {!subheadingSlot && !subHeading && metaType?.notes && (
-                              <p className={`notes ${subHeadingClass}`} dangerouslySetInnerHTML={{ __html: metaType.notes }} />
-                            )}
-                          </div>
-                          <div className="flex h-7 items-center">
-                            <CloseButton buttonClass="bg-gray-50 dark:bg-gray-900" onClose={close} />
-                          </div>
-                        </div>
-                      </div>
-
-                      {headerSlot}
-                      <AutoFormFields
-                        ref={formFieldsRef}
-                        key={formFieldsKey}
-                        value={model}
-                        onChange={update}
-                        api={api}
-                        configureField={configure}
-                        configureFormLayout={configureFormLayout}
-                      />
-                      {footerSlot}
-
-                    </div>
+    <ModalProviderContext.Provider value={modalProvider}>
+      <div>
+        {formStyle === 'card' ? (
+          <div className={panelClass}>
+            {formContent(false)}
+          </div>
+        ) : (
+          <div className="relative z-10" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+            <div className="fixed inset-0"></div>
+            <div className="fixed inset-0 overflow-hidden">
+              <div onMouseDown={close} className="absolute inset-0 overflow-hidden">
+                <div onMouseDown={(e) => e.stopPropagation()} className="pointer-events-none fixed inset-y-0 right-0 flex pl-10">
+                  <div className={`pointer-events-auto w-screen xl:max-w-3xl md:max-w-xl max-w-lg ${transition1}`}>
+                    {formContent(true)}
                   </div>
-                  <div className={buttonsClass}>
-                    <div>
-                      {deleteType && <ConfirmDelete onDelete={onDelete} />}
-                    </div>
-                    <div>
-                      {showLoading && loading && <FormLoading />}
-                    </div>
-                    <div className="flex justify-end">
-                      {showCancel && <SecondaryButton onClick={close} disabled={loading}>Cancel</SecondaryButton>}
-                      <PrimaryButton type="submit" className="ml-4" disabled={loading}>Save</PrimaryButton>
-                    </div>
-                  </div>
-                </form>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        )}
 
-      {modal?.name == 'ModalLookup' && modal.ref && (
-        <ModalLookup refInfo={modal.ref} onDone={openModalDone} configureField={configureField} />
-      )}
-    </ModalContext.Provider>
+        {modal?.name === 'ModalLookup' && modal.ref && (
+          <ModalLookup refInfo={modal.ref} onDone={openModalDone} configureField={configureField} />
+        )}
+      </div>
+    </ModalProviderContext.Provider>
   )
 })
+
+AutoEditForm.displayName = 'AutoEditForm'
 
 export default AutoEditForm

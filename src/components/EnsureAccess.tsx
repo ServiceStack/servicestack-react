@@ -1,3 +1,4 @@
+import React from 'react'
 import type { EnsureAccessProps } from '@/components/types'
 import { useAuth } from '@/use/auth'
 import { useConfig } from '@/use/config'
@@ -5,7 +6,7 @@ import { appendQueryString } from "@servicestack/client"
 import Alert from './Alert'
 import SecondaryButton from './SecondaryButton'
 
-export default function EnsureAccess({ invalidAccess }: EnsureAccessProps) {
+export default function EnsureAccess({ invalidAccess, alertClass, children }: EnsureAccessProps) {
   const { isAuthenticated } = useAuth()
   const { config } = useConfig()
 
@@ -25,7 +26,9 @@ export default function EnsureAccess({ invalidAccess }: EnsureAccessProps) {
 
   return (
     <div>
-      <Alert dangerouslySetInnerHTML={{ __html: invalidAccess }} />
+      <Alert className={alertClass}>
+        <span dangerouslySetInnerHTML={{ __html: invalidAccess }} />
+      </Alert>
       <div className="md:p-4">
         {!isAuthenticated ? (
           <SecondaryButton onClick={signIn}>Sign In</SecondaryButton>

@@ -1,6 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+
+@variant dark (.dark &);
+
+[type='button'],button[type='submit']{cursor:pointer}
 
 .svg-external {
     color: #007bff;

@@ -1,22 +1,34 @@
-import { useState, useMemo } from 'react'
+import React, { useState } from 'react'
 import type { ConfirmDeleteProps } from '@/components/types'
 
-export default function ConfirmDelete({ onDelete, children, ...attrs }: ConfirmDeleteProps & { children?: React.ReactNode }) {
-  const [deleteConfirmed, setDeleteConfirmed] = useState(false)
+interface ConfirmDeleteComponentProps extends ConfirmDeleteProps {
+  children?: React.ReactNode
+  className?: string
+  [key: string]: any
+}
 
-  const onClick = () => {
-    if (deleteConfirmed) {
-      onDelete?.()
+const ConfirmDelete: React.FC<ConfirmDeleteComponentProps> = ({
+  onDelete,
+  children = "Delete",
+  className,
+  ...rest
+}) => {
+  const [deleteConfirmed, setDeleteConfirmed] = useState<boolean>(false)
+
+  const onClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (deleteConfirmed && onDelete) {
+      onDelete()
     }
   }
 
-  const cls = useMemo(() =>
-    `select-none inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white ${
-      deleteConfirmed
-        ? "cursor-pointer bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-        : "bg-red-400"
-    }`
-  , [deleteConfirmed])
+  const cls = [
+    "select-none inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white",
+    deleteConfirmed
+      ? "cursor-pointer bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+      : "bg-red-400",
+    className
+  ].filter(Boolean).join(' ')
 
   return (
     <>
@@ -28,9 +40,11 @@ export default function ConfirmDelete({ onDelete, children, ...attrs }: ConfirmD
         onChange={(e) => setDeleteConfirmed(e.target.checked)}
       />
       <label htmlFor="confirmDelete" className="ml-2 mr-2 select-none">confirm</label>
-      <span onClick={onClick} className={cls} {...attrs}>
-        {children || 'Delete'}
+      <span onClick={onClick} className={cls} {...rest}>
+        {children}
       </span>
     </>
   )
 }
+
+export default ConfirmDelete

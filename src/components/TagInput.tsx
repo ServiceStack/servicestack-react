@@ -1,117 +1,175 @@
-import { useState, useRef, useMemo, useContext } from 'react'
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
+import type { ApiState } from '@/types'
 import type { TagInputProps } from '@/components/types'
-import { $1, errorResponse, humanize, map, omit, toPascalCase, trimEnd } from "@servicestack/client"
-import { filterClass as filterClassFn } from "./css"
-import { ApiStateContext } from './TextInput'
+import { errorResponse, humanize, toPascalCase, trimEnd } from '@servicestack/client'
+import { filterClass } from './css'
 
-export default function TagInput({
+const TagInput: React.FC<TagInputProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof TagInputProps>> = ({
   id,
   type,
+  inputClass,
+  filterClass: filterClassFn,
   label,
   labelClass,
   help,
-  value: modelValue = [],
-  onChange,
-  status,
-  inputClass,
-  filterClass,
-  className,
+  value,
+  delimiters = [','],
   allowableValues,
   string,
-  converter,
-  delimiters = [','],
   maxVisibleItems = 300,
+  converter,
+  status,
+  onChange,
   ...attrs
-}: TagInputProps & { className?: string }) {
-  const txtInputRef = useRef<HTMLInputElement>(null)
-  const [active, setActive] = useState<string>()
-  const [expanded, setExpanded] = useState(false)
+}) => {
   const [inputValue, setInputValue] = useState('')
+  const [expanded, setExpanded] = useState(false)
+  const [active, setActive] = useState<string | undefined>()
   const [cancelBlur, setCancelBlur] = useState(false)
+  const txtInputRef = useRef<HTMLInputElement>(null)
 
-  function converterFn(values: string | string[]) {
+  // Converter function
+  const convertValue = useCallback((values: string | string[]) => {
     return converter ? converter(values) : values
-  }
+  }, [converter])
 
+  // Model array - convert value to array of strings
   const modelArray = useMemo(() => {
-    const converted = converterFn(modelValue)
-    return (map(converted, v => typeof v == 'string'
-      ? v.trim().length == 0 ? [] : v.split(',')
-      : v) || []) as string[]
-  }, [modelValue, converter])
+    const converted = convertValue(value || [])
+    const items = Array.isArray(converted) ? converted : [converted]
+    return items.flatMap(v =>
+      typeof v === 'string' && v.trim().length > 0
+        ? v.split(',').filter(x => x.trim())
+        : []
+    )
+  }, [value, convertValue])
 
+  // Filtered values for autocomplete dropdown
   const filteredValues = useMemo(() => {
     const inputLower = inputValue.toLowerCase()
-    if (!allowableValues || allowableValues.length == 0) return []
+    if (!allowableValues || allowableValues.length === 0) return []
 
     return allowableValues.length < 1000
       ? allowableValues.filter(x => !modelArray.includes(x) && x.toLowerCase().includes(inputLower))
       : allowableValues.filter(x => !modelArray.includes(x) && x.startsWith(inputLower))
-  }, [allowableValues, modelArray, inputValue])
+  }, [inputValue, allowableValues, modelArray])
 
-  const useType = useMemo(() => type || 'text', [type])
-  const useLabel = useMemo(() => label ?? humanize(toPascalCase(id)), [label, id])
-
-  const ctx = useContext(ApiStateContext)
+  const useType = type || 'text'
+  const useLabel = label ?? humanize(toPascalCase(id))
   const errorField = useMemo(() =>
-    errorResponse.call({ responseStatus: status ?? (ctx as any)?.error?.current }, id)
-  , [status, ctx, id])
+    errorResponse.call({ responseStatus: status }, id),
+    [status, id]
+  )
 
-  const cls = useMemo(() => filterClassFn([
-    'w-full cursor-text flex flex-wrap sm:text-sm rounded-md dark:text-white dark:bg-gray-900 border focus-within:border-transparent focus-within:ring-1 focus-within:outline-none',
-    errorField
-      ? 'pr-10 border-red-300 text-red-900 placeholder-red-300 focus-within:outline-none focus-within:ring-red-500 focus-within:border-red-500'
-      : 'shadow-sm border-gray-300 dark:border-gray-600 focus-within:ring-indigo-500 focus-within:border-indigo-500',
-    inputClass
-  ], 'TagInput', filterClass), [errorField, inputClass, filterClass])
+  const cls = useMemo(() => filterClass(
+    [
+      'w-full cursor-text flex flex-wrap sm:text-sm rounded-md dark:text-white dark:bg-gray-900 border focus-within:border-transparent focus-within:ring-1 focus-within:outline-none',
+      errorField
+        ? 'pr-10 border-red-300 text-red-900 placeholder-red-300 focus-within:outline-none focus-within:ring-red-500 focus-within:border-red-500'
+        : 'shadow-sm border-gray-300 dark:border-gray-600 focus-within:ring-indigo-500 focus-within:border-indigo-500',
+      inputClass
+    ],
+    'TagInput',
+    filterClassFn
+  ), [errorField, inputClass, filterClassFn])
 
-  const removeTag = (tag: string) => updateValue(modelArray.filter(x => x != tag))
+  const updateValue = useCallback((newValue: string[]) => {
+    const ev = string ? newValue.join(',') : newValue
+    onChange?.(ev)
+  }, [string, onChange])
 
-  function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
-    if (document.activeElement === e.target) {
+  const removeTag = useCallback((tag: string) => {
+    updateValue(modelArray.filter(x => x !== tag))
+  }, [modelArray, updateValue])
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (document.activeElement === e.currentTarget) {
       txtInputRef.current?.focus()
     }
   }
 
-  function expand() {
+  const expand = useCallback(() => {
     setExpanded(true)
     setCancelBlur(true)
-  }
+  }, [])
 
-  function onFocus() {
+  const onFocus = () => {
     expand()
   }
 
-  function onBlur() {
+  const currentTag = useCallback(() => {
+    if (inputValue.length === 0) return ''
+    let tag = trimEnd(inputValue.trim(), ',')
+    if (tag[0] === ',') tag = tag.substring(1)
+    tag = tag.trim()
+
+    return tag.length === 0 && expanded && filteredValues.length > 0
+      ? active
+      : tag
+  }, [inputValue, expanded, filteredValues, active])
+
+  const add = useCallback((tag?: string) => {
+    if (!tag || tag.length === 0) return
+    const newValue = Array.from(modelArray)
+    if (newValue.indexOf(tag) === -1) {
+      newValue.push(tag)
+    }
+    updateValue(newValue)
+    setInputValue('')
+    setExpanded(false)
+  }, [modelArray, updateValue])
+
+  const onBlur = useCallback(() => {
     add(currentTag())
     setCancelBlur(false)
     setTimeout(() => {
-      if (!cancelBlur) setExpanded(false)
+      setCancelBlur(curr => {
+        if (!curr) setExpanded(false)
+        return curr
+      })
     }, 200)
-  }
+  }, [add, currentTag])
 
-  function updateValue(newValue: string[]) {
-    const ev = string ? newValue.join(',') : newValue
-    onChange?.(ev as any)
-  }
+  const scrollActiveIntoView = useCallback(() => {
+    setTimeout(() => {
+      const el = document.querySelector(`#${id}-tag li.active`) as HTMLElement
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' } as ScrollIntoViewOptions)
+      }
+    }, 0)
+  }, [id])
 
-  function keyDown(e: React.KeyboardEvent) {
-    if (e.key == "Backspace" && inputValue.length == 0) {
+  const onlyScrollActiveIntoViewIfNeeded = useCallback(() => {
+    setTimeout(() => {
+      const el = document.querySelector(`#${id}-tag li.active`) as HTMLElement
+      if (el) {
+        if ('scrollIntoViewIfNeeded' in el) {
+          (el as any).scrollIntoViewIfNeeded({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+        } else {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' } as ScrollIntoViewOptions)
+        }
+      }
+    }, 0)
+  }, [id])
+
+  const keyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && inputValue.length === 0) {
       if (modelArray.length > 0) {
         removeTag(modelArray[modelArray.length - 1]!)
       }
     }
-    if (!allowableValues || allowableValues.length == 0) return
 
-    if (e.code == 'Escape' || e.code == 'Tab') {
+    if (!allowableValues || allowableValues.length === 0) return
+
+    if (e.code === 'Escape' || e.code === 'Tab') {
       setExpanded(false)
-    } else if (e.code == 'Home') {
+    } else if (e.code === 'Home') {
       setActive(filteredValues[0])
       scrollActiveIntoView()
-    } else if (e.code == 'End') {
-      setActive(filteredValues[filteredValues.length-1])
+    } else if (e.code === 'End') {
+      setActive(filteredValues[filteredValues.length - 1])
       scrollActiveIntoView()
-    } else if (e.code == 'ArrowDown') {
+    } else if (e.code === 'ArrowDown') {
       setExpanded(true)
       if (!active) {
         setActive(filteredValues[0])
@@ -122,17 +180,17 @@ export default function TagInput({
           : filteredValues[0])
       }
       onlyScrollActiveIntoViewIfNeeded()
-    } else if (e.code == 'ArrowUp') {
+    } else if (e.code === 'ArrowUp') {
       if (!active) {
-        setActive(filteredValues[filteredValues.length-1])
+        setActive(filteredValues[filteredValues.length - 1])
       } else {
         const currIndex = filteredValues.indexOf(active)
         setActive(currIndex - 1 >= 0
           ? filteredValues[currIndex - 1]
-          : filteredValues[filteredValues.length-1])
+          : filteredValues[filteredValues.length - 1])
       }
       onlyScrollActiveIntoViewIfNeeded()
-    } else if (e.code == 'Enter') {
+    } else if (e.code === 'Enter') {
       if (active && expanded) {
         add(active)
         e.preventDefault()
@@ -142,92 +200,48 @@ export default function TagInput({
     } else {
       setExpanded(filteredValues.length > 0)
     }
-  }
+  }, [inputValue, modelArray, removeTag, allowableValues, filteredValues, active, expanded, add, scrollActiveIntoView, onlyScrollActiveIntoViewIfNeeded])
 
-  function currentTag() {
-    if (inputValue.length == 0) return ''
-    let tag = trimEnd(inputValue.trim(), ',')
-    if (tag[0] == ',') tag = tag.substring(1)
-    tag = tag.trim()
-
-    return tag.length == 0 && expanded && filteredValues.length > 0
-      ? active
-      : tag
-  }
-
-  function keyPress(e: React.KeyboardEvent) {
+  const keyPress = useCallback((e: React.KeyboardEvent) => {
     const tag = currentTag()
     if (tag && tag.length > 0) {
-      const isDelim = delimiters.some(x => x == e.key)
+      const isDelim = delimiters.some(x => x === e.key)
       if (isDelim) e.preventDefault()
-      const isEnter = e.key == "Enter" || e.key == "NumpadEnter"
-      if (isEnter || (e.key.length == 1 && isDelim)) {
+      const isEnter = e.key === 'Enter' || e.key === 'NumpadEnter'
+      if (isEnter || (e.key.length === 1 && isDelim)) {
         add(tag)
         return
       }
     }
-  }
+  }, [currentTag, delimiters, add])
 
-  const scrollOptions: any = { behavior: "smooth", block: "nearest", inline: "nearest", scrollMode:'if-needed' }
-
-  function scrollActiveIntoView() {
-    setTimeout(() => {
-      let el = $1(`#${id}-tag li.active`)
-      if (el) {
-        el.scrollIntoView(scrollOptions)
-      }
-    }, 0)
-  }
-
-  function onlyScrollActiveIntoViewIfNeeded() {
-    setTimeout(() => {
-      let el = $1(`#${id}-tag li.active`)
-      if (el) {
-        if ('scrollIntoViewIfNeeded' in el) {
-          (el as any).scrollIntoViewIfNeeded(scrollOptions)
-        } else {
-          el.scrollIntoView(scrollOptions)
-        }
-      }
-    }, 0)
-  }
-
-  function add(tag?: string) {
-    if (!tag || tag.length === 0) return
-    const newValue = Array.from(modelArray)
-    if (newValue.indexOf(tag) == -1) {
-      newValue.push(tag)
-    }
-    updateValue(newValue)
-    setInputValue('')
-    setExpanded(false)
-  }
-
-  function onPaste(e: React.ClipboardEvent) {
-    e.preventDefault()
-    e.stopPropagation()
-    const text = e.clipboardData?.getData('Text')
-    handlePastedText(text)
-  }
-
-  function handlePastedText(txt?: string) {
+  const handlePastedText = useCallback((txt?: string) => {
     if (!txt) return
     const re = new RegExp(`\\n|\\t|${delimiters.join('|')}`)
     const newTags = Array.from(modelArray)
     const tags = txt.split(re).map(x => x.trim())
     tags.forEach(tag => {
-      if (newTags.indexOf(tag) == -1) {
+      if (newTags.indexOf(tag) === -1) {
         newTags.push(tag)
       }
     })
     updateValue(newTags)
     setInputValue('')
-  }
+  }, [delimiters, modelArray, updateValue])
 
-  const filteredAttrs = omit(attrs, ['class', 'required'])
+  const onPaste = useCallback((e: React.ClipboardEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const text = e.clipboardData?.getData('Text')
+    handlePastedText(text)
+  }, [handlePastedText])
+
+  const setActiveOption = useCallback((option: string) => {
+    setActive(option)
+  }, [])
 
   return (
-    <div className={className} id={`${id}-tag`} onMouseMove={() => setCancelBlur(true)}>
+    <div className={attrs.className} id={`${id}-tag`} onMouseMove={() => setCancelBlur(true)}>
       {useLabel && (
         <label htmlFor={id} className={`block text-sm font-medium text-gray-700 dark:text-gray-300 ${labelClass ?? ''}`}>
           {useLabel}
@@ -235,10 +249,10 @@ export default function TagInput({
       )}
       <div className="mt-1 relative">
         <input type="hidden" id={id} name={id} value={modelArray.join(',')} />
-        <button className={cls} onClick={handleClick} onFocus={() => setExpanded(true)} tabIndex={-1}>
+        <button className={cls} onClick={handleClick} onFocus={() => setExpanded(true)} tabIndex={-1} type="button">
           <div className="flex flex-wrap pb-1.5">
-            {modelArray.map(tag => (
-              <div key={tag} className="pt-1.5 pl-1">
+            {modelArray.map((tag, idx) => (
+              <div key={idx} className="pt-1.5 pl-1">
                 <span className="inline-flex rounded-full items-center py-0.5 pl-2.5 pr-1 text-sm font-medium bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300">
                   {tag}
                   <button
@@ -247,7 +261,7 @@ export default function TagInput({
                     className="flex-shrink-0 ml-1 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 dark:text-indigo-500 hover:bg-indigo-200 dark:hover:bg-indigo-800 hover:text-indigo-500 dark:hover:text-indigo-400 focus:outline-none focus:bg-indigo-500 focus:text-white dark:focus:text-black"
                   >
                     <svg className="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                      <path strokeLinecap="round" strokeWidth="1.5" d="M1 1l6 6m0-6L1 7"></path>
+                      <path strokeLinecap="round" strokeWidth="1.5" d="M1 1l6 6m0-6L1 7" />
                     </svg>
                   </button>
                 </span>
@@ -276,7 +290,7 @@ export default function TagInput({
                 onFocus={onFocus}
                 onBlur={onBlur}
                 onClick={() => setExpanded(true)}
-                {...filteredAttrs}
+                {...attrs}
               />
             </div>
           </div>
@@ -288,11 +302,11 @@ export default function TagInput({
             id={`${id}-options`}
             role="listbox"
           >
-            {filteredValues.slice(0, maxVisibleItems).map(option => (
+            {filteredValues.slice(0, maxVisibleItems).map((option, idx) => (
               <li
-                key={option}
+                key={idx}
                 className={`${option === active ? 'active bg-indigo-600 text-white' : 'text-gray-900 dark:text-gray-100'} relative cursor-default select-none py-2 pl-3 pr-9`}
-                onMouseOver={() => setActive(option)}
+                onMouseOver={() => setActiveOption(option)}
                 onClick={() => add(option)}
                 role="option"
                 tabIndex={-1}
@@ -312,11 +326,10 @@ export default function TagInput({
         )}
       </div>
 
-      {errorField ? (
-        <p className="mt-2 text-sm text-red-500" id={`${id}-error`}>{errorField}</p>
-      ) : help ? (
-        <p className="mt-2 text-sm text-gray-500" id={`${id}-description`}>{help}</p>
-      ) : null}
+      {errorField && <p className="mt-2 text-sm text-red-500" id={`${id}-error`}>{errorField}</p>}
+      {!errorField && help && <p className="mt-2 text-sm text-gray-500" id={`${id}-description`}>{help}</p>}
     </div>
   )
 }
+
+export default TagInput

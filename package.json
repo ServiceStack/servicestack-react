@@ -1,6 +1,6 @@
 {
   "name": "@servicestack/react",
-  "version": "2.0.0",
+  "version": "3.0.134",
   "repository": {
     "type": "git",
     "url": "https://github.com/ServiceStack/servicestack-react"
@@ -10,8 +10,10 @@
     "dist"
   ],
   "type": "module",
+  "main": "./dist/servicestack-react.umd.cjs",
   "module": "./dist/servicestack-react.mjs",
   "types": "./dist/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -21,8 +23,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check build-only build-style",
+    "build": "run-p type-check build-only build-style && run-p build-minify",
+    "build-minify": "uglifyjs dist/servicestack-react.mjs --compress --mangle --webkit -o dist/servicestack-react.min.mjs",
     "build-style": "postcss src/tailwind.css -o dist/styles.css",
+    "build-copy": "npm run build && rm -rf /home/mythz/src/NetCoreTemplates/react-spa/MyApp.Client/node_modules/@servicestack/react && mkdir -p /home/mythz/src/NetCoreTemplates/react-spa/MyApp.Client/node_modules/@servicestack/react/dist && cp ./dist/* /home/mythz/src/NetCoreTemplates/react-spa/MyApp.Client/node_modules/@servicestack/react/dist/ && cp package.json /home/mythz/src/NetCoreTemplates/react-spa/MyApp.Client/node_modules/@servicestack/react/",
     "preview": "vite preview",
     "build-only": "vite build -l error",
     "type-check": "tsc --noEmit",
@@ -31,35 +35,39 @@
     "bump": "npx bump && git add . && git commit -m 'bump version' && git push && git push --tags"
   },
   "dependencies": {
-    "@servicestack/client": "^2.1.13",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0"
+    "@servicestack/client": "^2.1.13"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "react-router-dom": "^7.0.0"
   },
   "devDependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.9.5",
     "@tailwindcss/forms": "^0.5.10",
-    "@types/node": "^24.6.2",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/browser": "^3.2.4",
+    "@tailwindcss/postcss": "^4.1.17",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "@vitest/browser": "^4.0.7",
+    "@vitest/browser-playwright": "^4.0.7",
     "autoprefixer": "^10.4.21",
+    "jsdom": "^27.1.0",
     "npm-run-all": "^4.1.5",
     "playwright": "^1.56.1",
     "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
     "shx": "^0.4.0",
-    "tailwindcss": "^3.4.18",
+    "tailwindcss": "^4.1.17",
     "typescript": "~5.9.3",
     "uglify-js": "^3.19.3",
-    "vite": "^7.1.7",
+    "vite": "^7.2.1",
     "vite-plugin-dts": "^4.5.4",
-    "vitest": "^3.2.4",
+    "vitest": "^4.0.7",
     "webdriverio": "^9.20.0"
-  },
-  "overrides": {
-    "@microsoft/api-extractor": {
-      "typescript": "$typescript"
-    }
   }
 }

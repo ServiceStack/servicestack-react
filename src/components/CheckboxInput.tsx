@@ -1,37 +1,46 @@
-import { useMemo, useContext } from 'react'
-import type { CheckboxInputProps } from '@/components/types'
-import { errorResponse, humanize, omit, toPascalCase } from "@servicestack/client"
-import { filterClass as filterClassFn } from "./css"
-import { ApiStateContext } from './TextInput'
+import React, { useMemo } from 'react'
+import type { CheckboxInputProps } from './types'
+import { errorResponse, humanize, omit, toPascalCase } from '@servicestack/client'
+import { filterClass } from './css'
 
-export default function CheckboxInput({
-  id,
-  label,
-  help,
-  value: modelValue,
-  onChange,
-  status,
-  inputClass,
-  labelClass,
-  filterClass,
-  className,
-  ...attrs
-}: CheckboxInputProps & { className?: string }) {
+const CheckboxInput: React.FC<CheckboxInputProps & React.HTMLAttributes<HTMLInputElement>> = (props) => {
+  const {
+    value,
+    status,
+    id,
+    inputClass,
+    filterClass: filterClassFn,
+    label,
+    labelClass,
+    help,
+    onChange,
+    className,
+    ...restProps
+  } = props
 
-  const useLabel = useMemo(() => label ?? humanize(toPascalCase(id)), [label, id])
+  const useLabel = label ?? humanize(toPascalCase(id))
 
-  const ctx = useContext(ApiStateContext)
   const errorField = useMemo(() =>
-    errorResponse.call({ responseStatus: status ?? (ctx as any)?.error?.current }, id)
-  , [status, ctx, id])
+    errorResponse.call({ responseStatus: status }, id),
+    [status, id]
+  )
 
-  const cls = useMemo(() => filterClassFn([
-    'focus:ring-indigo-500 h-4 w-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800',
-    inputClass
-  ], 'CheckboxInput', filterClass), [inputClass, filterClass])
+  const cls = useMemo(() =>
+    filterClass(
+      [
+        'focus:ring-indigo-500 h-4 w-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800',
+        inputClass
+      ],
+      'CheckboxInput',
+      filterClassFn
+    ),
+    [inputClass, filterClassFn]
+  )
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange?.(e.target.checked)
+    if (onChange) {
+      onChange(e.target.checked)
+    }
   }
 
   return (
@@ -41,22 +50,33 @@ export default function CheckboxInput({
           id={id}
           name={id}
           type="checkbox"
-          checked={modelValue ?? false}
+          checked={value ?? false}
           onChange={handleChange}
           className={cls}
-          {...omit(attrs, ['class'])}
+          {...omit(restProps, ['class'])}
         />
       </div>
       <div className="ml-3 text-sm">
-        <label htmlFor={id} className={`font-medium text-gray-700 dark:text-gray-300 ${labelClass ?? ''}`}>
+        <label
+          htmlFor={id}
+          className={`font-medium text-gray-700 dark:text-gray-300 ${labelClass ?? ''}`}
+        >
           {useLabel}
         </label>
         {errorField ? (
-          <p className="mt-2 text-sm text-red-500" id={`${id}-error`}>{errorField}</p>
+          <p className="mt-2 text-sm text-red-500" id={`${id}-error`}>
+            {errorField}
+          </p>
         ) : help ? (
-          <p className="mt-2 text-sm text-gray-500" id={`${id}-description`}>{help}</p>
+          <p className="mt-2 text-sm text-gray-500" id={`${id}-description`}>
+            {help}
+          </p>
         ) : null}
       </div>
     </div>
   )
 }
+
+CheckboxInput.displayName = 'CheckboxInput'
+
+export default CheckboxInput

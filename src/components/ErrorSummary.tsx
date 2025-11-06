@@ -1,21 +1,23 @@
-import { useMemo, useContext } from 'react'
+import type { ApiState } from "@/types"
 import type { ErrorSummaryProps } from '@/components/types'
 import { errorResponseExcept } from "@servicestack/client"
-import { ApiStateContext } from './TextInput'
+import { useContext, useMemo } from "react"
+import { ApiStateContext } from "@/use/context"
 
 export default function ErrorSummary({ status, except, className }: ErrorSummaryProps) {
-  const ctx = useContext(ApiStateContext)
-  
-  const errorSummary = useMemo(() => 
-    status || (ctx as any)?.error?.current
-      ? errorResponseExcept.call({ responseStatus: status ?? (ctx as any)?.error?.current }, except ?? [])
+  const ctx: ApiState | undefined = useContext(ApiStateContext)
+
+  const errorSummary = useMemo(() => {
+    const responseStatus = status || (ctx as any)?.error.value
+    return responseStatus
+      ? errorResponseExcept.call({ responseStatus }, except ?? [])
       : null
-  , [status, ctx, except])
+  }, [status, ctx, except])
 
   if (!errorSummary) return null
 
   return (
-    <div className={`bg-red-50 dark:bg-red-900 border-l-4 border-red-400 p-4 ${className ?? ''}`}>
+    <div className={`bg-red-50 dark:bg-red-900 border-l-4 border-red-400 p-4 ${className || ''}`}>
       <div className="flex">
         <div className="flex-shrink-0">
           <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -29,4 +31,3 @@ export default function ErrorSummary({ status, except, className }: ErrorSummary
     </div>
   )
 }
-

@@ -1,70 +1,74 @@
-import { useState, useRef, useMemo, useContext, useEffect } from 'react'
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
+import type { ApiState, UploadedFile } from '@/types'
 import type { FileInputProps } from '@/components/types'
-import type { UploadedFile } from '@/types'
 import { errorResponse, humanize, lastLeftPart, lastRightPart, toPascalCase } from '@servicestack/client'
-import { useConfig } from '@/use/config'
 import { filePathUri, getMimeType, formatBytes, fileImageUri, flush } from '@/use/files'
-import { filterClass as filterClassFn } from './css'
-import { ApiStateContext } from './TextInput'
+import { filterClass } from './css'
+import { assetsPathResolver, fallbackPathResolver } from '@/use/config'
 
-export default function FileInput({
+const FileInput: React.FC<FileInputProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof FileInputProps>> = ({
   id,
+  multiple,
+  inputClass,
+  filterClass: filterClassFn,
   label,
   labelClass,
   help,
   placeholder,
-  value: modelValue,
+  value,
   values,
   files,
-  multiple,
   status,
-  inputClass,
-  filterClass,
-  className,
+  onChange,
   ...attrs
-}: FileInputProps & { className?: string }) {
+}) => {
   const inputRef = useRef<HTMLInputElement>(null)
-  const { assetsPathResolver, fallbackPathResolver } = useConfig()
-  const [fallbackSrcMap, setFallbackSrcMap] = useState<{[name:string]:string|undefined}>({})
-  const [fallbackSrc, setFallbackSrc] = useState<string|undefined>()
+  const [fallbackSrc, setFallbackSrc] = useState<string | undefined>()
+  const [fallbackSrcMap, setFallbackSrcMap] = useState<{ [name: string]: string | undefined }>({})
   const [fileList, setFileList] = useState<UploadedFile[]>(() => {
     if (files && files.length > 0) {
-      return files.map(file => ({
-        ...file,
-        filePath: assetsPathResolver(file.filePath)
-      }))
+      return files.map(toFile)
     }
     if (values && values.length > 0) {
       return values.map(x => {
-        let filePath = x.replace(/\\/g,'/')
+        let filePath = x.replace(/\\/g, '/')
         return {
-          fileName: lastLeftPart(lastRightPart(filePath,'/'),'.'),
-          filePath: assetsPathResolver(filePath),
+          fileName: lastLeftPart(lastRightPart(filePath, '/'), '.'),
+          filePath,
           contentType: getMimeType(filePath)
         } as UploadedFile
-      })
+      }).map(toFile)
     }
     return []
   })
 
-  const useLabel = useMemo(() => label ?? humanize(toPascalCase(id)), [label, id])
-  const usePlaceholder = useMemo(() => placeholder ?? useLabel, [placeholder, useLabel])
+  function toFile(file: UploadedFile) {
+    file.filePath = assetsPathResolver(file.filePath)
+    return file
+  }
 
-  const ctx = useContext(ApiStateContext)
+  const useLabel = label ?? humanize(toPascalCase(id))
+  const usePlaceholder = placeholder ?? useLabel
+
   const errorField = useMemo(() =>
-    errorResponse.call({ responseStatus: status ?? (ctx as any)?.error?.current }, id)
-  , [status, ctx, id])
+    errorResponse.call({ responseStatus: status }, id),
+    [status, id]
+  )
 
-  const cls = useMemo(() => filterClassFn([
-    'block w-full sm:text-sm rounded-md dark:text-white dark:bg-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 dark:file:bg-violet-900 file:text-violet-700 dark:file:text-violet-200 hover:file:bg-violet-100 dark:hover:file:bg-violet-800',
-    errorField
-      ? 'pr-10 border-red-300 text-red-900 placeholder-red-300 focus:outline-none focus:ring-red-500 focus:border-red-500'
-      : 'text-slate-500 dark:text-slate-400',
-    inputClass
-  ], 'FileInput', filterClass), [errorField, inputClass, filterClass])
+  const cls = useMemo(() => filterClass(
+    [
+      'block w-full sm:text-sm rounded-md dark:text-white dark:bg-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 dark:file:bg-violet-900 file:text-violet-700 dark:file:text-violet-200 hover:file:bg-violet-100 dark:hover:file:bg-violet-800',
+      errorField
+        ? 'pr-10 border-red-300 text-red-900 placeholder-red-300 focus:outline-none focus:ring-red-500 focus:border-red-500'
+        : 'text-slate-500 dark:text-slate-400',
+      inputClass
+    ],
+    'FileInput',
+    filterClassFn
+  ), [errorField, inputClass, filterClassFn])
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target as HTMLInputElement
     setFallbackSrc('')
     setFileList(Array.from(f.files || []).map(x => ({
       fileName: x.name,
@@ -72,34 +76,41 @@ export default function FileInput({
       contentLength: x.size,
       contentType: x.type || getMimeType(x.name),
     })))
-  }
+  }, [])
 
-  const openFile = () => inputRef.current?.click()
+  const openFile = useCallback(() => {
+    inputRef.current?.click()
+  }, [])
 
-  const isDataUri = (src?: string | null) => src == null ? false : src.startsWith("data:") || src.startsWith("blob:")
+  const isDataUri = useCallback((src?: string | null) =>
+    src == null ? false : src.startsWith('data:') || src.startsWith('blob:'),
+    []
+  )
 
   const src = useMemo(() => {
     if (fileList.length > 0)
-      return fileList[0].filePath
-    let filePath = typeof modelValue == 'string' ? modelValue : values && values[0]
+      return (fileList[0] as UploadedFile).filePath
+    let filePath = typeof value === 'string' ? value : values && values[0]
     return filePath && filePathUri(assetsPathResolver(filePath)) || null
-  }, [fileList, modelValue, values, assetsPathResolver])
+  }, [fileList, value, values])
 
-  const imgCls = (src?: string | null) => !src || src.startsWith("data:") || src.endsWith(".svg")
-    ? ''
-    : 'rounded-full object-cover'
+  const imgCls = useCallback((src?: string | null) =>
+    !src || src.startsWith('data:') || src.endsWith('.svg')
+      ? ''
+      : 'rounded-full object-cover',
+    []
+  )
 
-  function onError(_e: React.SyntheticEvent<HTMLImageElement>) {
+  const onError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     setFallbackSrc(fallbackPathResolver(src!))
-  }
+  }, [src])
 
-  function onFileError(filePath: string) {
-    const uri = filePathUri(filePath)!
+  const onErrorMultiple = useCallback((filePath: string) => {
     setFallbackSrcMap(prev => ({
       ...prev,
-      [uri]: fallbackPathResolver(uri)
+      [filePathUri(filePath)!]: fallbackPathResolver(filePathUri(filePath)!)
     }))
-  }
+  }, [])
 
   useEffect(() => {
     return () => flush()
@@ -126,7 +137,7 @@ export default function FileInput({
             placeholder={usePlaceholder}
             aria-invalid={errorField != null}
             aria-describedby={`${id}-error`}
-            onChange={onChange as any}
+            onChange={handleChange}
             {...attrs}
           />
 
@@ -138,11 +149,8 @@ export default function FileInput({
             </div>
           )}
         </div>
-        {errorField ? (
-          <p className="mt-2 text-sm text-red-500" id={`${id}-error`}>{errorField}</p>
-        ) : help ? (
-          <p className="mt-2 text-sm text-gray-500" id={`${id}-description`}>{help}</p>
-        ) : null}
+        {errorField && <p className="mt-2 text-sm text-red-500" id={`${id}-error`}>{errorField}</p>}
+        {!errorField && help && <p className="mt-2 text-sm text-gray-500" id={`${id}-description`}>{help}</p>}
       </div>
       {!multiple ? (
         <div>
@@ -162,18 +170,18 @@ export default function FileInput({
         <div className="mt-3">
           <table className="w-full">
             <tbody>
-              {fileList.map((file, index) => (
-                <tr key={index}>
+              {fileList.map((file, idx) => (
+                <tr key={idx}>
                   <td className="pr-6 align-bottom pb-2">
                     <div className="flex w-full" title={!isDataUri(file.filePath) ? file.filePath : ''}>
                       <img
                         src={fallbackSrcMap[filePathUri(file.filePath)!] || assetsPathResolver(filePathUri(file.filePath)!)}
                         className={`mr-2 h-8 w-8 ${imgCls(file.filePath)}`}
-                        onError={() => onFileError(file.filePath!)}
+                        onError={() => onErrorMultiple(file.filePath)}
                         alt=""
                       />
                       {!isDataUri(file.filePath) ? (
-                        <a href={assetsPathResolver(file.filePath || '')} target="_blank" rel="noreferrer" className="overflow-hidden">
+                        <a href={assetsPathResolver(file.filePath || '')} target="_blank" rel="noopener noreferrer" className="overflow-hidden">
                           {file.fileName}
                         </a>
                       ) : (
@@ -197,3 +205,5 @@ export default function FileInput({
     </div>
   )
 }
+
+export default FileInput

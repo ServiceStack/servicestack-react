@@ -1,5 +1,5 @@
 import type { AuthenticateResponse, MetadataOperationType } from "@/types"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Sole } from "./config"
 import { sanitize } from "@servicestack/client"
 
@@ -11,13 +11,13 @@ function toAuth(auth?:AuthenticateResponse) {
 
 /** Sign In the currently Authenticated User */
 function signIn(user:AuthenticateResponse) {
-    Sole.user.value = toAuth(user)!
+    Sole.user = toAuth(user)!
     Sole.events.publish('signIn', user)
 }
 
 /** Sign Out currently Authenticated User */
 function signOut() {
-    Sole.user.value = null
+    Sole.user = null
     Sole.events.publish('signOut', null)
 }
 
@@ -28,12 +28,12 @@ const getPermissions = (user:any) => user?.permissions || []
 
 /** Check if the Authenticated User has a specific role */
 function hasRole(role:string) {
-    return getRoles(Sole.user.value).indexOf(role) >= 0
+    return getRoles(Sole.user).indexOf(role) >= 0
 }
 
 /** Check if the Authenticated User has a specific permission */
 function hasPermission(permission:string) {
-    return getPermissions(Sole.user.value).indexOf(permission) >= 0
+    return getPermissions(Sole.user).indexOf(permission) >= 0
 }
 
 /** Check if the Authenticated User has the Admin role */
@@ -46,7 +46,7 @@ export function canAccess(op?:MetadataOperationType|null) {
     if (!op) return false
     if (!op.requiresAuth)
         return true
-    const auth = Sole.user.value
+    const auth = Sole.user
     if (!auth)
         return false
     if (isAdmin())
@@ -68,7 +68,7 @@ export function canAccess(op?:MetadataOperationType|null) {
 /** Return error message if Authenticated User cannot access API */
 export function invalidAccessMessage(op:MetadataOperationType) {
     if (!op || !op.requiresAuth) return null
-    const auth = Sole.user.value
+    const auth = Sole.user
     if (!auth) {
         return `<b>${op.request.name}</b> requires Authentication`
     }
@@ -93,15 +93,18 @@ export function invalidAccessMessage(op:MetadataOperationType) {
 }
 
 export function useAuth() {
-    /** Access the currently Authenticated User info */
-    const [user, setUser] = useState<AuthenticateResponse|null>(Sole.user.value)
-
-    /** Check if the current user is Authenticated */
-    const isAuthenticated = user != null
+    const [, setUpdateCounter] = useState(0)
 
     useEffect(() => {
-        return Sole.user.subscribe(setUser)
+        const unsubscribe = Sole.subscribe(() => setUpdateCounter(c => c + 1))
+        return () => { unsubscribe() }
     }, [])
+
+    /** Access the currently Authenticated User info */
+    const user = useMemo(() => Sole.user || null, [Sole.user])
+
+    /** Check if the current user is Authenticated */
+    const isAuthenticated = useMemo(() => Sole.user != null, [Sole.user])
 
     return { signIn, signOut, user, toAuth, isAuthenticated, hasRole, hasPermission, isAdmin, canAccess, invalidAccessMessage }
 }

@@ -1,121 +1,139 @@
-import { useState, useEffect, useMemo, useRef, createContext } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
+import type { JsonServiceClient } from '@servicestack/client'
 import type { ApiPrefs, ApiResponse, Column, ColumnSettings, MetadataPropertyType } from '@/types'
-import type { ModalLookupProps } from '@/components/types'
-import type { ModalProvider } from '@/types'
+import type { ModalLookupProps } from './types'
 import { ApiResult, delaySet, humanize, mapGet } from '@servicestack/client'
 import { parseJson, getTypeName } from '@/use/utils'
 import { useConfig } from '@/use/config'
 import { Apis, createDto, Crud, getPrimaryKey, typeOf, typeProperties, useMetadata } from '@/use/metadata'
 import { grid } from './css'
 import { canAccess } from '@/use/auth'
-import { useClient } from '@/use/client'
+import ModalDialog from './ModalDialog'
 
 import FilterColumn from './grids/FilterColumn'
 import FilterViews from './grids/FilterViews'
 import QueryPrefs from './grids/QueryPrefs'
-import SettingsIcons from './SettingsIcons'
 import DataGrid from './DataGrid'
-import ModalDialog from './ModalDialog'
+import AutoCreateForm from './AutoCreateForm'
 import ErrorSummary from './ErrorSummary'
 import Loading from './Loading'
-import AutoCreateForm from './AutoCreateForm'
-
-export const ModalContext = createContext<ModalProvider | null>(null)
+import SettingsIcons from './SettingsIcons'
 
 const asStrings = (o?: string | string[] | null) => typeof o == 'string' ? o.split(',') : o || []
 
 export default function ModalLookup({
   id = 'ModalLookup',
   refInfo,
-  skip: skipProp = 0,
-  prefs: prefsProp,
-  selectedColumns: selectedColumnsProp,
+  skip: initialSkip = 0,
+  prefs,
+  selectedColumns: propSelectedColumns,
   allowFiltering = true,
   showPreferences = true,
   showPagingNav = true,
   showPagingInfo = true,
   showResetPreferences = true,
   showFiltersView = true,
-  toolbarButtonClass: toolbarButtonClassProp,
-  canFilter: canFilterProp,
-  modelTitle: modelTitleProp,
-  newButtonLabel: newButtonLabelProp,
+  toolbarButtonClass: propToolbarButtonClass,
+  canFilter: propCanFilter,
+  modelTitle: propModelTitle,
+  newButtonLabel: propNewButtonLabel,
   configureField,
   onDone
 }: ModalLookupProps) {
   const { config } = useConfig()
   const { metadataApi, filterDefinitions } = useMetadata()
-  const client = useClient()
+  const client = useRef<JsonServiceClient>((window as any).client).current
   const storage = config.storage!
 
-  const toolbarButtonClass = useMemo(() => toolbarButtonClassProp ?? grid.toolbarButtonClass, [toolbarButtonClassProp])
-  const definitions = useMemo(() => filterDefinitions, [filterDefinitions])
-
-  const defaultTake = 25
-  const [apiPrefs, setApiPrefs] = useState<ApiPrefs>({ take: defaultTake })
+  // State
+  const [apiPrefs, setApiPrefs] = useState<ApiPrefs>({ take: 25 })
   const [api, setApi] = useState<ApiResponse>(new ApiResult<any>())
-  const [skip, setSkip] = useState(skipProp)
+  const [skip, setSkip] = useState(initialSkip)
   const [apiLoading, setApiLoading] = useState(false)
-  const [open, setOpen] = useState<"filters" | null>()
-  const [showQueryPrefs, setShowQueryPrefs] = useState(false)
-  const [showFilters, setShowFilters] = useState<{ column: Column, topLeft: { x: number, y: number } } | null>()
-  const [create, setCreate] = useState(false)
+  const [open, setOpen] = useState<"filters" | null>(null)
   const [columns, setColumns] = useState<Column[]>([])
+  const [showQueryPrefs, setShowQueryPrefs] = useState(false)
+  const [showFilters, setShowFilters] = useState<{ column: Column, topLeft: { x: number, y: number } } | null>(null)
+  const [create, setCreate] = useState(false)
 
   const createFormRef = useRef<any>(null)
 
+  // Computed values
+  const toolbarButtonClass = useMemo(() =>
+    propToolbarButtonClass ?? grid.toolbarButtonClass,
+    [propToolbarButtonClass]
+  )
 
-  function getTableRowClass(_item: any, i: number) {
-    return grid.getTableRowClass("fullWidth", i, false, true)
-  }
-
-  function getSelectedColumns() {
-    let selectedCols = asStrings(selectedColumnsProp)
-    return selectedCols.length > 0 ? selectedCols : []
-  }
+  const definitions = useMemo(() => filterDefinitions, [filterDefinitions])
+  const defaultTake = 25
 
   const viewModel = useMemo(() => typeOf(refInfo.model), [refInfo.model])
 
   const viewModelColumns = useMemo(() => {
-    let selectedCols = getSelectedColumns()
-    let selectedLower = selectedCols.map(x => x.toLowerCase())
+    const selectedCols = getSelectedColumns()
+    const selectedLower = selectedCols.map(x => x.toLowerCase())
     const viewProps = typeProperties(viewModel)
     return selectedLower.length > 0
       ? selectedLower.map(x => viewProps.find(p => p.name.toLowerCase() === x)).filter(x => x != null) as MetadataPropertyType[]
       : viewProps
-  }, [viewModel, selectedColumnsProp])
+  }, [viewModel, propSelectedColumns])
 
   const filteredColumns = useMemo(() => {
-    let viewColumns = viewModelColumns.map(x => x.name)
-    let filterColumns = asStrings(apiPrefs.selectedColumns).map(x => x.toLowerCase())
+    const viewColumns = viewModelColumns.map(x => x.name)
+    const filterColumns = asStrings(apiPrefs.selectedColumns).map(x => x.toLowerCase())
     return filterColumns.length > 0
       ? viewColumns.filter(x => filterColumns.includes(x.toLowerCase()))
       : viewColumns
   }, [viewModelColumns, apiPrefs.selectedColumns])
 
   const take = useMemo(() => apiPrefs.take ?? defaultTake, [apiPrefs.take])
-  const results = useMemo<any[]>(() => (api.response ? mapGet(api.response, 'results') : null) ?? [], [api.response])
-  const total = useMemo<number>(() => api.response?.total ?? results.length ?? 0, [api.response, results])
+  const results = useMemo<any[]>(() =>
+    (api.response ? mapGet(api.response, 'results') : null) ?? [],
+    [api.response]
+  )
+  const total = useMemo<number>(() =>
+    api.response?.total ?? results.length ?? 0,
+    [api.response, results]
+  )
 
   const canFirst = useMemo(() => skip > 0, [skip])
   const canPrev = useMemo(() => skip > 0, [skip])
-  const canNext = useMemo(() => results.length >= take, [results.length, take])
-  const canLast = useMemo(() => results.length >= take, [results.length, take])
+  const canNext = useMemo(() => results.length >= take, [results, take])
+  const canLast = useMemo(() => results.length >= take, [results, take])
 
-  const hasPrefs = useMemo(() => columns.some(x => x.settings.filters.length > 0 || !!x.settings.sort), [columns])
-  const filtersCount = useMemo(() => columns.map(x => x.settings.filters.length).reduce((acc, x) => acc + x, 0), [columns])
+  const hasPrefs = useMemo(() =>
+    columns.some(x => x.settings.filters.length > 0 || !!x.settings.sort),
+    [columns]
+  )
+  const filtersCount = useMemo(() =>
+    columns.map(x => x.settings.filters.length).reduce((acc, x) => acc + x, 0),
+    [columns]
+  )
   const primaryKey = useMemo(() => getPrimaryKey(viewModel), [viewModel])
 
   const queryOp = useMemo(() =>
-    metadataApi?.operations.find(op => op.dataModel?.name == refInfo.model && Crud.isAnyQuery(op))
-    , [metadataApi, refInfo.model])
+    metadataApi?.operations.find(op =>
+      op.dataModel?.name == refInfo.model && Crud.isAnyQuery(op)
+    ),
+    [metadataApi, refInfo.model]
+  )
 
   const typeName = useMemo(() => getTypeName(refInfo.model), [refInfo.model])
   const apis = useMemo(() => Apis.forType(typeName, metadataApi), [typeName, metadataApi])
   const dataModelName = useMemo(() => typeName || queryOp?.dataModel.name, [typeName, queryOp])
-  const modelTitle = useMemo(() => modelTitleProp || dataModelName, [modelTitleProp, dataModelName])
-  const newButtonLabel = useMemo(() => newButtonLabelProp || `New ${modelTitle}`, [newButtonLabelProp, modelTitle])
-  const canCreate = useMemo(() => canAccess(apis.Create), [apis.Create])
+  const modelTitle = useMemo(() => propModelTitle || dataModelName, [propModelTitle, dataModelName])
+  const newButtonLabel = useMemo(() => propNewButtonLabel || `New ${modelTitle}`, [propNewButtonLabel, modelTitle])
+  const canCreate = useMemo(() => canAccess(apis.Create), [apis])
+
+  // Functions
+  function getSelectedColumns() {
+    const selectedCols = asStrings(propSelectedColumns)
+    return selectedCols.length > 0 ? selectedCols : []
+  }
+
+  function getTableRowClass(item: any, i: number) {
+    return grid.getTableRowClass("fullWidth", i, false, true)
+  }
 
   const prefsCacheKey = () => `${id}/ApiPrefs/${refInfo.model}`
   const columnCacheKey = (name: string) => `Column/${id}:${refInfo.model}.${name}`
@@ -131,7 +149,7 @@ export default function ModalLookup({
     await update()
   }
 
-  async function onRowSelected(item: any, _ev: Event) {
+  async function onRowSelected(item: any, ev: React.MouseEvent) {
     onDone?.(item)
   }
 
@@ -139,16 +157,18 @@ export default function ModalLookup({
     onDone?.(null)
   }
 
-  function onHeaderSelected(name: string, e: Event) {
-    let elTarget = e.target as HTMLElement
+  function onHeaderSelected(name: string, e: React.MouseEvent) {
+    const elTarget = e.target as HTMLElement
     if (elTarget?.tagName !== 'TD') {
-      let tableRect = elTarget?.closest('TABLE')?.getBoundingClientRect()
-      let column = columns.find(x => x.name.toLowerCase() == name.toLowerCase())
+      const tableRect = elTarget?.closest('TABLE')?.getBoundingClientRect()
+      const column = columns.find(x => x.name.toLowerCase() == name.toLowerCase())
       if (column && tableRect) {
-        let filterDialogWidth = 318
-        let div = (e.target as HTMLElement)?.tagName === 'DIV' ? e.target as HTMLElement : (e.target as HTMLElement)?.closest('DIV')
-        let rect = div!.getBoundingClientRect()
-        let minLeft = filterDialogWidth + 25
+        const filterDialogWidth = 318
+        const div = (e.target as HTMLElement)?.tagName === 'DIV'
+          ? e.target as HTMLElement
+          : (e.target as HTMLElement)?.closest('DIV')
+        const rect = div!.getBoundingClientRect()
+        const minLeft = filterDialogWidth + 25
         setShowFilters({
           column,
           topLeft: {
@@ -165,7 +185,7 @@ export default function ModalLookup({
   }
 
   async function onFilterSave(settings: ColumnSettings) {
-    let column = showFilters?.column
+    const column = showFilters?.column
     if (column) {
       column.settings = settings
       storage.setItem(columnCacheKey(column.name), JSON.stringify(column.settings))
@@ -196,33 +216,35 @@ export default function ModalLookup({
       console.error(`No Query API was found for ${refInfo.model}`)
       return
     }
-    let requestDto = createDto(op, args)
-    let complete = delaySet((x: boolean) => {
-      setApi(new ApiResult<any>())
+    const requestDto = createDto(op, args)
+    const complete = delaySet(x => {
+      setApi(prev => ({ ...prev, response: undefined, error: undefined }))
       setApiLoading(x)
     })
-    let r = await client.api(requestDto)
+    const r = await client.api(requestDto)
     complete()
     setApi(r)
+    const searchResults = mapGet(r.response as any, 'results') || []
+    if (!r.succeeded || searchResults.length == 0) return
   }
 
   function createRequestArgs() {
-    let args: any = {
+    const args: any = {
       include: 'total',
       take: take,
     }
-    let selectedColumns = asStrings(apiPrefs.selectedColumns || selectedColumnsProp)
-    if (selectedColumns.length > 0) {
-      let pk = primaryKey
-      if (pk && selectedColumns.includes(pk.name))
-        selectedColumns = [pk.name, ...selectedColumns]
-      args.fields = selectedColumns.join(',')
+    const selectedCols = asStrings(apiPrefs.selectedColumns || propSelectedColumns)
+    if (selectedCols.length > 0) {
+      const pk = primaryKey
+      if (pk && selectedCols.includes(pk.name))
+        selectedCols.unshift(pk.name)
+      args.fields = selectedCols.join(',')
     }
-    let orderBy: string[] = []
+    const orderBy: string[] = []
     columns.forEach(c => {
       if (c.settings.sort) orderBy.push((c.settings.sort === 'DESC' ? '-' : '') + c.name)
       c.settings.filters.forEach(filter => {
-        let k = filter.key.replace('%', c.name)
+        const k = filter.key.replace('%', c.name)
         args[k] = filter.value
       })
     })
@@ -241,6 +263,7 @@ export default function ModalLookup({
       column.settings = { filters: [] }
       storage.removeItem(columnCacheKey(column.name))
     })
+    setColumns([...columns])
     await update()
   }
 
@@ -257,38 +280,45 @@ export default function ModalLookup({
     onDone?.(result)
   }
 
+  function setCreateModel(props: any) {
+    if (!createFormRef.current) return
+    Object.assign(createFormRef.current.model, props)
+    console.log('setCreate', JSON.stringify(props, null, 2))
+    createFormRef.current?.forceUpdate()
+  }
 
-
+  // Effects
   useEffect(() => {
-    const prefs = prefsProp || parseJson(storage.getItem(prefsCacheKey()))
-    if (prefs) setApiPrefs(prefs)
+    const loadedPrefs = prefs || parseJson(storage.getItem(prefsCacheKey()))
+    if (loadedPrefs) setApiPrefs(loadedPrefs)
 
-    const newColumns = viewModelColumns.map(p => ({
+    setColumns(viewModelColumns.map(p => ({
       name: p.name,
       type: p.type,
       meta: p,
-      settings: Object.assign({
-        filters: []
-      },
+      settings: Object.assign(
+        { filters: [] },
         parseJson(storage.getItem(columnCacheKey(p.name)))
       )
-    }))
-    setColumns(newColumns)
+    })))
 
-    if (!isNaN(skipProp)) {
-      setSkip(skipProp)
+    if (!isNaN(initialSkip)) {
+      setSkip(initialSkip)
     }
 
     update()
   }, [])
 
+  if (!refInfo) return null
+
   return (
-    <ModalDialog id={id} onDone={done}>
+    <ModalDialog id={id} onDone={done} configureField={configureField}>
       <div className="pt-2 overflow-auto" style={{ minHeight: '620px' }}>
         <div className="mt-3 pl-5 flex flex-wrap items-center">
           <h3 className="hidden sm:block text-xl leading-6 font-medium text-gray-900 dark:text-gray-50 mr-3">
             Select <span className="hidden md:inline">{humanize(refInfo.model)}</span>
           </h3>
+
           <div className="flex pb-1 sm:pb-0">
             {showPreferences && (
               <button
@@ -354,8 +384,9 @@ export default function ModalLookup({
               </>
             )}
           </div>
-          <div className="flex pb-1 sm:pb-0">
-            {showPagingInfo && (
+
+          {showPagingInfo && (
+            <div className="flex pb-1 sm:pb-0">
               <div className="px-4 text-lg text-black dark:text-white">
                 {apiLoading && <span>Querying...</span>}
                 {results.length > 0 && (
@@ -364,17 +395,18 @@ export default function ModalLookup({
                     {skip + 1} - {Math.min(skip + results.length, total)} <span> of {total}</span>
                   </span>
                 )}
-                {!apiLoading && api.completed && results.length === 0 && <span>No Results</span>}
+                {!apiLoading && results.length === 0 && api.completed && <span>No Results</span>}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
           {apis.Create && canCreate && (
             <div className="pl-2 mt-1">
               <button
                 type="button"
                 onClick={onShowNewItem}
                 title={modelTitle}
-                className={toolbarButtonClass}
+                className={grid.toolbarButtonClass}
               >
                 <svg className="w-5 h-5 mr-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                   <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"></path>
@@ -382,13 +414,15 @@ export default function ModalLookup({
                 <span className="whitespace-nowrap">{newButtonLabel}</span>
               </button>
               {create && (
-                <AutoCreateForm
-                  ref={createFormRef}
-                  type={apis.Create!.request.name}
-                  configureField={configureField}
-                  onDone={createDone}
-                  onSave={createSave}
-                />
+                <React.Suspense fallback={<div>Loading...</div>}>
+                  <AutoCreateForm
+                    ref={createFormRef}
+                    type={apis.Create.request.name}
+                    configureField={configureField}
+                    onDone={createDone}
+                    onSave={createSave}
+                  />
+                </React.Suspense>
               )}
             </div>
           )}
@@ -439,68 +473,66 @@ export default function ModalLookup({
         </div>
 
         {open == 'filters' && (
-          <FilterViews
-            className="border-y border-gray-200 dark:border-gray-800 py-8 my-2"
-            definitions={definitions}
-            columns={columns}
-            onDone={() => setOpen(null)}
-            onChange={filtersChanged}
-          />
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <FilterViews
+              className="border-y border-gray-200 dark:border-gray-800 py-8 my-2"
+              definitions={definitions}
+              columns={columns}
+              onDone={() => setOpen(null)}
+              onChange={filtersChanged}
+            />
+          </React.Suspense>
         )}
 
         {showFilters && (
-          <FilterColumn
-            definitions={definitions}
-            column={showFilters.column}
-            topLeft={showFilters.topLeft}
-            onDone={onFilterDone}
-            onSave={onFilterSave}
-          />
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <FilterColumn
+              definitions={definitions}
+              column={showFilters.column}
+              topLeft={showFilters.topLeft}
+              onDone={onFilterDone}
+              onSave={onFilterSave}
+            />
+          </React.Suspense>
         )}
 
-        <ErrorSummary status={api.error} />
-        {apiLoading ? (
-          <Loading />
+        {api.error ? (
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <ErrorSummary status={api.error} />
+          </React.Suspense>
+        ) : apiLoading ? (
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <Loading />
+          </React.Suspense>
         ) : (
           <div>
             {results.length > 0 && (
-              <DataGrid
-                id={id}
-                items={results}
-                type={refInfo.model}
-                selectedColumns={filteredColumns}
-                tableStyle="fullWidth"
-                rowClass={getTableRowClass}
-                onRowSelected={onRowSelected}
-                onHeaderSelected={onHeaderSelected}
-              >
-                {(column: string, label: string) => (
-                  allowFiltering && (!canFilterProp || canFilterProp(column)) ? (
-                    <div className="cursor-pointer flex justify-between items-center hover:text-gray-900 dark:hover:text-gray-50">
-                      <span className="mr-1 select-none">{label}</span>
-                      <SettingsIcons
-                        column={columns.find((x: Column) => x.name.toLowerCase() === column.toLowerCase())!}
-                        isOpen={showFilters?.column.name === column}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex justify-between items-center">
-                      <span className="mr-1 select-none">{label}</span>
-                    </div>
-                  )
-                )}
-              </DataGrid>
+              <React.Suspense fallback={<div>Loading...</div>}>
+                <DataGrid
+                  id={id}
+                  items={results}
+                  type={refInfo.model}
+                  selectedColumns={filteredColumns}
+                  tableStyle="fullWidth"
+                  rowClass={getTableRowClass}
+                  onRowSelected={onRowSelected}
+                  onHeaderSelected={onHeaderSelected}
+                />
+              </React.Suspense>
             )}
           </div>
         )}
       </div>
+
       {showQueryPrefs && (
-        <QueryPrefs
-          columns={viewModelColumns}
-          prefs={apiPrefs}
-          onDone={() => setShowQueryPrefs(false)}
-          onSave={saveApiPrefs}
-        />
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <QueryPrefs
+            columns={viewModelColumns}
+            prefs={apiPrefs}
+            onDone={() => setShowQueryPrefs(false)}
+            onSave={saveApiPrefs}
+          />
+        </React.Suspense>
       )}
     </ModalDialog>
   )

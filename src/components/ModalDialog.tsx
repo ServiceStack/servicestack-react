@@ -1,11 +1,42 @@
-import { useState, useEffect, createContext } from 'react'
-import type { ModalDialogProps } from '@/components/types'
-import type { ModalProvider } from '@/types'
-import { transition } from '@/use/utils'
+import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react'
+import type { ModalDialogProps } from './types'
+import type { ModalProvider, RefInfo } from '@/types'
 import * as css from './css'
-import ModalLookup from './ModalLookup'
 
-export const ModalContext = createContext<ModalProvider | null>(null)
+// ModalLookup will be imported later to avoid circular dependency
+const ModalLookup = React.lazy(() => import('./ModalLookup'))
+
+// Create ModalProvider context
+export const ModalProviderContext = createContext<ModalProvider | null>(null)
+
+export function useModalProvider() {
+  const context = useContext(ModalProviderContext)
+  if (!context) {
+    throw new Error('useModalProvider must be used within ModalDialog')
+  }
+  return context
+}
+
+interface TransitionRule {
+  cls: string
+  from: string
+  to: string
+}
+
+interface TransitionRules {
+  entering: TransitionRule
+  leaving: TransitionRule
+}
+
+function transition(rule: TransitionRules, setTransition: (cls: string) => void, show: boolean) {
+  if (show) {
+    setTransition(rule.entering.cls + ' ' + rule.entering.from)
+    setTimeout(() => setTransition(rule.entering.cls + ' ' + rule.entering.to), 0)
+  } else {
+    setTransition(rule.leaving.cls + ' ' + rule.leaving.from)
+    setTimeout(() => setTransition(rule.leaving.cls + ' ' + rule.leaving.to), 0)
+  }
+}
 
 export default function ModalDialog({
   id = 'ModalDialog',
@@ -14,13 +45,10 @@ export default function ModalDialog({
   closeButtonClass = "bg-white dark:bg-black cursor-pointer rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:ring-offset-black",
   configureField,
   children,
-  closeButton,
-  bottom,
   onDone
 }: ModalDialogProps & {
-  children?: React.ReactNode,
-  closeButton?: React.ReactNode,
-  bottom?: React.ReactNode
+  closeButton?: ReactNode
+  bottom?: ReactNode
 }) {
   const [show, setShow] = useState(false)
   const [transition1, setTransition1] = useState('')
@@ -28,19 +56,19 @@ export default function ModalDialog({
   const [modal, setModal] = useState<{name: string} & any>()
   const [modalDone, setModalDone] = useState<((result: any) => any) | undefined>()
 
-  const rule1 = {
+  const rule1: TransitionRules = {
     entering: { cls: 'ease-out duration-300', from: 'opacity-0', to: 'opacity-100' },
     leaving: { cls: 'ease-in duration-200', from: 'opacity-100', to: 'opacity-0' }
   }
-  const rule2 = {
+
+  const rule2: TransitionRules = {
     entering: { cls: 'ease-out duration-300', from: 'opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95', to: 'opacity-100 translate-y-0 sm:scale-100' },
     leaving: { cls: 'ease-in duration-200', from: 'opacity-100 translate-y-0 sm:scale-100', to: 'opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95' }
   }
 
-  useEffect(() => {
-    setShow(true)
-  }, [])
+  const close = () => setShow(false)
 
+  // Handle show state changes
   useEffect(() => {
     transition(rule1, setTransition1, show)
     transition(rule2, setTransition2, show)
@@ -48,10 +76,23 @@ export default function ModalDialog({
       const timer = setTimeout(() => onDone?.(), 200)
       return () => clearTimeout(timer)
     }
-  }, [show, onDone])
+  }, [show])
 
-  const close = () => setShow(false)
+  // Initialize show state
+  useEffect(() => {
+    setShow(true)
+  }, [])
 
+  // Handle escape key
+  useEffect(() => {
+    const globalKeyHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close()
+    }
+    window.addEventListener('keydown', globalKeyHandler)
+    return () => window.removeEventListener('keydown', globalKeyHandler)
+  }, [])
+
+  // ModalProvider functions
   function openModal(info: {name: string} & any, done: (result: any) => any) {
     setModal(info)
     setModalDone(() => done)
@@ -69,16 +110,8 @@ export default function ModalDialog({
     openModal
   }
 
-  useEffect(() => {
-    const globalKeyHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close()
-    }
-    window.addEventListener('keydown', globalKeyHandler)
-    return () => window.removeEventListener('keydown', globalKeyHandler)
-  }, [])
-
   return (
-    <ModalContext.Provider value={modalProvider}>
+    <ModalProviderContext.Provider value={modalProvider}>
       <div
         id={id}
         data-transition-for={id}
@@ -92,31 +125,52 @@ export default function ModalDialog({
 
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div className={`${modalClass} ${sizeClass} ${transition2}`} onMouseDown={(e) => e.stopPropagation()}>
+            <div
+              className={`${modalClass} ${sizeClass} ${transition2}`}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
               <div>
-                {closeButton || (
-                  <div className="hidden sm:block absolute top-0 right-0 pt-4 pr-4 z-10">
-                    <button type="button" onClick={close} className={closeButtonClass} title="Close">
-                      <span className="sr-only">Close</span>
-                      <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                          d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
+                <div className="hidden sm:block absolute top-0 right-0 pt-4 pr-4 z-10">
+                  <button
+                    type="button"
+                    onClick={close}
+                    className={closeButtonClass}
+                    title="Close"
+                  >
+                    <span className="sr-only">Close</span>
+                    <svg
+                      className="h-6 w-6"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
                 {children}
               </div>
             </div>
-            {bottom}
           </div>
         </div>
 
-        {modal?.name == 'ModalLookup' && modal.ref && (
-          <ModalLookup refInfo={modal.ref} onDone={openModalDone} configureField={configureField} />
+        {modal?.name === 'ModalLookup' && modal.ref && (
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <ModalLookup
+              refInfo={modal.ref}
+              onDone={openModalDone}
+              configureField={configureField}
+            />
+          </React.Suspense>
         )}
       </div>
-    </ModalContext.Provider>
+    </ModalProviderContext.Provider>
   )
 }

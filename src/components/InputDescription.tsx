@@ -5,7 +5,6 @@ export default function InputDescription({ id, description }: InputDescriptionPr
 
   return (
     <div
-      key="description"
       className="mt-2 text-sm text-gray-500"
       id={`${id}-description`}
       aria-describedby={`${id}-description`}

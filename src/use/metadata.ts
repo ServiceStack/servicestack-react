@@ -1,10 +1,10 @@
-import { type AppMetadata, type MetadataType, type MetadataPropertyType, type MetadataOperationType, type InputInfo, type KeyValuePair, type MetadataTypes, type AutoQueryConvention, type Filter, type RefInfo, type InputProp, type AppInfo, type MetadataTypeName, type AutoQueryApis } from "@/types"
+import { type AppMetadata, type MetadataType, type MetadataPropertyType, type MetadataOperationType, type InputInfo, type KeyValuePair, type MetadataTypes, type AutoQueryConvention, type Filter, type RefInfo, type InputProp, type AppInfo, type MetadataTypeName, type AutoQueryApis, MetadataApp } from "@/types"
 import type { JsonServiceClient } from '@servicestack/client'
 import { toDate, toCamelCase, chop, map, mapGet, toDateTime, leftPart } from '@servicestack/client'
-import { useState, useEffect } from 'react'
+import { useContext } from 'react'
 import { Sole } from './config'
 import { dateInputFormat, scopedExpr } from './utils'
-// import { ClientContext } from './client'
+import { ClientContext } from './context'
 
 const metadataPath = "/metadata/app.json"
 
@@ -50,7 +50,7 @@ const NumTypesMap = {
     Double: 'double',
     Decimal: 'decimal',
 }
-// const NumTypes = [ ...Object.keys(NumTypesMap), ...Object.values(NumTypesMap) ]
+const NumTypes = [ ...Object.keys(NumTypesMap), ...Object.values(NumTypesMap) ]
 const Aliases:{[k:string]:string} = {
     String: 'string',
     Boolean: 'bool',
@@ -143,7 +143,7 @@ export class Apis implements AutoQueryApis
             }
         }
         if (type) {
-            metaTypes ??= Sole.metadata.value?.api
+            metaTypes ??= Sole.metadata?.api
             metaTypes?.operations.forEach(op => {
                 if (op.dataModel?.name == type) {
                     apis.add(op)
@@ -270,7 +270,7 @@ export function makeDto(requestDto:string, obj?:any, ctx:{ createResponse?:() =>
 }
 
 /** Mutates Request DTO values to supported HTML Input values */
-export function toFormValues(dto:any, _metaType?:MetadataType|null) {
+export function toFormValues(dto:any, metaType?:MetadataType|null) {
     if (!dto) return {}
     Object.keys(dto).forEach((key:string) => {
         let value = dto[key]
@@ -320,18 +320,18 @@ export function isValid(metadata:AppMetadata|null|undefined) {
 }
 
 /** Get get AppMetadata instance */
-export function getMetadata(opt?:{assert?:boolean}):any { // use 'any' to avoid type explosion    
-    if (!tryLoad() && opt?.assert && !Sole.metadata.value)
+export function getMetadata(opt?:{assert?:boolean}):any { // use 'any' to avoid type explosion
+    if (!tryLoad() && opt?.assert && !Sole.metadata)
         throw new Error('useMetadata() not configured, see: https://docs.servicestack.net/vue/use-metadata')
-        
-    return Sole.metadata.value
+
+    return Sole.metadata
 }
 
 /** Explicitly set AppMetadata and save to localStorage */
 export function setMetadata(metadata:AppMetadata|null|undefined) {
     if (metadata && isValid(metadata)) {
         metadata.date = toDateTime(new Date())
-        Sole.metadata.value = metadata
+        Sole.metadata = metadata
         if (typeof localStorage != 'undefined') localStorage.setItem(metadataPath, JSON.stringify(metadata))
         return true
     }
@@ -340,12 +340,12 @@ export function setMetadata(metadata:AppMetadata|null|undefined) {
 
 /** Delete AppMetadata and remove from localStorage */
 export function clearMetadata() {
-    Sole.metadata.value = null
+    Sole.metadata = null
     if (typeof localStorage != 'undefined') localStorage.removeItem(metadataPath)
 }
 
 export function tryLoad() {
-    if (Sole.metadata.value != null) return true
+    if (Sole.metadata != null) return true
     let metadata:AppMetadata|null = (globalThis as any).Server
     if (isValid(metadata)) {
         setMetadata(metadata)
@@ -359,7 +359,7 @@ export function tryLoad() {
             }
         }
     }
-    return Sole.metadata.value != null
+    return Sole.metadata != null
 }
 
 export async function downloadMetadata(metadataPath:string, resolve?:() => Promise<Response>) {
@@ -372,7 +372,7 @@ export async function downloadMetadata(metadataPath:string, resolve?:() => Promi
     } else {
         console.error(`Could not download ${resolve ? 'AppMetadata' : metadataPath}: ${r.statusText}`)
     }
-    if (!isValid(Sole.metadata.value)) {
+    if (!isValid(Sole.metadata)) {
         console.warn('AppMetadata is not available')
     }
 }
@@ -382,15 +382,16 @@ export async function downloadMetadata(metadataPath:string, resolve?:() => Promi
  * @param resolvePath - Override `/metadata/app.json` path use to fetch metadata
  * @param resolve     - Use a custom fetch to resolve AppMetadata
 */
-async function loadMetadata(args:{ 
-    olderThan?:number, 
+async function loadMetadata(args:{
+    olderThan?:number,
     resolvePath?: string,
-    resolve?:() => Promise<Response> 
+    resolve?:() => Promise<Response>,
+    client?: JsonServiceClient
 }) {
-    const { olderThan, resolvePath, resolve } = args || {}
+    const { olderThan, resolvePath, resolve, client } = args || {}
     let hasMetadata = tryLoad() && olderThan !== 0
     if (hasMetadata && olderThan) {
-        let date = toDate(Sole.metadata.value?.date)
+        let date = toDate(Sole.metadata?.date)
         if (!date || (new Date().getTime() - date.getTime()) > olderThan) {
             hasMetadata = false
         }
@@ -399,37 +400,35 @@ async function loadMetadata(args:{
         // If provided user-defined paths
         if (resolvePath || resolve) {
             await downloadMetadata(resolvePath || metadataPath, resolve)
-            if (Sole.metadata.value != null) return
+            if (Sole.metadata != null) return
         }
 
         // If has registered API client
-        // Note: In React, client should be passed as a parameter or obtained from context
-        // const client = inject<JsonServiceClient>('client')
-        // if (client != null) {
-        //     const api = await client.api(new MetadataApp())
-        //     if (api.succeeded) {
-        //         setMetadata(api.response)
-        //     }
-        // }
-        if (Sole.metadata.value != null) return
+        if (client != null) {
+            const api = await client.api(new MetadataApp())
+            if (api.succeeded) {
+                setMetadata(api.response)
+            }
+        }
+        if (Sole.metadata != null) return
 
         // Default to /metadata/app.json
         await downloadMetadata(metadataPath)
     }
-    return Sole.metadata.value as any // avoid type explosion in api.d.ts until needed
+    return Sole.metadata as any // avoid type explosion in api.d.ts until needed
 }
 
 /**
  * Resolve {MetadataType} for DTO name
  * @param name        - Find MetadataType by name
- * @param [namespace] - Find MetadataType by name and namespace 
+ * @param [namespace] - Find MetadataType by name and namespace
  */
 export function typeOf(name?:string|null, namespace?:string|null) {
     if (Sole.config.typeResolver) {
         let type = Sole.config.typeResolver(name!,namespace)
         if (type) return type
     }
-    let api = Sole.metadata.value?.api
+    let api = Sole.metadata?.api
     if (!api || !name) return null
     let type = api.types.find(x => x.name.toLowerCase() === name.toLowerCase() && (!namespace || x.namespace == namespace))
     if (type) return type
@@ -446,7 +445,7 @@ export function apiOf(name:string) {
         const op = Sole.config.apiResolver(name)
         if (op) return op
     }
-    let api = Sole.metadata.value?.api
+    let api = Sole.metadata?.api
     if (!api) return null
     let requestOp = api.operations.find(x => x.request.name.toLowerCase() === name.toLowerCase())
     return requestOp
@@ -454,7 +453,7 @@ export function apiOf(name:string) {
 
 /** Filter Apis by different filtering conditions */
 export function findApis({ dataModel }: { dataModel?:string|MetadataType }) {
-    const api = Sole.metadata.value?.api
+    const api = Sole.metadata?.api
     if (!api) return []
     let apis = api.operations
     if (dataModel) {
@@ -567,7 +566,7 @@ export function createFormLayout(metaType?:MetadataType|null) {
             const input = createInput(prop, prop.input)
             input.id = toCamelCase(input.id)
             if (input.type == 'file' && prop.uploadTo && !input.accept) {
-                const uploadLocation = Sole.metadata.value?.plugins.filesUpload?.locations.find(x => x.name == prop.uploadTo)
+                const uploadLocation = Sole.metadata?.plugins.filesUpload?.locations.find(x => x.name == prop.uploadTo)
                 if (uploadLocation && !input.accept && uploadLocation.allowExtensions) {
                     input.accept = uploadLocation.allowExtensions.map(x => x.startsWith('.') ? x : `.${x}`).join(',')
                 }
@@ -715,30 +714,25 @@ const defaultViewerConventions:AutoQueryConvention[] = [
 ]
 
 export function useMetadata() {
-    const [metadataApp, setMetadataApp] = useState<AppInfo|null>(Sole.metadata.value?.app || null)
-    const [metadataApi, setMetadataApi] = useState<MetadataTypes|null>(Sole.metadata.value?.api || null)
-    const [filterDefinitions, setFilterDefinitions] = useState<AutoQueryConvention[]>(
-        Sole.metadata.value?.plugins?.autoQuery?.viewerConventions || defaultViewerConventions
-    )
+    const client = useContext(ClientContext)
 
-    useEffect(() => {
-        tryLoad()
+    tryLoad()
 
-        return Sole.metadata.subscribe((metadata) => {
-            setMetadataApp(metadata?.app || null)
-            setMetadataApi(metadata?.api || null)
-            setFilterDefinitions(metadata?.plugins?.autoQuery?.viewerConventions || defaultViewerConventions)
-        })
-    }, [])
+    // Create a wrapper for loadMetadata that includes the client from context
+    const loadMetadataWithClient = (args?: {
+        olderThan?: number,
+        resolvePath?: string,
+        resolve?: () => Promise<Response>
+    }) => loadMetadata({ ...args, client })
 
     return {
-        loadMetadata,
+        loadMetadata: loadMetadataWithClient,
         getMetadata,
         setMetadata,
         clearMetadata,
-        metadataApp,
-        metadataApi,
-        filterDefinitions,
+        metadataApp: Sole.metadata?.app || null,
+        metadataApi: Sole.metadata?.api || null,
+        filterDefinitions: Sole.metadata?.plugins?.autoQuery?.viewerConventions || defaultViewerConventions,
         typeOf,
         typeOfRef,
         typeEquals,

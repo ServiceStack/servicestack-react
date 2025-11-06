@@ -26,7 +26,7 @@ export function timeInputFormat(s?:string|number|Date|null) { return s == null ?
 export function textInputValue(type:string, value:any) {
     if (Sole.config.inputValue)
         return Sole.config.inputValue(type,value)
-
+    
     if (type === 'date') {
         return dateInputFormat(value)
     } else if (type === 'datetime-local') {
@@ -40,24 +40,25 @@ export function textInputValue(type:string, value:any) {
 }
 
 
-/** Double set reactive Ref<T> to force triggering updates */
-export function setRef<T>($ref:MutableRefObject<T>, value:T, setValue?: (value: T) => void) {
-    if (setValue) {
-        setValue(null as any)
-        setTimeout(() => setValue(value), 0)
+/** Set React ref or state value - for React compatibility, just sets the value directly */
+export function setRef<T>($ref: MutableRefObject<T> | ((value: T) => void), value: T) {
+    if (typeof $ref === 'function') {
+        // It's a setState function
+        $ref(value)
     } else {
-        $ref.current = null as any
-        setTimeout(() => $ref.current = value, 0)
+        // It's a React ref
+        $ref.current = value
     }
 }
 
-/** Returns a dto with all values unwrapped (no-op in React) */
-export function unRefs(o:any) {
-    return o
+/** Returns a dto with all properties unwrapped - for React, just returns a shallow copy */
+export function unRefs<T extends Record<string, any>>(o: T): T {
+    // In React, we don't have Vue refs, so just return a shallow copy
+    return { ...o }
 }
 
-/** Update reactive `transition` class based on Tailwind animation transition rule-set */
-export function transition(rule:TransitionRules, setTransition:(value:string) => void, show:boolean) {
+/** Update transition class based on Tailwind animation transition rule-set */
+export function transition(rule: TransitionRules, setTransition: (value: string) => void, show: boolean) {
     if (show) {
         setTransition(rule.entering.cls + ' ' + rule.entering.from)
         setTimeout(() => setTransition(rule.entering.cls + ' ' + rule.entering.to), 0)

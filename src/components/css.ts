@@ -49,7 +49,7 @@ export const form = {
     legendClass: "text-base font-medium text-gray-900 dark:text-gray-100 text-center mb-4",
 }
 export const grid = {
-    getGridClass(_style:TableStyleOptions="stripedRows") { return grid.gridClass },
+    getGridClass(style:TableStyleOptions="stripedRows") { return grid.gridClass },
     getGrid2Class(style:TableStyleOptions="stripedRows") { return hasTableStyle(style,"fullWidth")
         ? "overflow-x-auto" 
         : grid.grid2Class },

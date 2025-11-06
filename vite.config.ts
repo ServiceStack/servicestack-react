@@ -22,13 +22,14 @@ export default defineConfig({
       fileName: (fmt,name) => fmt == 'es' ? `servicestack-react.mjs` : `servicestack-react.${fmt}.cjs`,
     },
     rollupOptions: {
-      external:['react','react-dom','react/jsx-runtime','@servicestack/client'],
+      external:['react','react-dom','react/jsx-runtime','react-router-dom','@servicestack/client'],
       output: {
         exports: 'named',
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
+          'react-router-dom': 'ReactRouterDOM',
           '@servicestack/client': 'Servicestack',
           '@servicestack/react': 'ServicestackReact'
         }

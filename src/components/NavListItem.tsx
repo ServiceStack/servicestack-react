@@ -1,7 +1,15 @@
 import type { NavListItemProps } from '@/components/types'
 import Icon from './Icon'
 
-export default function NavListItem({ href, title, icon, iconSrc, iconSvg, iconAlt, children }: NavListItemProps & { children?: React.ReactNode }) {
+export default function NavListItem({
+  title,
+  href,
+  icon,
+  iconSvg,
+  iconSrc,
+  iconAlt,
+  children
+}: NavListItemProps & { children?: React.ReactNode }) {
   return (
     <li className="relative flex items-start space-x-4 py-6">
       <div className="flex-shrink-0">

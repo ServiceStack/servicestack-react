@@ -1,45 +1,60 @@
-import { useMemo, useContext } from 'react'
-import type { TextareaInputProps } from '@/components/types'
-import { errorResponse, humanize, omit, toPascalCase } from "@servicestack/client"
-import { input, filterClass as filterClassFn } from "./css"
-import { ApiStateContext } from './TextInput'
+import React, { useMemo } from 'react'
+import type { TextareaInputProps } from './types'
+import { errorResponse, humanize, omit, toPascalCase } from '@servicestack/client'
+import { input, filterClass } from './css'
 
-export default function TextareaInput({
-  id,
-  label,
-  placeholder,
-  help,
-  value: modelValue,
-  onChange,
-  status,
-  inputClass,
-  labelClass,
-  filterClass,
-  className,
-  ...attrs
-}: TextareaInputProps & { className?: string }) {
+const TextareaInput: React.FC<TextareaInputProps & React.HTMLAttributes<HTMLTextAreaElement>> = (props) => {
+  const {
+    status,
+    id,
+    inputClass,
+    filterClass: filterClassFn,
+    label,
+    labelClass,
+    help,
+    placeholder,
+    value,
+    onChange,
+    className,
+    ...restProps
+  } = props
 
-  const useLabel = useMemo(() => label ?? humanize(toPascalCase(id)), [label, id])
-  const usePlaceholder = useMemo(() => placeholder ?? useLabel, [placeholder, useLabel])
+  const useLabel = label ?? humanize(toPascalCase(id))
+  const usePlaceholder = placeholder ?? useLabel
 
-  const ctx = useContext(ApiStateContext)
   const errorField = useMemo(() =>
-    errorResponse.call({ responseStatus: status ?? (ctx as any)?.error?.current }, id)
-  , [status, ctx, id])
+    errorResponse.call({ responseStatus: status }, id),
+    [status, id]
+  )
 
-  const cls = useMemo(() => filterClassFn(['shadow-sm ' + input.base,
-    errorField
-      ? 'text-red-900 focus:ring-red-500 focus:border-red-500 border-red-300'
-      : 'text-gray-900 ' + input.valid, inputClass], 'TextareaInput', filterClass), [errorField, inputClass, filterClass])
+  const cls = useMemo(() =>
+    filterClass(
+      [
+        'shadow-sm ' + input.base,
+        errorField
+          ? 'text-red-900 focus:ring-red-500 focus:border-red-500 border-red-300'
+          : 'text-gray-900 ' + input.valid,
+        inputClass
+      ],
+      'TextareaInput',
+      filterClassFn
+    ),
+    [errorField, inputClass, filterClassFn]
+  )
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onChange?.(e.target.value)
+    if (onChange) {
+      onChange(e.target.value)
+    }
   }
 
   return (
     <div className={className}>
       {useLabel && (
-        <label htmlFor={id} className={`block text-sm font-medium text-gray-700 dark:text-gray-300 ${labelClass ?? ''}`}>
+        <label
+          htmlFor={id}
+          className={`block text-sm font-medium text-gray-700 dark:text-gray-300 ${labelClass ?? ''}`}
+        >
           {useLabel}
         </label>
       )}
@@ -49,18 +64,26 @@ export default function TextareaInput({
           id={id}
           className={cls}
           placeholder={usePlaceholder}
+          value={value ?? ''}
           onChange={handleInput}
-          value={modelValue ?? ''}
           aria-invalid={errorField != null}
           aria-describedby={`${id}-error`}
-          {...omit(attrs, ['class'])}
+          {...omit(restProps, ['class'])}
         />
       </div>
       {errorField ? (
-        <p className="mt-2 text-sm text-red-500" id={`${id}-error`}>{errorField}</p>
+        <p className="mt-2 text-sm text-red-500" id={`${id}-error`}>
+          {errorField}
+        </p>
       ) : help ? (
-        <p className="mt-2 text-sm text-gray-500" id={`${id}-description`}>{help}</p>
+        <p className="mt-2 text-sm text-gray-500" id={`${id}-description`}>
+          {help}
+        </p>
       ) : null}
     </div>
   )
 }
+
+TextareaInput.displayName = 'TextareaInput'
+
+export default TextareaInput

@@ -1,6 +1,6 @@
 import type { NavListProps } from '@/components/types'
 
-export default function NavList({ title, children }: NavListProps & { children?: React.ReactNode }) {
+export default function NavList({ title, children }: NavListProps) {
   return (
     <div>
       {title && (

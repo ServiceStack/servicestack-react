@@ -1,76 +1,117 @@
-import { useRef, useEffect, useMemo, useImperativeHandle, forwardRef, useContext } from 'react'
+import React, { useState, useMemo, useRef, useEffect, useImperativeHandle, forwardRef, useContext } from 'react'
 import type { MarkdownInputProps } from '@/components/types'
+import type { ApiState, MarkdownInputOptions, ResponseStatus } from '@/types'
 import { filterClass, input } from "./css"
 import { errorResponse, humanize, toPascalCase } from "@servicestack/client"
-import type { MarkdownInputOptions } from '@/types'
 import { asOptions } from '@/use/utils'
-import { ApiStateContext } from './TextInput'
+import { ApiStateContext } from '@/use/context'
 
-type Item = { value: string, selectionStart?: number, selectionEnd?: number }
+interface Item {
+  value: string
+  selectionStart?: number
+  selectionEnd?: number
+}
 
-const MarkdownInput = forwardRef<any, MarkdownInputProps & {
-  headerSlot?: React.ReactNode,
-  toolbarbuttonsSlot?: React.ReactNode,
-  footerSlot?: React.ReactNode
-}>(({
-  id,
-  value: modelValue,
-  onChange: onUpdateModelValue,
+interface InsertOptions {
+  selectionAtEnd?: boolean
+  offsetStart?: number
+  offsetEnd?: number
+  filterValue?: (value: string, opt: any) => string
+  filterSelection?: (selection: string) => string
+}
+
+export interface MarkdownInputRef {
+  textarea: React.RefObject<HTMLTextAreaElement>
+  updateModelValue: (value: string) => void
+  selection: () => string
+  hasSelection: () => boolean
+  selectionInfo: () => any
+  insert: (prefix: string, suffix: string, placeholder?: string, options?: InsertOptions) => void
+  replace: (item: Item) => void
+}
+
+const MarkdownInput = forwardRef<MarkdownInputRef, MarkdownInputProps>(({
   status,
+  id,
+  inputClass,
+  filterClass: filterClassProp,
   label,
   labelClass,
   help,
-  rows,
-  disabled,
+  placeholder,
+  value = '',
+  counter,
+  rows = 6,
+  errorMessages,
   lang,
-  hide,
+  autoFocus,
+  disabled,
   helpUrl = "https://guides.github.com/features/mastering-markdown/",
-  inputClass,
-  filterClass: filterClassProp,
-  onClose,
-  headerSlot,
-  toolbarbuttonsSlot,
-  footerSlot
+  hide,
+  onChange,
+  onClose
 }, ref) => {
+  const txt = useRef<HTMLTextAreaElement>(null)
   const historyRef = useRef<Item[]>([])
   const redosRef = useRef<Item[]>([])
-  const txtRef = useRef<HTMLTextAreaElement>(null)
 
-  const ctx = useContext(ApiStateContext)
+  const ctx: ApiState | undefined = useContext(ApiStateContext)
+
   const errorField = useMemo(() =>
-    errorResponse.call({ responseStatus: status ?? (ctx as any)?.error?.current }, id),
-    [status, ctx, id])
-  const useLabel = useMemo(() => label ?? humanize(toPascalCase(id)), [label, id])
+    errorResponse.call({ responseStatus: status ?? (ctx as any)?.error.value }, id),
+    [status, ctx, id]
+  )
+
+  const useLabel = useMemo(() =>
+    label ?? humanize(toPascalCase(id)),
+    [label, id]
+  )
 
   const allShow = 'bold,italics,link,image,blockquote,code,heading,orderedList,unorderedList,strikethrough,undo,redo,help'.split(',') as MarkdownInputOptions[]
   const showOptions = useMemo<{ [k: string]: boolean }>(() =>
     hide ? asOptions(allShow, hide) : asOptions(allShow, []),
-    [hide])
-  function show(target: MarkdownInputOptions) { return showOptions[target] }
+    [hide]
+  )
 
-  const cls = useMemo(() => filterClass(['shadow-sm font-mono' + input.base.replace('rounded-md', ''),
-    errorField
-      ? 'text-red-900 focus:ring-red-500 focus:border-red-500 border-red-300'
-      : 'text-gray-900 ' + input.valid, inputClass], 'MarkdownInput', filterClassProp), [errorField, inputClass, filterClassProp])
+  const show = (target: MarkdownInputOptions) => showOptions[target]
+
+  const cls = useMemo(() =>
+    filterClass(
+      [
+        'shadow-sm font-mono' + input.base.replace('rounded-md', ''),
+        errorField
+          ? 'text-red-900 focus:ring-red-500 focus:border-red-500 border-red-300'
+          : 'text-gray-900 ' + input.valid,
+        inputClass
+      ],
+      'MarkdownInput',
+      filterClassProp
+    ),
+    [errorField, inputClass, filterClassProp]
+  )
+
   const btnCls = "w-5 h-5 cursor-pointer select-none text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
 
-  function updateModelValue(value: string) {
-    onUpdateModelValue?.(value)
+  const updateModelValue = (value: string) => {
+    onChange?.(value)
   }
 
-  function hasSelection() {
-    return txtRef.current!.selectionStart !== txtRef.current!.selectionEnd
+  const hasSelection = () => {
+    return txt.current!.selectionStart !== txt.current!.selectionEnd
   }
 
-  function selection() {
-    const el = txtRef.current!
+  const selection = () => {
+    const el = txt.current!
     return el.value.substring(el.selectionStart, el.selectionEnd) || ''
   }
 
-  function selectionInfo() {
-    const el = txtRef.current!
-    const value = el.value, selPos = el.selectionStart, sel = value.substring(selPos, el.selectionEnd) || '',
-      beforeSel = value.substring(0, selPos), prevCRPos = beforeSel.lastIndexOf('\n')
+  const selectionInfo = () => {
+    const el = txt.current!
+    const value = el.value
+    const selPos = el.selectionStart
+    const sel = value.substring(selPos, el.selectionEnd) || ''
+    const beforeSel = value.substring(0, selPos)
+    const prevCRPos = beforeSel.lastIndexOf('\n')
     return {
       value,
       sel,
@@ -83,40 +124,60 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
     }
   }
 
-  function replace({ value, selectionStart, selectionEnd }: Item) {
+  const replace = ({ value: newValue, selectionStart, selectionEnd }: Item) => {
     if (selectionEnd == null) {
       selectionEnd = selectionStart
     }
-    updateModelValue(value)
+    updateModelValue(newValue)
     setTimeout(() => {
-      txtRef.current!.focus()
-      txtRef.current!.setSelectionRange(selectionStart!, selectionEnd!)
+      txt.current?.focus()
+      txt.current?.setSelectionRange(selectionStart!, selectionEnd!)
     }, 0)
   }
 
-  function insert(prefix: string, suffix: string, placeholder: string = '',
-    { selectionAtEnd, offsetStart, offsetEnd, filterValue, filterSelection }
-      : { selectionAtEnd?: boolean, offsetStart?: number, offsetEnd?: number, filterValue?: Function, filterSelection?: Function } = {}) {
-    const el = txtRef.current!
+  const insert = (
+    prefix: string,
+    suffix: string,
+    placeholder: string = '',
+    options: InsertOptions = {}
+  ) => {
+    const {
+      selectionAtEnd,
+      offsetStart,
+      offsetEnd,
+      filterValue,
+      filterSelection
+    } = options
+
+    const el = txt.current!
     let value = el.value
     let pos = el.selectionEnd
-    historyRef.current.push({ value, selectionStart: el.selectionStart, selectionEnd: el.selectionEnd })
+    historyRef.current.push({
+      value,
+      selectionStart: el.selectionStart,
+      selectionEnd: el.selectionEnd
+    })
     redosRef.current = []
-    const from = el.selectionStart, to = el.selectionEnd
+
+    const from = el.selectionStart
+    const to = el.selectionEnd
     let beforeRange = value.substring(0, from)
     let afterRange = value.substring(to)
     const toggleOff = prefix && beforeRange.endsWith(prefix) && afterRange.startsWith(suffix)
 
     const noSelection = from == to
+    let newOffsetStart = offsetStart
+    let newOffsetEnd = offsetEnd
+
     if (noSelection) {
       if (!toggleOff) {
         value = beforeRange + prefix + placeholder + suffix + afterRange
         pos += prefix.length
-        offsetStart = 0
-        offsetEnd = placeholder?.length || 0
+        newOffsetStart = 0
+        newOffsetEnd = placeholder?.length || 0
         if (selectionAtEnd) {
-          pos += offsetEnd
-          offsetEnd = 0
+          pos += newOffsetEnd
+          newOffsetEnd = 0
         }
       } else {
         value = beforeRange.substring(0, beforeRange.length - prefix.length) + afterRange.substring(suffix.length)
@@ -136,26 +197,26 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
       if (!toggleOff) {
         value = beforeRange + prefix + selectedText + suffix + afterRange
 
-        if (offsetStart) {
+        if (newOffsetStart) {
           pos += (prefix + suffix).length
         } else {
           pos = from
-          offsetStart = prefix.length
-          offsetEnd = selectedText.length
+          newOffsetStart = prefix.length
+          newOffsetEnd = selectedText.length
         }
       } else {
         value = beforeRange.substring(0, beforeRange.length - prefix.length) + selectedText + afterRange.substring(suffix.length)
-        offsetStart = -selectedText.length - prefix.length
-        offsetEnd = selectedText.length
+        newOffsetStart = -selectedText.length - prefix.length
+        newOffsetEnd = selectedText.length
       }
     }
 
     updateModelValue(value)
     setTimeout(() => {
       el.focus()
-      offsetStart = pos + (offsetStart || 0)
-      offsetEnd = (offsetStart || 0) + (offsetEnd || 0)
-      el.setSelectionRange(offsetStart, offsetEnd)
+      const start = pos + (newOffsetStart || 0)
+      const end = (start || 0) + (newOffsetEnd || 0)
+      el.setSelectionRange(start, end)
     }, 0)
   }
 
@@ -166,9 +227,9 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
   const quote = () => insert('\n> ', '\n', 'Blockquote', {})
   const image = () => insert('![](', ')')
 
-  function code(e: React.MouseEvent | KeyboardEvent) {
+  const code = (e: React.MouseEvent | React.KeyboardEvent) => {
     const sel = selection()
-    if (sel && !(e as any).shiftKey) {
+    if (sel && !('shiftKey' in e && e.shiftKey)) {
       insert('`', '`', 'code')
     } else {
       const langVal = lang || 'js'
@@ -181,9 +242,9 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
     }
   }
 
-  function ol() {
+  const ol = () => {
     if (hasSelection()) {
-      let { sel, beforeSel, afterSel, prevCRPos, beforeCR, afterCR } = selectionInfo()
+      let { sel, selPos, beforeSel, afterSel, prevCRPos, beforeCR, afterCR } = selectionInfo()
       const partialSel = sel.indexOf('\n') === -1
       if (!partialSel) {
         const indent = !sel.startsWith(' 1. ')
@@ -191,11 +252,11 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
           let index = 1
           insert('', '', ' - ', {
             selectionAtEnd: true,
-            filterSelection: (v: string) => " 1. " + v.replace(/\n$/, '').replace(/\n/g, _x => `\n ${++index}. `) + "\n"
+            filterSelection: (v: string) => " 1. " + v.replace(/\n$/, '').replace(/\n/g, () => `\n ${++index}. `) + "\n"
           })
         } else {
           insert('', '', '', {
-            filterValue: (_v: string, opt: any) => {
+            filterValue: (v: string, opt: any) => {
               if (prevCRPos >= 0) {
                 let afterCRTrim = afterCR.replace(/^ - /, '')
                 beforeSel = beforeCR + afterCRTrim
@@ -206,8 +267,7 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
             filterSelection: (v: string) => v.replace(/^ 1. /g, '').replace(/\n \d+. /g, "\n")
           })
         }
-      }
-      else {
+      } else {
         insert('\n 1. ', '\n')
       }
     } else {
@@ -215,9 +275,9 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
     }
   }
 
-  function ul() {
+  const ul = () => {
     if (hasSelection()) {
-      let { sel, beforeSel, afterSel, prevCRPos, beforeCR, afterCR } = selectionInfo()
+      let { sel, selPos, beforeSel, afterSel, prevCRPos, beforeCR, afterCR } = selectionInfo()
       const partialSel = sel.indexOf('\n') === -1
       if (!partialSel) {
         const indent = !sel.startsWith(' - ')
@@ -228,7 +288,7 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
           })
         } else {
           insert('', '', '', {
-            filterValue: (_v: string, opt: any) => {
+            filterValue: (v: string, opt: any) => {
               if (prevCRPos >= 0) {
                 let afterCRTrim = afterCR.replace(/^ - /, '')
                 beforeSel = beforeCR + afterCRTrim
@@ -247,8 +307,9 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
     }
   }
 
-  function heading() {
-    const sel = selection(), partialSel = sel.indexOf('\n') === -1
+  const heading = () => {
+    const sel = selection()
+    const partialSel = sel.indexOf('\n') === -1
     if (sel) {
       if (partialSel) {
         insert('\n## ', '\n', '')
@@ -260,10 +321,10 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
     }
   }
 
-  function comment() {
+  const comment = () => {
     let { sel, selPos, beforeSel, afterSel, prevCRPos, beforeCR, afterCR } = selectionInfo()
-    const commentVal = !sel.startsWith('//') && !afterCR.startsWith('//')
-    if (commentVal) {
+    const isComment = !sel.startsWith('//') && !afterCR.startsWith('//')
+    if (isComment) {
       if (!sel) {
         replace({
           value: beforeCR + '//' + afterCR + afterSel,
@@ -277,7 +338,7 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
       }
     } else {
       insert('', '', '', {
-        filterValue: (_v: string, opt: any) => {
+        filterValue: (v: string, opt: any) => {
           if (prevCRPos >= 0) {
             let afterCRTrim = afterCR.replace(/^\/\//, '')
             beforeSel = beforeCR + afterCRTrim
@@ -292,41 +353,40 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
 
   const blockComment = () => insert('/*\n', '*/\n', '')
 
-  function undo() {
+  const undo = () => {
     if (historyRef.current.length === 0) return false
-    const el = txtRef.current!
-    const lastState = historyRef.current.pop()
-    redosRef.current.push({ value: el.value, selectionStart: el.selectionStart, selectionEnd: el.selectionEnd })
-    replace(lastState!)
+    const el = txt.current!
+    const lastState = historyRef.current.pop()!
+    redosRef.current.push({
+      value: el.value,
+      selectionStart: el.selectionStart,
+      selectionEnd: el.selectionEnd
+    })
+    replace(lastState)
     return true
   }
 
-  function redo() {
+  const redo = () => {
     if (redosRef.current.length === 0) return false
-    const el = txtRef.current!
-    const lastState = redosRef.current.pop()
-    historyRef.current.push({ value: el.value, selectionStart: el.selectionStart, selectionEnd: el.selectionEnd })
-    replace(lastState!)
+    const el = txt.current!
+    const lastState = redosRef.current.pop()!
+    historyRef.current.push({
+      value: el.value,
+      selectionStart: el.selectionStart,
+      selectionEnd: el.selectionEnd
+    })
+    replace(lastState)
     return true
   }
 
-  const tab = () => null //TODO
-
-  useImperativeHandle(ref, () => ({
-    props: { id, value: modelValue, 'onUpdate:modelValue': onUpdateModelValue, status, label, labelClass, help, rows, disabled, lang, hide, helpUrl, inputClass, filterClass: filterClassProp, onClose },
-    textarea: txtRef,
-    updateModelValue,
-    selection,
-    hasSelection,
-    selectionInfo,
-    insert,
-    replace
-  }))
+  const tab = () => null // TODO
 
   useEffect(() => {
     historyRef.current = []
     redosRef.current = []
-    const el = txtRef.current!
+
+    const el = txt.current
+    if (!el) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" || e.keyCode === 27) {
@@ -335,7 +395,7 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
       }
 
       const c = String.fromCharCode(e.keyCode).toLowerCase()
-      if (c === '\t') { //tab: indent/unindent
+      if (c === '\t') { // tab: indent/unindent
         const indent = !e.shiftKey
         if (indent) {
           insert('', '', '    ', {
@@ -344,8 +404,8 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
           })
         } else {
           insert('', '', '', {
-            filterValue: (_v: string, opt: any) => {
-              let { beforeSel, afterSel, prevCRPos, beforeCR, afterCR } = selectionInfo()
+            filterValue: (v: string, opt: any) => {
+              let { selPos, beforeSel, afterSel, prevCRPos, beforeCR, afterCR } = selectionInfo()
               if (prevCRPos >= 0) {
                 let afterCRTrim = afterCR.replace(/\t/g, '    ').replace(/^ ? ? ? ?/, '')
                 beforeSel = beforeCR + afterCRTrim
@@ -357,9 +417,8 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
           })
         }
         e.preventDefault()
-      }
-      else if (e.ctrlKey) {
-        if (c === 'z') { //z: undo/redo
+      } else if (e.ctrlKey) {
+        if (c === 'z') { // z: undo/redo
           if (!e.shiftKey) {
             if (undo()) {
               e.preventDefault()
@@ -369,19 +428,19 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
               e.preventDefault()
             }
           }
-        } else if (c === 'b' && !e.shiftKey) { //b: bold
+        } else if (c === 'b' && !e.shiftKey) { // b: bold
           bold()
           e.preventDefault()
-        } else if (c === 'h' && !e.shiftKey) { //h: heading
+        } else if (c === 'h' && !e.shiftKey) { // h: heading
           heading()
           e.preventDefault()
-        } else if (c === 'i' && !e.shiftKey) { //i: italic
+        } else if (c === 'i' && !e.shiftKey) { // i: italic
           italic()
           e.preventDefault()
-        } else if (c === 'q' && !e.shiftKey) { //q: blockquote
+        } else if (c === 'q' && !e.shiftKey) { // q: blockquote
           quote()
           e.preventDefault()
-        } else if (c === 'k') { //l: link/image
+        } else if (c === 'k') { // l: link/image
           if (!e.shiftKey) {
             link()
             e.preventDefault()
@@ -389,8 +448,8 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
             image()
             e.preventDefault()
           }
-        } else if ((c === ',' || e.key === '<' || e.key === '>' || e.keyCode === 188)) { //<>: code
-          code(e)
+        } else if ((c === ',' || e.key === '<' || e.key === '>' || e.keyCode === 188)) { // <>: code
+          code(e as any)
           e.preventDefault()
         } else if (c === '/' || e.key === '/') {
           comment()
@@ -399,8 +458,7 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
           blockComment()
           e.preventDefault()
         }
-      }
-      else if (e.altKey) {
+      } else if (e.altKey) {
         if (e.key === '1' || e.key === '0') {
           ol()
           e.preventDefault()
@@ -414,15 +472,24 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
       }
     }
 
-    el.onkeydown = handleKeyDown
+    el.addEventListener('keydown', handleKeyDown)
     return () => {
-      el.onkeydown = null
+      el.removeEventListener('keydown', handleKeyDown)
     }
-  }, [modelValue])
+  }, [value, onChange])
+
+  useImperativeHandle(ref, () => ({
+    textarea: txt,
+    updateModelValue,
+    selection,
+    hasSelection,
+    selectionInfo,
+    insert,
+    replace
+  }))
 
   return (
     <div>
-      {headerSlot}
       {useLabel && (
         <label htmlFor={id} className={`mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300 ${labelClass ?? ''}`}>
           {useLabel}
@@ -503,11 +570,10 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
                 <path fill="currentColor" d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16a8.002 8.002 0 0 1 7.6-5.5c1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z" />
               </svg>
             )}
-            {toolbarbuttonsSlot}
           </div>
           {show('help') && helpUrl && (
             <div className="p-2 flex flex-wrap gap-x-4">
-              <a title="formatting help" target="_blank" href={helpUrl} tabIndex={-1}>
+              <a title="formatting help" target="_blank" href={helpUrl} tabIndex={-1} rel="noreferrer">
                 <svg className={btnCls} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5c0-2.21-1.79-4-4-4z" />
                 </svg>
@@ -516,28 +582,36 @@ const MarkdownInput = forwardRef<any, MarkdownInputProps & {
           )}
         </div>
       )}
-      <div className="">
+      <div>
         <textarea
-          ref={txtRef}
+          ref={txt}
           name={id}
           id={id}
           className={cls}
-          value={modelValue}
-          rows={rows || 6}
+          value={value}
+          rows={rows}
           disabled={disabled}
           onChange={(e) => updateModelValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Tab') {
-              tab()
+              e.preventDefault()
             }
           }}
         />
       </div>
-      {errorField && <p className="mt-2 text-sm text-red-500" id={`${id}-error`}>{errorField}</p>}
-      {!errorField && help && <p className="mt-2 text-sm text-gray-500" id={`${id}-description`}>{help}</p>}
-      {footerSlot}
+      {errorField ? (
+        <p className="mt-2 text-sm text-red-500" id={`${id}-error`}>
+          {errorField}
+        </p>
+      ) : help ? (
+        <p className="mt-2 text-sm text-gray-500" id={`${id}-description`}>
+          {help}
+        </p>
+      ) : null}
     </div>
   )
 })
+
+MarkdownInput.displayName = 'MarkdownInput'
 
 export default MarkdownInput

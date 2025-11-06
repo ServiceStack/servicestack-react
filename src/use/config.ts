@@ -3,6 +3,7 @@ import type { ComponentType } from "react"
 import { getFormatters } from "./formatters"
 import { enumFlagsConverter } from "./metadata"
 import { createBus, toKebabCase } from "@servicestack/client"
+import { RouterLink } from '../components/RouterLink'
 
 export class Interceptors {
     callbacks:{ [key:string]: (key:string, value:any) => void} = {}
@@ -46,29 +47,10 @@ export class LocalStore implements Storage {
     }
 }
 
-// Simple reactive state management for React
-class ReactiveValue<T> {
-    private _value: T
-    private listeners: Set<(value: T) => void> = new Set()
-
-    constructor(initialValue: T) {
-        this._value = initialValue
-    }
-
-    get value(): T {
-        return this._value
-    }
-
-    set value(newValue: T) {
-        this._value = newValue
-        this.listeners.forEach(listener => listener(newValue))
-    }
-
-    subscribe(listener: (value: T) => void): () => void {
-        this.listeners.add(listener)
-        return () => this.listeners.delete(listener)
-    }
-}
+// State holder for React
+let userState: AuthenticateResponse | null = null
+let metadataState: AppMetadata | null = null
+let subscribers: Set<() => void> = new Set()
 
 export class Sole {
     static config:UiConfig = {
@@ -95,10 +77,33 @@ export class Sole {
     }
 
     static events = createBus()
-    static user = new ReactiveValue<AuthenticateResponse|null>(null)
-    static metadata = new ReactiveValue<AppMetadata|null>(null)
-    static components:{[k:string]:ComponentType<any>} = {}
 
+    static get user() {
+        return userState
+    }
+
+    static set user(value: AuthenticateResponse | null) {
+        userState = value
+        subscribers.forEach(cb => cb())
+    }
+
+    static get metadata() {
+        return metadataState
+    }
+
+    static set metadata(value: AppMetadata | null) {
+        metadataState = value
+        subscribers.forEach(cb => cb())
+    }
+
+    static subscribe(callback: () => void) {
+        subscribers.add(callback)
+        return () => subscribers.delete(callback)
+    }
+
+    static components:{[k:string]:ComponentType} = {
+        RouterLink,
+    }
     static component(name:string) {
         const component = Sole.components[name]
         if (component) return component
@@ -138,15 +143,16 @@ export function registerInterceptor(key:string, callback:(key:string, value:any)
 
 /** Manage Global Configuration for Component Library */
 export function useConfig() {
-    /** Resolve configuration */
-    const config = Sole.config
-    const autoQueryGridDefaults = Sole.autoQueryGridDefaults
     const events = Sole.events
 
     return {
-        config, setConfig, events,
-        autoQueryGridDefaults, setAutoQueryGridDefaults,
-        assetsPathResolver, fallbackPathResolver,
+        config: Sole.config,
+        setConfig,
+        events,
+        autoQueryGridDefaults: Sole.autoQueryGridDefaults,
+        setAutoQueryGridDefaults,
+        assetsPathResolver,
+        fallbackPathResolver,
         registerInterceptor,
     }
 }

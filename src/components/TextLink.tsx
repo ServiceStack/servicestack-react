@@ -1,16 +1,17 @@
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import type { TextLinkProps } from '@/components/types'
 import { a } from './css'
 
-export default function TextLink({
+const TextLink: React.FC<TextLinkProps & React.AnchorHTMLAttributes<HTMLAnchorElement>> = ({
   color = 'blue',
-  href,
   children,
+  href,
   ...attrs
-}: TextLinkProps & { children?: React.ReactNode }) {
+}) => {
   const cls = useMemo(() =>
-    (a[color] || a.blue) + (!href ? ' cursor-pointer' : '')
-  , [color, href])
+    (a[color] || a.blue) + (!href ? ' cursor-pointer' : ''),
+    [color, href]
+  )
 
   return (
     <a className={cls} href={href} {...attrs}>
@@ -18,3 +19,5 @@ export default function TextLink({
     </a>
   )
 }
+
+export default TextLink
