@@ -13,14 +13,21 @@ import ModalDialog from '../components/ModalDialog'
 import SlideOver from '../components/SlideOver'
 import DataGrid from '../components/DataGrid'
 import AutoForm from '../components/AutoForm'
+import AutoQueryGrid from '../components/AutoQueryGrid'
+// In production, import from '@servicestack/react':
+// import { AutoQueryGrid, ClientContext } from '@servicestack/react'
+import { ClientContext } from '../use/context'
 import { tracks, RoomType } from './data'
-import { ApiResult, EmptyResponse, IReturn, ResponseStatus } from '@servicestack/client'
+import { ApiResult, EmptyResponse, IReturn, ResponseStatus, JsonServiceClient } from '@servicestack/client'
 import { setMetadata } from '../use/metadata'
 import { Sole } from '../use/config'
 import metadataJson from './metadata.json'
 import PrimaryButton from '../components/PrimaryButton'
 
 setMetadata(metadataJson)
+
+// Create a JsonServiceClient instance for AutoQueryGrid
+const client = new JsonServiceClient('https://blazor-gallery.jamstacks.net')
 
 class Forecast {
   public date?: string;
@@ -147,6 +154,7 @@ export default function App() {
 
   return (
     <>
+      <ClientContext.Provider value={client}>
       <div className="absolute top-2 right-2">
         <DarkModeToggle />
       </div>
@@ -404,7 +412,6 @@ export default function App() {
       {/* Contextual Validation Test Section */}
       <div className="max-w-4xl mx-auto p-8">
         <h2 className="text-2xl font-bold mb-6">AutoForm Contextual Validation Test</h2>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <p className="mb-4 text-gray-600 dark:text-gray-400">
             This form demonstrates contextual validation. When you submit, it will return field-specific errors
             that are automatically displayed on the corresponding inputs via ApiStateContext.
@@ -449,8 +456,19 @@ export default function App() {
                 : new ApiResult({ response: new EmptyResponse() })
             }}
           />
+      </div>
+
+     {/* AutoQuery Bookings Test */}
+      <div className="max-w-4xl mx-auto p-8">
+        <h2 className="text-2xl font-bold mb-6">AutoQuery Bookings Test</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <p className="mb-4 text-gray-600 dark:text-gray-400">
+          </p>
+          <AutoQueryGrid type="Booking" />
         </div>
       </div>
+
+      </ClientContext.Provider>
     </>
   )
 }

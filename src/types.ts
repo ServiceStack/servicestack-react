@@ -65,6 +65,7 @@ export type ApiState = {
     unRefs: <T extends Record<string, any>>(o: T) => T
     setError: ({ message, errorCode, fieldName, errors }: IResponseStatus) => ResponseStatus
     addFieldError: ({ fieldName, message, errorCode }: IResponseError) => void
+    clearErrors(): void
     loading: boolean
     error: ResponseStatus | undefined
     api: <TResponse>(request: IReturn<TResponse> | ApiRequest, args?: any, method?: string) => Promise<ApiResult<TResponse>>

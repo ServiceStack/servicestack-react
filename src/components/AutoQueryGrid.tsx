@@ -8,6 +8,7 @@ import { a, grid } from './css'
 import { asOptions, asStrings, copyText, getTypeName, parseJson, pushState, uniqueIgnoreCase } from '@/use/utils'
 import { canAccess, useAuth } from '@/use/auth'
 import { Sole } from '@/use/config'
+import { ClientContext } from '@/use/context'
 import EnsureAccess from './EnsureAccess'
 import EnsureAccessDialog from './EnsureAccessDialog'
 import FilterColumn from './grids/FilterColumn'
@@ -44,13 +45,15 @@ export interface AutoQueryGridRef {
     total: number
 }
 
-interface AutoQueryGridComponentProps extends AutoQueryGridProps {
-    // Event handlers
+// Event handlers and callbacks
+interface AutoQueryGridCallbacks {
     onHeaderSelected?: (name: string, e: React.MouseEvent) => void
     onRowSelected?: (item: any, ev: React.MouseEvent) => void
     onNav?: (args: any) => void
+}
 
-    // Slot/children props
+// Slot/children props
+interface AutoQueryGridSlots {
     children?: ReactNode
     toolbar?: ReactNode
     toolbarButtons?: (props: { toolbarButtonClass: string }) => ReactNode
@@ -95,8 +98,8 @@ interface AutoQueryGridComponentProps extends AutoQueryGridProps {
     headerSlots?: Record<string, (props: any) => ReactNode>
 }
 
-// Context for the client
-const ClientContext = React.createContext<JsonServiceClient | null>(null)
+// Combined props for internal use
+type AutoQueryGridComponentProps = AutoQueryGridProps & AutoQueryGridCallbacks & AutoQueryGridSlots
 
 export const AutoQueryGrid = forwardRef<AutoQueryGridRef, AutoQueryGridComponentProps>((props, ref) => {
     const {
@@ -1075,6 +1078,3 @@ export const AutoQueryGrid = forwardRef<AutoQueryGridRef, AutoQueryGridComponent
 AutoQueryGrid.displayName = 'AutoQueryGrid'
 
 export default AutoQueryGrid
-
-// Export context for use by parent components
-export { ClientContext }

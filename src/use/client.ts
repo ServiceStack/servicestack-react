@@ -13,6 +13,7 @@ export function useClient(use?: JsonServiceClient) {
     const [response, setResponse] = useState<any>()
     const contextClient = useContext(ClientContext)
     const client = use ?? contextClient!
+    const clearErrors = () => setError(undefined)
 
     /** Set error state with summary or field validation error */
     function setErrorState({ message, errorCode, fieldName, errors }: IResponseStatus) {
@@ -122,6 +123,7 @@ export function useClient(use?: JsonServiceClient) {
     const ctx: ApiState = {
         setError: setErrorState,
         addFieldError,
+        clearErrors,
         loading,
         error,
         api,
