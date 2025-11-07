@@ -275,6 +275,15 @@ export declare interface AuthInfo {
     };
 }
 
+/**
+ * Autocomplete component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ */
 export declare const Autocomplete: default_2.ForwardRefExoticComponent<AutocompleteProps & Omit<default_2.InputHTMLAttributes<HTMLInputElement>, keyof AutocompleteProps> & default_2.RefAttributes<AutocompleteRef>>;
 
 export declare interface AutocompleteProps {
@@ -299,6 +308,32 @@ declare interface AutocompleteRef {
     toggle(expand: boolean): void;
 }
 
+/**
+ * AutoCreateForm component for creating new entities with ServiceStack AutoQuery CRUD APIs.
+ *
+ * The form provides ApiStateContext to all child components, allowing them to access
+ * the form's loading and error state using the `useApiState()` hook.
+ *
+ * @example
+ * ```tsx
+ * // In a child component within AutoCreateForm:
+ * import { useApiState } from '@servicestack/react'
+ *
+ * function CustomFormField() {
+ *   const apiState = useApiState()
+ *
+ *   if (apiState?.loading) {
+ *     return <div>Saving...</div>
+ *   }
+ *
+ *   if (apiState?.error) {
+ *     return <div>Error: {apiState.error.message}</div>
+ *   }
+ *
+ *   return <div>Form field content</div>
+ * }
+ * ```
+ */
 export declare const AutoCreateForm: default_2.ForwardRefExoticComponent<AutoCreateFormProps & AutoCreateFormSlots & default_2.RefAttributes<AutoCreateFormRef>>;
 
 export declare interface AutoCreateFormProps extends AutoFormBaseProps {
@@ -326,6 +361,32 @@ declare interface AutoCreateFormSlots {
     children?: ReactNode;
 }
 
+/**
+ * AutoEditForm component for editing existing entities with ServiceStack AutoQuery CRUD APIs.
+ *
+ * The form provides ApiStateContext to all child components, allowing them to access
+ * the form's loading and error state using the `useApiState()` hook.
+ *
+ * @example
+ * ```tsx
+ * // In a child component within AutoEditForm:
+ * import { useApiState } from '@servicestack/react'
+ *
+ * function CustomFormField() {
+ *   const apiState = useApiState()
+ *
+ *   if (apiState?.loading) {
+ *     return <div>Updating...</div>
+ *   }
+ *
+ *   if (apiState?.error) {
+ *     return <div>Error: {apiState.error.message}</div>
+ *   }
+ *
+ *   return <div>Form field content</div>
+ * }
+ * ```
+ */
 export declare const AutoEditForm: default_2.ForwardRefExoticComponent<AutoEditFormProps & AutoEditFormSlots & default_2.RefAttributes<AutoEditFormRef>>;
 
 export declare interface AutoEditFormProps extends AutoFormBaseProps {
@@ -356,6 +417,32 @@ declare interface AutoEditFormSlots {
     children?: ReactNode;
 }
 
+/**
+ * AutoForm component that automatically generates a form from a ServiceStack DTO type.
+ *
+ * The form provides ApiStateContext to all child components, allowing them to access
+ * the form's loading and error state using the `useApiState()` hook.
+ *
+ * @example
+ * ```tsx
+ * // In a child component within AutoForm:
+ * import { useApiState } from '@servicestack/react'
+ *
+ * function CustomFormField() {
+ *   const apiState = useApiState()
+ *
+ *   if (apiState?.loading) {
+ *     return <div>Loading...</div>
+ *   }
+ *
+ *   if (apiState?.error) {
+ *     return <div>Error: {apiState.error.message}</div>
+ *   }
+ *
+ *   return <div>Form field content</div>
+ * }
+ * ```
+ */
 export declare const AutoForm: default_2.ForwardRefExoticComponent<AutoFormProps & AutoFormSlots & default_2.RefAttributes<AutoFormRef>>;
 
 export declare interface AutoFormBaseProps {
@@ -425,10 +512,12 @@ export declare interface AutoFormProps {
     subHeadingClass?: string;
     submitLabel?: string;
     allowSubmit?: (model: any) => boolean;
+    onSubmit?: (request: any) => Promise<ApiResult_2<any>>;
     onSuccess?: (response: any) => void;
     onError?: (error: ResponseStatus) => void;
     onDone?: () => void;
     onChange?: (value: any) => void;
+    children?: ReactNode;
 }
 
 declare interface AutoFormRef {
@@ -691,6 +780,15 @@ export declare interface CellFormatProps {
     value: Object;
 }
 
+/**
+ * CheckboxInput component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ */
 export declare const CheckboxInput: default_2.FC<CheckboxInputProps & default_2.HTMLAttributes<HTMLInputElement>>;
 
 export declare interface CheckboxInputProps {
@@ -734,9 +832,16 @@ export declare type ColumnSettings = {
     sort?: "ASC" | "DESC";
 };
 
+/**
+ * Combobox component that wraps Autocomplete with key-value pair support.
+ *
+ * Error handling is delegated to the Autocomplete component, which supports ApiStateContext.
+ * Pass the `status` prop to explicitly set errors, or let Autocomplete access errors from context.
+ */
 export declare const Combobox: default_2.ForwardRefExoticComponent<ComboboxProps & Omit<default_2.HTMLAttributes<HTMLDivElement>, keyof ComboboxProps> & default_2.RefAttributes<ComboboxRef>>;
 
 export declare interface ComboboxProps {
+    status?: ResponseStatus | null;
     id: string;
     value?: any;
     multiple?: boolean;
@@ -820,7 +925,7 @@ export declare interface DatabaseInfo {
     schemas: SchemaInfo[];
 }
 
-export declare function DataGrid({ id, items, tableStyle, type, selectedColumns, className, gridClass: gridClassProp, grid2Class: grid2ClassProp, grid3Class: grid3ClassProp, grid4Class: grid4ClassProp, tableClass: tableClassProp, theadClass: theadClassProp, tbodyClass: tbodyClassProp, theadRowClass: theadRowClassProp, theadCellClass: theadCellClassProp, isSelected, headerTitle, headerTitles, visibleFrom, rowClass, rowStyle, onHeaderSelected, onRowSelected, children, }: DataGridProps & {
+export declare function DataGrid({ id, items, tableStyle, type, selectedColumns, className, gridClass: gridClassProp, grid2Class: grid2ClassProp, grid3Class: grid3ClassProp, grid4Class: grid4ClassProp, tableClass: tableClassProp, theadClass: theadClassProp, tbodyClass: tbodyClassProp, theadRowClass: theadRowClassProp, theadCellClass: theadCellClassProp, isSelected, headerTitle, headerTitles, visibleFrom, rowClass, rowStyle, onHeaderSelected, onRowSelected, slots: slotsProp, children, }: DataGridProps & {
     children?: default_2.ReactNode;
 }): JSX.Element;
 
@@ -852,6 +957,9 @@ export declare interface DataGridProps {
     rowStyle?: (model: any, i: number) => CSSProperties | undefined;
     onHeaderSelected?: (name: string, ev: React.MouseEvent) => void;
     onRowSelected?: (item: any, ev: React.MouseEvent) => void;
+    slots?: {
+        [name: string]: React.ReactNode | ((props: any) => React.ReactNode);
+    };
 }
 
 /** Format Date into required input[type=date] format */
@@ -871,7 +979,7 @@ declare const dummy: {
     colspans: string;
 };
 
-export declare const DynamicInput: default_2.FC<DynamicInputProps>;
+export declare function DynamicInput({ input, value: modelValue, onChange: onUpdateModelValue, api }: DynamicInputProps): JSX.Element;
 
 export declare interface DynamicInputProps {
     input: InputProp | InputInfo;
@@ -955,6 +1063,15 @@ declare function fileImageUri(file: any | {
     name: string;
 }): string;
 
+/**
+ * FileInput component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ */
 export declare const FileInput: default_2.FC<FileInputProps & Omit<default_2.InputHTMLAttributes<HTMLInputElement>, keyof FileInputProps>>;
 
 export declare interface FileInputProps {
@@ -1423,6 +1540,15 @@ declare function makeDto(requestDto: string, obj?: any, ctx?: {
     method?: string;
 }): any;
 
+/**
+ * MarkdownInput component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ */
 export declare const MarkdownInput: default_2.ForwardRefExoticComponent<MarkdownInputProps & default_2.RefAttributes<MarkdownInputRef>>;
 
 export declare type MarkdownInputOptions = "bold" | "italics" | "link" | "image" | "blockquote" | "code" | "heading" | "orderedList" | "unorderedList" | "strikethrough" | "undo" | "redo" | "help";
@@ -1924,6 +2050,15 @@ export declare interface SecondaryButtonProps {
     disabled?: boolean;
 }
 
+/**
+ * SelectInput component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ */
 export declare const SelectInput: default_2.FC<SelectInputProps & default_2.HTMLAttributes<HTMLSelectElement>>;
 
 export declare interface SelectInputProps {
@@ -1993,6 +2128,32 @@ export declare interface SidebarLayoutRef {
     toggle(show: boolean): void;
 }
 
+/**
+ * SignIn component for authenticating users with ServiceStack Auth.
+ *
+ * The component provides ApiStateContext to all child components, allowing them to access
+ * the authentication loading and error state using the `useApiState()` hook.
+ *
+ * @example
+ * ```tsx
+ * // In a child component within SignIn:
+ * import { useApiState } from '@servicestack/react'
+ *
+ * function CustomAuthField() {
+ *   const apiState = useApiState()
+ *
+ *   if (apiState?.loading) {
+ *     return <div>Authenticating...</div>
+ *   }
+ *
+ *   if (apiState?.error) {
+ *     return <div>Error: {apiState.error.message}</div>
+ *   }
+ *
+ *   return <div>Auth field content</div>
+ * }
+ * ```
+ */
 export declare const SignIn: default_2.FC<SignInProps>;
 
 /** Sign In the currently Authenticated User */
@@ -2068,6 +2229,15 @@ export declare interface TabsProps {
     clearQuery?: boolean;
 }
 
+/**
+ * TagInput component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ */
 export declare const TagInput: default_2.FC<TagInputProps & Omit<default_2.InputHTMLAttributes<HTMLInputElement>, keyof TagInputProps>>;
 
 export declare interface TagInputProps {
@@ -2088,6 +2258,15 @@ export declare interface TagInputProps {
     onChange?: (value: string | string[]) => void;
 }
 
+/**
+ * TextareaInput component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ */
 export declare const TextareaInput: default_2.FC<TextareaInputProps & default_2.HTMLAttributes<HTMLTextAreaElement>>;
 
 export declare interface TextareaInputProps {
@@ -2103,6 +2282,26 @@ export declare interface TextareaInputProps {
     onChange?: (value: string) => void;
 }
 
+/**
+ * TextInput component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ *
+ * @example
+ * ```tsx
+ * // With explicit status prop
+ * <TextInput id="email" status={responseStatus} />
+ *
+ * // Within a form component (uses context automatically)
+ * <AutoForm type={MyDto}>
+ *   <TextInput id="email" />
+ * </AutoForm>
+ * ```
+ */
 export declare const TextInput: default_2.ForwardRefExoticComponent<TextInputProps & default_2.HTMLAttributes<HTMLInputElement> & default_2.RefAttributes<TextInputRef>>;
 
 export declare interface TextInputProps {
@@ -2241,6 +2440,12 @@ export declare interface UploadedFile {
     contentType?: string;
     contentLength?: number;
 }
+
+/**
+ * Hook to access the API state (loading, error) from AutoForm context
+ * Use this in child components within AutoForm to access the form's API state
+ */
+export declare function useApiState(): ApiState | undefined;
 
 export declare function useAuth(): {
     signIn: typeof signIn;
