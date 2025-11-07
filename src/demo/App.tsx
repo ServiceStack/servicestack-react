@@ -416,29 +416,37 @@ export default function App() {
               // Simulate API call that returns validation errors
               await new Promise(resolve => setTimeout(resolve, 500))
 
-              const errors: ResponseStatus = {
+              const errors = []
+              if (!request.name) {
+                errors.push({
+                  fieldName: 'name',
+                  errorCode: 'NotEmpty',
+                  message: 'Name is required and cannot be empty'
+                })
+              }
+              if (!request.email) {
+                errors.push({
+                  fieldName: 'email',
+                  errorCode: 'InvalidEmail',
+                  message: 'Please enter a valid email address'
+                })
+              }
+              if (!request.age || request.age < 18 || request.age > 120) {
+                errors.push({
+                  fieldName: 'age',
+                  errorCode: 'Range',
+                  message: 'Age must be between 18 and 120'
+                })
+              }
+              const status: ResponseStatus = {
                 errorCode: 'ValidationError',
                 message: 'Validation failed',
-                errors: [
-                  {
-                    fieldName: 'name',
-                    errorCode: 'NotEmpty',
-                    message: 'Name is required and cannot be empty'
-                  },
-                  {
-                    fieldName: 'email',
-                    errorCode: 'InvalidEmail',
-                    message: 'Please enter a valid email address'
-                  },
-                  {
-                    fieldName: 'age',
-                    errorCode: 'Range',
-                    message: 'Age must be between 18 and 120'
-                  }
-                ]
+                errors
               }
 
-              return new ApiResult({ error: errors })
+              return errors.length 
+                ? new ApiResult({ error: status })
+                : new ApiResult({ response: new EmptyResponse() })
             }}
           />
         </div>
