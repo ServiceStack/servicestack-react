@@ -115,7 +115,7 @@ export default function App() {
         <DataGrid items={tracks} />
       </div>
 
-      <div>
+      <div className="mt-8 mx-auto max-w-4xl flex flex-col gap-y-4">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Custom DataGrid</h2>
         <DataGrid
           items={forecasts}
