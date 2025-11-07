@@ -1,18 +1,18 @@
 import type { ApiState } from "@/types"
 import type { ErrorSummaryProps } from '@/components/types'
 import { errorResponseExcept } from "@servicestack/client"
-import { useContext, useMemo } from "react"
-import { ApiStateContext } from "@/use/context"
+import { useMemo } from "react"
+import { useApiState } from "@/use/context"
 
 export default function ErrorSummary({ status, except, className }: ErrorSummaryProps) {
-  const ctx: ApiState | undefined = useContext(ApiStateContext)
+  const apiState = useApiState()
 
   const errorSummary = useMemo(() => {
-    const responseStatus = status || (ctx as any)?.error.value
+    const responseStatus = status || apiState?.error
     return responseStatus
       ? errorResponseExcept.call({ responseStatus }, except ?? [])
       : null
-  }, [status, ctx, except])
+  }, [status, apiState?.error, except])
 
   if (!errorSummary) return null
 

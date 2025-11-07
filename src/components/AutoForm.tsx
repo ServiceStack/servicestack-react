@@ -1,12 +1,12 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback, useImperativeHandle, forwardRef, ReactNode } from 'react'
-import type { MetadataType, ApiRequest, ResponseStatus, ModalProvider } from '@/types'
+import React, { useState, useMemo, useEffect, useRef, useCallback, useImperativeHandle, forwardRef, ReactNode, createContext } from 'react'
+import type { MetadataType, ApiRequest, ResponseStatus, ModalProvider, ApiState } from '@/types'
 import type { AutoFormProps } from '@/components/types'
 import { ApiResult, HttpMethods, humanize, map, omitEmpty } from '@servicestack/client'
 import { useClient } from '@/use/client'
 import { getTypeName, transition as doTransition } from '@/use/utils'
 import { useMetadata } from '@/use/metadata'
 import { form, card, slideOver } from './css'
-import { ModalProviderContext } from '@/use/context'
+import { ModalProviderContext, ApiStateContext } from '@/use/context'
 import AutoFormFields from './AutoFormFields'
 import PrimaryButton from './PrimaryButton'
 import SecondaryButton from './SecondaryButton'
@@ -34,6 +34,32 @@ interface AutoFormSlots {
   rightbuttons?: (props: { instance: AutoFormRef | null, model: any }) => ReactNode
 }
 
+/**
+ * AutoForm component that automatically generates a form from a ServiceStack DTO type.
+ *
+ * The form provides ApiStateContext to all child components, allowing them to access
+ * the form's loading and error state using the `useApiState()` hook.
+ *
+ * @example
+ * ```tsx
+ * // In a child component within AutoForm:
+ * import { useApiState } from '@servicestack/react'
+ *
+ * function CustomFormField() {
+ *   const apiState = useApiState()
+ *
+ *   if (apiState?.loading) {
+ *     return <div>Loading...</div>
+ *   }
+ *
+ *   if (apiState?.error) {
+ *     return <div>Error: {apiState.error.message}</div>
+ *   }
+ *
+ *   return <div>Form field content</div>
+ * }
+ * ```
+ */
 const AutoForm = forwardRef<AutoFormRef, AutoFormProps & AutoFormSlots>((props, ref) => {
   const {
     type,
@@ -56,10 +82,12 @@ const AutoForm = forwardRef<AutoFormRef, AutoFormProps & AutoFormSlots>((props, 
     subHeadingClass: subHeadingClassProp,
     submitLabel = 'Submit',
     allowSubmit,
+    onSubmit,
     onSuccess,
     onError,
     onDone,
     onChange,
+    children,
     // Slots
     heading: headingSlot,
     subheading: subheadingSlot,
@@ -82,7 +110,7 @@ const AutoForm = forwardRef<AutoFormRef, AutoFormProps & AutoFormSlots>((props, 
   const [api, setApi] = useState(new ApiResult())
 
   const panelClass = useMemo(() => panelClassProp || form.panelClass(formStyle), [panelClassProp, formStyle])
-  const formClass = useMemo(() => formClassProp || (formStyle === "card" ? 'shadow sm:rounded-md' : slideOver.formClass), [formClassProp, formStyle])
+  const formClass = useMemo(() => formClassProp || form.formClass(formStyle), [formClassProp, formStyle])
   const headingClass = useMemo(() => headingClassProp || form.headingClass(formStyle), [headingClassProp, formStyle])
   const subHeadingClass = useMemo(() => subHeadingClassProp || form.subHeadingClass(formStyle), [subHeadingClassProp, formStyle])
   const buttonsClass = useMemo(() => typeof buttonsClassProp === 'string' ? buttonsClassProp : form.buttonsClass, [buttonsClassProp])
@@ -141,7 +169,11 @@ const AutoForm = forwardRef<AutoFormRef, AutoFormProps & AutoFormSlots>((props, 
 
     let apiResult: ApiResult<any>
 
-    if (HttpMethods.hasRequestBody(method)) {
+    if (onSubmit != null) {
+      let requestDto = new dto.constructor(omitEmpty(model))
+      apiResult = await onSubmit(requestDto)
+    }
+    else if (HttpMethods.hasRequestBody(method)) {
       let requestDto = new dto.constructor()
       let formData = new FormData(form)
       if (!returnsVoid) {
@@ -192,7 +224,7 @@ const AutoForm = forwardRef<AutoFormRef, AutoFormProps & AutoFormSlots>((props, 
   }
 
   useEffect(() => {
-    doTransition(rule1, { value: transition1 } as any, show)
+    doTransition(rule1, setTransition1, show)
     if (!show) {
       const timer = setTimeout(done, 700)
       return () => clearTimeout(timer)
@@ -285,16 +317,18 @@ const AutoForm = forwardRef<AutoFormRef, AutoFormProps & AutoFormSlots>((props, 
 
           {headerSlot?.({ instance: instanceRef, model })}
           <input type="submit" className="hidden" />
-          <AutoFormFields
-            ref={formFieldsRef}
-            key={formFieldsKey}
-            type={type as string}
-            value={model}
-            onChange={update}
-            api={api}
-            configureField={configureField}
-            configureFormLayout={configureFormLayout}
-          />
+          {children || (
+            <AutoFormFields
+              ref={formFieldsRef}
+              key={formFieldsKey}
+              type={type}
+              value={model}
+              onChange={update}
+              api={api}
+              configureField={configureField}
+              configureFormLayout={configureFormLayout}
+            />
+          )}
           {footerSlot?.({ instance: instanceRef, model })}
         </div>
       </div>
@@ -324,31 +358,33 @@ const AutoForm = forwardRef<AutoFormRef, AutoFormProps & AutoFormSlots>((props, 
   )
 
   return (
-    <ModalProviderContext.Provider value={modalProvider}>
-      <div>
-        {formStyle === 'card' ? (
-          <div className={panelClass}>
-            {formContent(false)}
-          </div>
-        ) : (
-          <div className="relative z-10" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
-            <div className="fixed inset-0"></div>
-            <div className="fixed inset-0 overflow-hidden">
-              <div onMouseDown={close} className="absolute inset-0 overflow-hidden">
-                <div onMouseDown={(e) => e.stopPropagation()} className="pointer-events-none fixed inset-y-0 right-0 flex pl-10">
-                  <div className={`pointer-events-auto w-screen xl:max-w-3xl md:max-w-xl max-w-lg ${transition1}`}>
-                    {formContent(true)}
+    <ApiStateContext.Provider value={client}>
+      <ModalProviderContext.Provider value={modalProvider}>
+        <div>
+          {formStyle === 'card' ? (
+            <div className={panelClass}>
+              {formContent(false)}
+            </div>
+          ) : (
+            <div className="relative z-10" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+              <div className="fixed inset-0"></div>
+              <div className="fixed inset-0 overflow-hidden">
+                <div onMouseDown={close} className="absolute inset-0 overflow-hidden">
+                  <div onMouseDown={(e) => e.stopPropagation()} className="pointer-events-none fixed inset-y-0 right-0 flex pl-10">
+                    <div className={`pointer-events-auto w-screen xl:max-w-3xl md:max-w-xl max-w-lg ${transition1}`}>
+                      {formContent(true)}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-        {modal?.name === 'ModalLookup' && modal.ref && (
-          <ModalLookup refInfo={modal.ref} onDone={openModalDone} configureField={configureField} />
-        )}
-      </div>
-    </ModalProviderContext.Provider>
+          )}
+          {modal?.name === 'ModalLookup' && modal.ref && (
+            <ModalLookup refInfo={modal.ref} onDone={openModalDone} configureField={configureField} />
+          )}
+        </div>
+      </ModalProviderContext.Provider>
+    </ApiStateContext.Provider>
   )
 })
 

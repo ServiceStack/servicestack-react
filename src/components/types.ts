@@ -7,6 +7,7 @@ import type {
   ApiResponseType, UploadedFile, ImageInfo, MarkdownInputOptions, RefInfo, FormatInfo, Column, AuthenticateResponse,
   ColumnSettings
 } from '@/types'
+import { ApiResult } from '@servicestack/client'
 
 // Input Components
 export interface TextInputProps {
@@ -134,10 +135,12 @@ export interface AutoFormProps {
     submitLabel?: string
     allowSubmit?: (model:any) => boolean
 
+    onSubmit?: (request:any) => Promise<ApiResult<any>>
     onSuccess?: (response:any) => void
     onError?: (error:ResponseStatus) => void
     onDone?: () => void
     onChange?: (value:any) => void
+    children?: ReactNode
 }
 
 export interface AutoFormBaseProps {
@@ -228,6 +231,7 @@ export interface AutocompleteProps {
 }
 
 export interface ComboboxProps {
+    status?: ResponseStatus|null
     id: string
     value?: any,
     multiple?: boolean,

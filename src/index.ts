@@ -6,6 +6,7 @@ import { useAuth } from './use/auth'
 import { useFiles } from './use/files'
 import { useMetadata } from './use/metadata'
 import { useFormatters } from './use/formatters'
+import { useApiState } from './use/context'
 import * as css from './components/css'
 
 // Export component types
@@ -13,7 +14,7 @@ export * from './components/types'
 export * from './types'
 
 // Export hooks and utilities
-export { useUtils, useConfig, useClient, useAuth, useMetadata, useFiles, useFormatters, css }
+export { useUtils, useConfig, useClient, useAuth, useMetadata, useFiles, useFormatters, useApiState, css }
 
 // Import components (this will be excluded from type generation)
 

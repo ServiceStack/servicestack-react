@@ -2,7 +2,17 @@ import React, { useMemo } from 'react'
 import type { SelectInputProps } from './types'
 import { errorResponse, humanize, omit, toPascalCase } from '@servicestack/client'
 import { filterClass } from './css'
+import { useApiState } from '../use/context'
 
+/**
+ * SelectInput component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ */
 const SelectInput: React.FC<SelectInputProps & React.HTMLAttributes<HTMLSelectElement>> = (props) => {
   const {
     status,
@@ -20,11 +30,18 @@ const SelectInput: React.FC<SelectInputProps & React.HTMLAttributes<HTMLSelectEl
     ...restProps
   } = props
 
+  const apiState = useApiState()
   const useLabel = label ?? humanize(toPascalCase(id))
 
+  // Use status prop if provided, otherwise fall back to apiState error
+  const responseStatus = useMemo(() =>
+    status || apiState?.error,
+    [status, apiState?.error]
+  )
+
   const errorField = useMemo(() =>
-    errorResponse.call({ responseStatus: status }, id),
-    [status, id]
+    errorResponse.call({ responseStatus }, id),
+    [responseStatus, id]
   )
 
   const kvpValues = useMemo(() => {

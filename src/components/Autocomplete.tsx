@@ -4,11 +4,21 @@ import type { AutocompleteProps } from '@/components/types'
 import { errorResponse, humanize, toPascalCase } from '@servicestack/client'
 import { focusNextElement } from '@/use/utils'
 import { input } from './css'
+import { useApiState } from '../use/context'
 
 export interface AutocompleteRef {
   toggle(expand: boolean): void
 }
 
+/**
+ * Autocomplete component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ */
 const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof AutocompleteProps>>(({
   id,
   label,
@@ -33,10 +43,18 @@ const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.
   const [filteredValues, setFilteredValues] = useState<any[]>([])
   const txtInputRef = useRef<HTMLInputElement>(null)
 
+  const apiState = useApiState()
   const useLabel = label ?? humanize(toPascalCase(id))
+
+  // Use status prop if provided, otherwise fall back to apiState error
+  const responseStatus = useMemo(() =>
+    status || apiState?.error,
+    [status, apiState?.error]
+  )
+
   const errorField = useMemo(() =>
-    errorResponse.call({ responseStatus: status }, id),
-    [status, id]
+    errorResponse.call({ responseStatus }, id),
+    [responseStatus, id]
   )
 
   const cls = useMemo(() => [

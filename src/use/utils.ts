@@ -26,7 +26,7 @@ export function timeInputFormat(s?:string|number|Date|null) { return s == null ?
 export function textInputValue(type:string, value:any) {
     if (Sole.config.inputValue)
         return Sole.config.inputValue(type,value)
-    
+
     if (type === 'date') {
         return dateInputFormat(value)
     } else if (type === 'datetime-local') {
@@ -36,7 +36,8 @@ export function textInputValue(type:string, value:any) {
     } else if (type === 'number' || type === 'range') {
         return value == null ? '' : Number(value)
     }
-    return value
+    // Ensure we always return a string for text inputs to avoid React controlled/uncontrolled warning
+    return value ?? ''
 }
 
 

@@ -15,6 +15,8 @@ BaseUrl: https://localhost:5001
 //DefaultImports: 
 */
 
+/* eslint-disable */
+// @ts-nocheck
 
 export interface IReturn<T>
 {

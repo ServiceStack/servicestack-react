@@ -7,7 +7,7 @@ import { form } from './css'
 import { getTypeName, transition as doTransition } from '@/use/utils'
 import { Sole } from '@/use/config'
 import { ApiResult, HttpMethods, humanize, map, mapGet } from '@servicestack/client'
-import { ModalProviderContext } from '@/use/context'
+import { ModalProviderContext, ApiStateContext } from '@/use/context'
 import AutoFormFields from './AutoFormFields'
 import PrimaryButton from './PrimaryButton'
 import SecondaryButton from './SecondaryButton'
@@ -32,6 +32,32 @@ interface AutoEditFormSlots {
   children?: ReactNode
 }
 
+/**
+ * AutoEditForm component for editing existing entities with ServiceStack AutoQuery CRUD APIs.
+ *
+ * The form provides ApiStateContext to all child components, allowing them to access
+ * the form's loading and error state using the `useApiState()` hook.
+ *
+ * @example
+ * ```tsx
+ * // In a child component within AutoEditForm:
+ * import { useApiState } from '@servicestack/react'
+ *
+ * function CustomFormField() {
+ *   const apiState = useApiState()
+ *
+ *   if (apiState?.loading) {
+ *     return <div>Updating...</div>
+ *   }
+ *
+ *   if (apiState?.error) {
+ *     return <div>Error: {apiState.error.message}</div>
+ *   }
+ *
+ *   return <div>Form field content</div>
+ * }
+ * ```
+ */
 const AutoEditForm = forwardRef<AutoEditFormRef, AutoEditFormProps & AutoEditFormSlots>((props, ref) => {
   const {
     type,
@@ -417,32 +443,34 @@ const AutoEditForm = forwardRef<AutoEditFormRef, AutoEditFormProps & AutoEditFor
   )
 
   return (
-    <ModalProviderContext.Provider value={modalProvider}>
-      <div>
-        {formStyle === 'card' ? (
-          <div className={panelClass}>
-            {formContent(false)}
-          </div>
-        ) : (
-          <div className="relative z-10" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
-            <div className="fixed inset-0"></div>
-            <div className="fixed inset-0 overflow-hidden">
-              <div onMouseDown={close} className="absolute inset-0 overflow-hidden">
-                <div onMouseDown={(e) => e.stopPropagation()} className="pointer-events-none fixed inset-y-0 right-0 flex pl-10">
-                  <div className={`pointer-events-auto w-screen xl:max-w-3xl md:max-w-xl max-w-lg ${transition1}`}>
-                    {formContent(true)}
+    <ApiStateContext.Provider value={client}>
+      <ModalProviderContext.Provider value={modalProvider}>
+        <div>
+          {formStyle === 'card' ? (
+            <div className={panelClass}>
+              {formContent(false)}
+            </div>
+          ) : (
+            <div className="relative z-10" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+              <div className="fixed inset-0"></div>
+              <div className="fixed inset-0 overflow-hidden">
+                <div onMouseDown={close} className="absolute inset-0 overflow-hidden">
+                  <div onMouseDown={(e) => e.stopPropagation()} className="pointer-events-none fixed inset-y-0 right-0 flex pl-10">
+                    <div className={`pointer-events-auto w-screen xl:max-w-3xl md:max-w-xl max-w-lg ${transition1}`}>
+                      {formContent(true)}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {modal?.name === 'ModalLookup' && modal.ref && (
-          <ModalLookup refInfo={modal.ref} onDone={openModalDone} configureField={configureField} />
-        )}
-      </div>
-    </ModalProviderContext.Provider>
+          {modal?.name === 'ModalLookup' && modal.ref && (
+            <ModalLookup refInfo={modal.ref} onDone={openModalDone} configureField={configureField} />
+          )}
+        </div>
+      </ModalProviderContext.Provider>
+    </ApiStateContext.Provider>
   )
 })
 

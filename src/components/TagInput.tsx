@@ -3,7 +3,17 @@ import type { ApiState } from '@/types'
 import type { TagInputProps } from '@/components/types'
 import { errorResponse, humanize, toPascalCase, trimEnd } from '@servicestack/client'
 import { filterClass } from './css'
+import { useApiState } from '../use/context'
 
+/**
+ * TagInput component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ */
 const TagInput: React.FC<TagInputProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, keyof TagInputProps>> = ({
   id,
   type,
@@ -22,6 +32,7 @@ const TagInput: React.FC<TagInputProps & Omit<React.InputHTMLAttributes<HTMLInpu
   onChange,
   ...attrs
 }) => {
+  const apiState = useApiState()
   const [inputValue, setInputValue] = useState('')
   const [expanded, setExpanded] = useState(false)
   const [active, setActive] = useState<string | undefined>()
@@ -56,9 +67,16 @@ const TagInput: React.FC<TagInputProps & Omit<React.InputHTMLAttributes<HTMLInpu
 
   const useType = type || 'text'
   const useLabel = label ?? humanize(toPascalCase(id))
+
+  // Use status prop if provided, otherwise fall back to apiState error
+  const responseStatus = useMemo(() =>
+    status || apiState?.error,
+    [status, apiState?.error]
+  )
+
   const errorField = useMemo(() =>
-    errorResponse.call({ responseStatus: status }, id),
-    [status, id]
+    errorResponse.call({ responseStatus }, id),
+    [responseStatus, id]
   )
 
   const cls = useMemo(() => filterClass(

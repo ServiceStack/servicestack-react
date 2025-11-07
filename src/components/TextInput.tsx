@@ -3,7 +3,28 @@ import type { TextInputProps, TextInputRef } from './types'
 import { errorResponse, humanize, omit, toPascalCase } from '@servicestack/client'
 import { input, filterClass } from './css'
 import { textInputValue } from '../use/utils'
+import { useApiState } from '../use/context'
 
+/**
+ * TextInput component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ *
+ * @example
+ * ```tsx
+ * // With explicit status prop
+ * <TextInput id="email" status={responseStatus} />
+ *
+ * // Within a form component (uses context automatically)
+ * <AutoForm type={MyDto}>
+ *   <TextInput id="email" />
+ * </AutoForm>
+ * ```
+ */
 const TextInput = forwardRef<TextInputRef, TextInputProps & React.HTMLAttributes<HTMLInputElement>>(
   (props, ref) => {
     const {
@@ -23,6 +44,7 @@ const TextInput = forwardRef<TextInputRef, TextInputProps & React.HTMLAttributes
     } = props
 
     const inputElement = useRef<HTMLInputElement>(null)
+    const apiState = useApiState()
 
     useImperativeHandle(ref, () => ({
       focus: () => {
@@ -38,9 +60,15 @@ const TextInput = forwardRef<TextInputRef, TextInputProps & React.HTMLAttributes
       return type === 'range' ? cls.replace('shadow-sm ', '') : cls
     }
 
+    // Use status prop if provided, otherwise fall back to apiState error
+    const responseStatus = useMemo(() =>
+      status || apiState?.error,
+      [status, apiState?.error]
+    )
+
     const errorField = useMemo(() =>
-      errorResponse.call({ responseStatus: status }, id),
-      [status, id]
+      errorResponse.call({ responseStatus }, id),
+      [responseStatus, id]
     )
 
     const cls = useMemo(() =>

@@ -3,7 +3,14 @@ import type { Pair } from '@/types'
 import type { ComboboxProps, ComboboxRef } from '@/components/types'
 import Autocomplete, { AutocompleteRef } from './Autocomplete'
 
+/**
+ * Combobox component that wraps Autocomplete with key-value pair support.
+ *
+ * Error handling is delegated to the Autocomplete component, which supports ApiStateContext.
+ * Pass the `status` prop to explicitly set errors, or let Autocomplete access errors from context.
+ */
 const Combobox = forwardRef<ComboboxRef, ComboboxProps & Omit<React.HTMLAttributes<HTMLDivElement>, keyof ComboboxProps>>(({
+  status,
   id,
   value,
   multiple: multipleProp,
@@ -80,6 +87,7 @@ const Combobox = forwardRef<ComboboxRef, ComboboxProps & Omit<React.HTMLAttribut
       <Autocomplete
         ref={inputRef}
         id={id}
+        status={status}
         options={kvpValues}
         match={match}
         multiple={multiple}

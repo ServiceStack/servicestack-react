@@ -5,7 +5,7 @@ import { ResponseError, ResponseStatus, ApiResult } from "@servicestack/client"
 import { unRefs, swrApi, fromCache, swrCacheKey, createDebounce } from "./utils"
 import { ClientContext } from "./context"
 
-export function useClient(use?:JsonServiceClient) {
+export function useClient(use?: JsonServiceClient) {
     /** Maintain loading state whilst API Request is in transit */
     const [loading, setLoading] = useState(false)
     /** Maintain API Error in reactive state */
@@ -40,14 +40,14 @@ export function useClient(use?:JsonServiceClient) {
             } else {
                 let copy = new ResponseStatus(prevError)
                 copy.errors = [...(copy.errors || []).filter(x => x.fieldName?.toLowerCase() !== fieldName?.toLowerCase()),
-                    new ResponseError({ fieldName, message, errorCode })]
+                new ResponseError({ fieldName, message, errorCode })]
                 return copy
             }
         })
     }
 
     /** Send a typed API request and return results in an ApiResult<TResponse> */
-    async function api<TResponse>(request:IReturn<TResponse> | ApiRequest, args?:any, method?:string) {
+    async function api<TResponse>(request: IReturn<TResponse> | ApiRequest, args?: any, method?: string) {
         setLoading(true)
         let api = await client.api<TResponse>(unRefs(request), args, method)
         setLoading(false)
@@ -57,7 +57,7 @@ export function useClient(use?:JsonServiceClient) {
     }
 
     /** Send a typed API request and return empty response in a void ApiResult */
-    async function apiVoid(request:IReturnVoid | ApiRequest, args?:any, method?:string) {
+    async function apiVoid(request: IReturnVoid | ApiRequest, args?: any, method?: string) {
         setLoading(true)
         let api = await client.apiVoid(unRefs(request), args, method)
         setLoading(false)
@@ -86,14 +86,14 @@ export function useClient(use?:JsonServiceClient) {
         return api
     }
 
-    async function swr<TResponse>(request:IReturn<TResponse> | ApiRequest, fn:(r:ApiResult<TResponse>) => void, args?: any, method?: string) {
+    async function swr<TResponse>(request: IReturn<TResponse> | ApiRequest, fn: (r: ApiResult<TResponse>) => void, args?: any, method?: string) {
         return swrApi(client, request, fn, args, method)
     }
 
     function swrEffect<TResponse>(requestFn: () => IReturn<TResponse> | ApiRequest,
-            options?:{ args?:any, method?:string, delayMs?:number }) {
+        options?: { args?: any, method?: string, delayMs?: number }) {
         const [api, setApi] = useState(new ApiResult<TResponse>())
-        const debounceApi = useReactRef(createDebounce(async (request:IReturn<TResponse> | ApiRequest) => {
+        const debounceApi = useReactRef(createDebounce(async (request: IReturn<TResponse> | ApiRequest) => {
             const result = await client.api(request)
             setApi(result)
         }, options?.delayMs))
@@ -119,6 +119,18 @@ export function useClient(use?:JsonServiceClient) {
         return api
     }
 
-    const ctx:ApiState = { setError: setErrorState, addFieldError, loading, error, api, apiVoid, apiForm, apiFormVoid, swr, swrEffect, unRefs }
+    const ctx: ApiState = {
+        setError: setErrorState,
+        addFieldError,
+        loading,
+        error,
+        api,
+        apiVoid,
+        apiForm,
+        apiFormVoid,
+        swr,
+        swrEffect,
+        unRefs,
+    }
     return ctx
 }

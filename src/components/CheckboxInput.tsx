@@ -2,7 +2,17 @@ import React, { useMemo } from 'react'
 import type { CheckboxInputProps } from './types'
 import { errorResponse, humanize, omit, toPascalCase } from '@servicestack/client'
 import { filterClass } from './css'
+import { useApiState } from '../use/context'
 
+/**
+ * CheckboxInput component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ */
 const CheckboxInput: React.FC<CheckboxInputProps & React.HTMLAttributes<HTMLInputElement>> = (props) => {
   const {
     value,
@@ -18,11 +28,18 @@ const CheckboxInput: React.FC<CheckboxInputProps & React.HTMLAttributes<HTMLInpu
     ...restProps
   } = props
 
+  const apiState = useApiState()
   const useLabel = label ?? humanize(toPascalCase(id))
 
+  // Use status prop if provided, otherwise fall back to apiState error
+  const responseStatus = useMemo(() =>
+    status || apiState?.error,
+    [status, apiState?.error]
+  )
+
   const errorField = useMemo(() =>
-    errorResponse.call({ responseStatus: status }, id),
-    [status, id]
+    errorResponse.call({ responseStatus }, id),
+    [responseStatus, id]
   )
 
   const cls = useMemo(() =>

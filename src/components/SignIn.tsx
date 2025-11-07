@@ -6,39 +6,38 @@ import { ApiResult, each, toPascalCase } from '@servicestack/client'
 import { useAuth } from '@/use/auth'
 import { useClient } from '@/use/client'
 import { useMetadata } from '@/use/metadata'
-import { ClientContext } from '@/use/context'
+import { ClientContext, ApiStateContext } from '@/use/context'
 import ErrorSummary from './ErrorSummary'
+import AutoFormFields from './AutoFormFields'
 import PrimaryButton from './PrimaryButton'
 import Icon from './Icon'
 
-// TODO: AutoFormFields needs to be converted from Vue to React
-// Placeholder component for now
-const AutoFormFields: React.FC<any> = ({ value, formLayout, api, hideSummary, onChange }) => {
-  return (
-    <div className="space-y-6">
-      {formLayout?.map((field: InputInfo) => (
-        <div key={field.id}>
-          <label htmlFor={field.id} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            {field.label || field.id}
-          </label>
-          <input
-            type={field.type?.toLowerCase() || 'text'}
-            id={field.id}
-            name={field.id}
-            value={value[field.id] || ''}
-            onChange={(e) => {
-              const newValue = { ...value, [field.id]: e.target.value }
-              onChange?.(newValue)
-            }}
-            autoComplete={field.autocomplete}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900 dark:border-gray-600 dark:text-white sm:text-sm"
-          />
-        </div>
-      ))}
-    </div>
-  )
-}
-
+/**
+ * SignIn component for authenticating users with ServiceStack Auth.
+ *
+ * The component provides ApiStateContext to all child components, allowing them to access
+ * the authentication loading and error state using the `useApiState()` hook.
+ *
+ * @example
+ * ```tsx
+ * // In a child component within SignIn:
+ * import { useApiState } from '@servicestack/react'
+ *
+ * function CustomAuthField() {
+ *   const apiState = useApiState()
+ *
+ *   if (apiState?.loading) {
+ *     return <div>Authenticating...</div>
+ *   }
+ *
+ *   if (apiState?.error) {
+ *     return <div>Error: {apiState.error.message}</div>
+ *   }
+ *
+ *   return <div>Auth field content</div>
+ * }
+ * ```
+ */
 const SignIn: React.FC<SignInProps> = ({
   provider: initialProvider,
   title = "Sign In",
@@ -170,7 +169,8 @@ const SignIn: React.FC<SignInProps> = ({
   }
 
   return (
-    <div className="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <ApiStateContext.Provider value={client}>
+      <div className="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-50">
           {title}
@@ -265,6 +265,7 @@ const SignIn: React.FC<SignInProps> = ({
         </div>
       </div>
     </div>
+    </ApiStateContext.Provider>
   )
 }
 

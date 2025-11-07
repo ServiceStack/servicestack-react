@@ -12,7 +12,15 @@ import DynamicInput from '../components/DynamicInput'
 import ModalDialog from '../components/ModalDialog'
 import SlideOver from '../components/SlideOver'
 import DataGrid from '../components/DataGrid'
+import AutoForm from '../components/AutoForm'
 import { tracks, RoomType } from './data'
+import { ApiResult, EmptyResponse, IReturn, ResponseStatus } from '@servicestack/client'
+import { setMetadata } from '../use/metadata'
+import { Sole } from '../use/config'
+import metadataJson from './metadata.json'
+import PrimaryButton from '../components/PrimaryButton'
+
+setMetadata(metadataJson)
 
 class Forecast {
   public date?: string;
@@ -21,6 +29,45 @@ class Forecast {
   public temperatureF?: number;
 
   public constructor(init?: Partial<Forecast>) { (Object as any).assign(this, init); }
+}
+
+// Test DTO for contextual validation
+class TestValidation implements IReturn<EmptyResponse> {
+  public name?: string;
+  public email?: string;
+  public age?: number;
+
+  public constructor(init?: Partial<TestValidation>) { (Object as any).assign(this, init); }
+  public getTypeName() { return 'TestValidation'; }
+  public getMethod() { return 'POST'; }
+  public createResponse() { return new EmptyResponse(); }
+}
+
+// Add metadata for TestValidation
+if (Sole.metadata?.api) {
+  Sole.metadata.api.types.push({
+    name: 'TestValidation',
+    namespace: 'MyApp',
+    properties: [
+      {
+        name: 'Name',
+        type: 'String',
+        namespace: 'System'
+      },
+      {
+        name: 'Email',
+        type: 'String',
+        namespace: 'System'
+      },
+      {
+        name: 'Age',
+        type: 'Int32',
+        namespace: 'System',
+        isValueType: true
+      }
+    ],
+    implements: []
+  })
 }
 
 export default function App() {
@@ -106,7 +153,7 @@ export default function App() {
 
       <div className="text-center space-x-3">
         <SecondaryButton onClick={() => setShow(!show)}>Toggle</SecondaryButton>
-        <SecondaryButton onClick={() => setSlideOver(!slideOver)}>Slide Over</SecondaryButton>
+        <PrimaryButton onClick={() => setSlideOver(!slideOver)}>Slide Over</PrimaryButton>
         <SecondaryButton onClick={() => setModal(!modal)}>Modal Dialog</SecondaryButton>
       </div>
 
@@ -353,6 +400,49 @@ export default function App() {
           </div>
         </ModalDialog>
       )}
+
+      {/* Contextual Validation Test Section */}
+      <div className="max-w-4xl mx-auto p-8">
+        <h2 className="text-2xl font-bold mb-6">AutoForm Contextual Validation Test</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <p className="mb-4 text-gray-600 dark:text-gray-400">
+            This form demonstrates contextual validation. When you submit, it will return field-specific errors
+            that are automatically displayed on the corresponding inputs via ApiStateContext.
+          </p>
+
+          <AutoForm
+            type={TestValidation}
+            onSubmit={async (request: TestValidation) => {
+              // Simulate API call that returns validation errors
+              await new Promise(resolve => setTimeout(resolve, 500))
+
+              const errors: ResponseStatus = {
+                errorCode: 'ValidationError',
+                message: 'Validation failed',
+                errors: [
+                  {
+                    fieldName: 'name',
+                    errorCode: 'NotEmpty',
+                    message: 'Name is required and cannot be empty'
+                  },
+                  {
+                    fieldName: 'email',
+                    errorCode: 'InvalidEmail',
+                    message: 'Please enter a valid email address'
+                  },
+                  {
+                    fieldName: 'age',
+                    errorCode: 'Range',
+                    message: 'Age must be between 18 and 120'
+                  }
+                ]
+              }
+
+              return new ApiResult({ error: errors })
+            }}
+          />
+        </div>
+      </div>
     </>
   )
 }

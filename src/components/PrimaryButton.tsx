@@ -8,6 +8,7 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   href,
   onClick,
   children,
+  className,
   ...attrs
 }) => {
   const colors = {
@@ -20,11 +21,11 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     indigo: 'focus:ring-indigo-500 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 disabled:hover:bg-indigo-400 dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800',
   }
 
-  const cls = useMemo(() =>
-    "inline-flex justify-center rounded-md border border-transparent py-2 px-4 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 dark:ring-offset-black text-white "
-    + (colors[color] || colors.indigo),
-    [color]
-  )
+  const cls = useMemo(() => {
+    const baseClasses = "inline-flex justify-center rounded-md border border-transparent py-2 px-4 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 dark:ring-offset-black text-white "
+      + (colors[color] || colors.indigo)
+    return className ? `${baseClasses} ${className}` : baseClasses
+  }, [color, className])
 
   if (href) {
     return (

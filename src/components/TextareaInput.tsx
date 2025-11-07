@@ -2,7 +2,17 @@ import React, { useMemo } from 'react'
 import type { TextareaInputProps } from './types'
 import { errorResponse, humanize, omit, toPascalCase } from '@servicestack/client'
 import { input, filterClass } from './css'
+import { useApiState } from '../use/context'
 
+/**
+ * TextareaInput component with support for ApiStateContext.
+ *
+ * The component can access error state from either:
+ * 1. The `status` prop (explicit ResponseStatus)
+ * 2. The `ApiStateContext` (from parent AutoForm, AutoCreateForm, AutoEditForm, or SignIn)
+ *
+ * The `status` prop takes precedence over the context error.
+ */
 const TextareaInput: React.FC<TextareaInputProps & React.HTMLAttributes<HTMLTextAreaElement>> = (props) => {
   const {
     status,
@@ -19,12 +29,19 @@ const TextareaInput: React.FC<TextareaInputProps & React.HTMLAttributes<HTMLText
     ...restProps
   } = props
 
+  const apiState = useApiState()
   const useLabel = label ?? humanize(toPascalCase(id))
   const usePlaceholder = placeholder ?? useLabel
 
+  // Use status prop if provided, otherwise fall back to apiState error
+  const responseStatus = useMemo(() =>
+    status || apiState?.error,
+    [status, apiState?.error]
+  )
+
   const errorField = useMemo(() =>
-    errorResponse.call({ responseStatus: status }, id),
-    [status, id]
+    errorResponse.call({ responseStatus }, id),
+    [responseStatus, id]
   )
 
   const cls = useMemo(() =>
