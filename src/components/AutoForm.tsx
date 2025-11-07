@@ -316,7 +316,7 @@ const AutoForm = forwardRef<AutoFormRef, AutoFormProps & AutoFormSlots>((props, 
           )}
 
           {headerSlot?.({ instance: instanceRef, model })}
-          <input type="submit" className="hidden" />
+          <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1}></button>
           {children || (
             <AutoFormFields
               ref={formFieldsRef}
