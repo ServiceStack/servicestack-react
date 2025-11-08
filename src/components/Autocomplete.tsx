@@ -42,6 +42,7 @@ const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.
   const [active, setActive] = useState<any | null>(null)
   const [take, setTake] = useState(viewCount)
   const [filteredValues, setFilteredValues] = useState<any[]>([])
+  const [isFocused, setIsFocused] = useState(false)
   const txtInputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -163,6 +164,14 @@ const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.
   const keyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.shiftKey || e.ctrlKey || e.altKey) return
 
+    // Handle backspace to remove last selected item in multiple mode
+    if (e.code === 'Backspace' && multiple && inputValue === '' && Array.isArray(value) && value.length > 0) {
+      const newValues = value.slice(0, -1)
+      onChange?.(newValues)
+      e.preventDefault()
+      return
+    }
+
     if (!expanded) {
       if (e.code === 'ArrowDown') {
         setExpanded(true)
@@ -215,7 +224,7 @@ const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.
         setExpanded(false)
       }
     }
-  }, [expanded, filteredValues, active, multiple, scrollActiveIntoView, onlyScrollActiveIntoViewIfNeeded])
+  }, [expanded, filteredValues, active, multiple, inputValue, value, onChange, scrollActiveIntoView, onlyScrollActiveIntoViewIfNeeded])
 
   const toggle = useCallback((expand: boolean) => {
     setExpanded(expand)
@@ -288,8 +297,9 @@ const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.
         newValues.push(option)
       }
       setActive(null)
+      setInputValue('')
       onChange?.(newValues)
-      // Don't clear input or close dropdown in multiple mode - keep it open for more selections
+      // Don't close dropdown in multiple mode - keep it open for more selections
     } else {
       setInputValue('')
       setExpanded(false)
@@ -358,10 +368,15 @@ const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.
                   autoComplete="off"
                   spellCheck="false"
                   className="p-0 dark:bg-transparent rounded-md border-none focus:!border-none focus:!outline-none"
-                  style={{ boxShadow: 'none !important', width: `${inputValue.length + 1}ch` }}
+                  style={{
+                    boxShadow: 'none !important',
+                    width: (isFocused || inputValue.length > 0) ? `${inputValue.length + 1}ch` : undefined
+                  }}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  placeholder={!value || (Array.isArray(value) && value.length === 0) ? placeholder : ''}
+                  placeholder={!isFocused && (!value || (Array.isArray(value) && value.length === 0)) ? placeholder : ''}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
                   onKeyDown={keyDown}
                   onKeyUp={keyUp}
                   onClick={onInputClick}
