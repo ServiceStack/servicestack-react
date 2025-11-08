@@ -39,6 +39,7 @@ function PhoneInput({ id, value, onChange, label, placeholder, help, className, 
 
   return (
     <TextInput
+      type="text"
       id={id}
       value={localValue}
       onChange={handleChange as any}
