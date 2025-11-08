@@ -141,6 +141,16 @@ export function registerInterceptor(key:string, callback:(key:string, value:any)
     Sole.interceptors.register(key, callback)
 }
 
+/** Register a custom component that can be used by DynamicInput and AutoForm */
+export function registerComponent(name:string, component:ComponentType) {
+    Sole.components[name] = component
+}
+
+/** Register multiple custom components at once */
+export function registerComponents(components:{[name:string]:ComponentType}) {
+    Object.assign(Sole.components, components)
+}
+
 /** Manage Global Configuration for Component Library */
 export function useConfig() {
     const events = Sole.events
@@ -154,5 +164,7 @@ export function useConfig() {
         assetsPathResolver,
         fallbackPathResolver,
         registerInterceptor,
+        registerComponent,
+        registerComponents,
     }
 }

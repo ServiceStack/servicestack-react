@@ -197,7 +197,10 @@ export default function App() {
   return (
     <>
       <ClientContext.Provider value={client}>
-      <div className="absolute top-2 right-2">
+      <div className="absolute top-2 right-2 flex items-center gap-4">
+        <a href="/gallery" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-medium">
+          Component Gallery
+        </a>
         <DarkModeToggle />
       </div>
 

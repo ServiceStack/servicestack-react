@@ -1,6 +1,6 @@
 // React library main entry point
 import { useUtils } from './use/utils'
-import { useConfig } from './use/config'
+import { useConfig, setConfig, setAutoQueryGridDefaults, registerComponent, registerComponents } from './use/config'
 import { useClient } from './use/client'
 import { useAuth, authContext } from './use/auth'
 import { useFiles } from './use/files'
@@ -14,7 +14,7 @@ export * from './components/types'
 export * from './types'
 
 // Export hooks and utilities
-export { useUtils, useConfig, useClient, useAuth, useMetadata, useFiles, useFormatters, useApiState, authContext, ClientContext, ApiStateContext, css }
+export { useUtils, useConfig, setConfig, setAutoQueryGridDefaults, registerComponent, registerComponents, useClient, useAuth, useMetadata, useFiles, useFormatters, useApiState, authContext, ClientContext, ApiStateContext, css }
 
 
 // Import components (this will be excluded from type generation)
