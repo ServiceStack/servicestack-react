@@ -135,7 +135,7 @@ const submit = async (e: React.FormEvent) => {
           type="UpdateContact"
           value={contact}
           formStyle="card"
-          panelClass="max-w-3xl"
+          panelClass="max-w-4xl"
         />
       </CodeExample>
     </GalleryLayout>
