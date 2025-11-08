@@ -138,7 +138,10 @@ const AutoCreateForm = forwardRef<AutoCreateFormRef, AutoCreateFormProps & AutoC
     openModal
   }), [openModal])
 
-  const panelClass = useMemo(() => panelClassProp || form.panelClass(formStyle), [panelClassProp, formStyle])
+  const panelClass = useMemo(() => {
+    const defaultClass = form.panelClass(formStyle)
+    return panelClassProp ? `${defaultClass} ${panelClassProp}` : defaultClass
+  }, [panelClassProp, formStyle])
   const formClass = useMemo(() => formClassProp || form.formClass(formStyle), [formClassProp, formStyle])
   const headingClass = useMemo(() => headingClassProp || form.headingClass(formStyle), [headingClassProp, formStyle])
   const subHeadingClass = useMemo(() => subHeadingClassProp || form.subHeadingClass(formStyle), [subHeadingClassProp, formStyle])
