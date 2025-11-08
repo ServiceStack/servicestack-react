@@ -80,12 +80,12 @@ function BookingsForm({ id }: { id: number }) {
             <ErrorSummary except={visibleFields} className="mb-4" />
             <div className="grid grid-cols-6 gap-6">
               <div className="col-span-6 sm:col-span-3">
-                <TextInput 
-                  id="name" 
+                <TextInput
+                  id="name"
                   value={request.name}
                   onChange={(value) => updateField('name', value)}
-                  required 
-                  placeholder="Name for this booking" 
+                  placeholder="Name for this booking"
+                  {...{ required: true } as any}
                 />
               </div>
               <div className="col-span-6 sm:col-span-3">
@@ -97,32 +97,30 @@ function BookingsForm({ id }: { id: number }) {
                 />
               </div>
               <div className="col-span-6 sm:col-span-3">
-                <TextInput 
-                  type="number" 
-                  id="roomNumber" 
+                <TextInput
+                  type="number"
+                  id="roomNumber"
                   value={request.roomNumber}
                   onChange={(value) => updateField('roomNumber', value)}
-                  min={0}
-                  required 
+                  {...{ min: 0, required: true } as any}
                 />
               </div>
               <div className="col-span-6 sm:col-span-3">
-                <TextInput 
-                  type="number" 
-                  id="cost" 
+                <TextInput
+                  type="number"
+                  id="cost"
                   value={request.cost}
                   onChange={(value) => updateField('cost', value)}
-                  min={0}
-                  required 
+                  {...{ min: 0, required: true } as any}
                 />
               </div>
               <div className="col-span-6 sm:col-span-3">
-                <TextInput 
-                  type="date" 
-                  id="bookingStartDate" 
+                <TextInput
+                  type="date"
+                  id="bookingStartDate"
                   value={request.bookingStartDate}
                   onChange={(value) => updateField('bookingStartDate', value)}
-                  required 
+                  {...{ required: true } as any}
                 />
               </div>
               <div className="col-span-6 sm:col-span-3">
@@ -153,7 +151,7 @@ function BookingsForm({ id }: { id: number }) {
               )}
             </div>
             <div>
-              <PrimaryButton onClick={submit}>Update Booking</PrimaryButton>
+              <PrimaryButton onClick={submit as any}>Update Booking</PrimaryButton>
             </div>
           </div>
         </div>

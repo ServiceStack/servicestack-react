@@ -54,12 +54,12 @@ function FileInputContent() {
   onChange={setFiles}
 />`}
       >
-        <FileInput 
-          id="profileUrls" 
-          label="Multiple File Uploads" 
-          multiple 
+        <FileInput
+          id="profileUrls"
+          label="Multiple File Uploads"
+          multiple
           files={files}
-          onChange={setFiles}
+          onChange={setFiles as any}
           className="max-w-lg"
         />
       </CodeExample>
@@ -131,11 +131,11 @@ const submit = async (e: React.FormEvent) => {
   formStyle="card" 
 />`}
       >
-        <AutoEditForm 
-          type="UpdateContact" 
-          value={contact} 
-          formStyle="card" 
-          className="max-w-3xl"
+        <AutoEditForm
+          type="UpdateContact"
+          value={contact}
+          formStyle="card"
+          panelClass="max-w-3xl"
         />
       </CodeExample>
     </GalleryLayout>

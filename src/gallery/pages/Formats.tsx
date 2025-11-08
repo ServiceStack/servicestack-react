@@ -48,7 +48,7 @@ export default function FormatsPage() {
         title="Icon with custom class"
         code={`<PreviewFormat value="/pages/vue/1.jpg" format={Formats.icon} className="w-40 h-40 rounded-full" />`}
       >
-        <PreviewFormat value="https://blazor-gallery.servicestack.net/profiles/1.jpg" format={Formats.icon} className="w-40 h-40 rounded-full" />
+        <PreviewFormat value="https://blazor-gallery.servicestack.net/profiles/1.jpg" format={Formats.icon} {...{ className: "w-40 h-40 rounded-full" } as any} />
       </CodeExample>
 
       <CodeExample
@@ -67,18 +67,17 @@ export default function FormatsPage() {
 
       <CodeExample
         title="Attachment (Document) with classes"
-        code={`<PreviewFormat 
-  value="/content/hosting.md" 
-  format={Formats.attachment} 
-  className="text-xl text-indigo-700 font-semibold" 
-  iconClass="w-8 h-8" 
+        code={`<PreviewFormat
+  value="/content/hosting.md"
+  format={Formats.attachment}
+  className="text-xl text-indigo-700 font-semibold"
+  iconClass="w-8 h-8"
 />`}
       >
-        <PreviewFormat 
-          value="/content/hosting.md" 
-          format={Formats.attachment} 
-          className="text-xl text-indigo-700 font-semibold" 
-          iconClass="w-8 h-8" 
+        <PreviewFormat
+          value="/content/hosting.md"
+          format={Formats.attachment}
+          {...{ className: "text-xl text-indigo-700 font-semibold", iconClass: "w-8 h-8" } as any}
         />
       </CodeExample>
 
@@ -93,7 +92,7 @@ export default function FormatsPage() {
         title="Link with class"
         code={`<PreviewFormat value="https://servicestack.net/react" format={Formats.link} className="text-xl text-blue-600" />`}
       >
-        <PreviewFormat value="https://servicestack.net/react" format={Formats.link} className="text-xl text-blue-600" />
+        <PreviewFormat value="https://servicestack.net/react" format={Formats.link} {...{ className: "text-xl text-blue-600" } as any} />
       </CodeExample>
 
       <CodeExample

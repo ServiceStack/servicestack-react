@@ -17,8 +17,8 @@ function PhoneInput({ id, value, onChange, label, placeholder, help, className, 
     return val
   }
 
-  const handleChange = (newValue: string) => {
-    const formatted = formatPhone(newValue)
+  const handleChange = (newValue: string | number) => {
+    const formatted = formatPhone(String(newValue))
     onChange?.(formatted)
   }
 
@@ -26,7 +26,7 @@ function PhoneInput({ id, value, onChange, label, placeholder, help, className, 
     <TextInput
       id={id}
       value={value}
-      onChange={handleChange}
+      onChange={handleChange as any}
       label={label}
       placeholder={placeholder || "(123) 456-7890"}
       help={help}
@@ -307,7 +307,7 @@ const volumeInput: InputInfo = {
                 label: 'Phone Number',
                 help: 'Auto-formats as you type'
               } as InputInfo}
-              value={dynamicModel}
+              value={dynamicModel as any}
               onChange={setDynamicModel}
               api={null}
             />
@@ -318,7 +318,7 @@ const volumeInput: InputInfo = {
                 label: 'Theme Color',
                 help: 'Pick your brand color'
               } as InputInfo}
-              value={dynamicModel}
+              value={dynamicModel as any}
               onChange={setDynamicModel}
               api={null}
             />
@@ -331,7 +331,7 @@ const volumeInput: InputInfo = {
                 max: '100',
                 step: 5
               } as InputInfo}
-              value={dynamicModel}
+              value={dynamicModel as any}
               onChange={setDynamicModel}
               api={null}
             />

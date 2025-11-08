@@ -28,10 +28,10 @@ function AutoFormContent() {
   </div>
 )}`}
       >
-        <AutoForm 
-          className="mx-auto max-w-3xl" 
-          type="QueryBookings" 
-          onSuccess={onSuccess} 
+        <AutoForm
+          panelClass="mx-auto max-w-3xl"
+          type="QueryBookings"
+          onSuccess={onSuccess}
         />
         {results && (
           <div>
@@ -85,11 +85,11 @@ function AutoFormContent() {
   type="QueryBookings" 
 />`}
       >
-        <AutoForm 
-          className="mx-auto max-w-3xl" 
+        <AutoForm
+          panelClass="mx-auto max-w-3xl"
           value={request}
           onChange={setRequest}
-          type="QueryBookings" 
+          type="QueryBookings"
         />
       </CodeExample>
 
@@ -98,10 +98,10 @@ function AutoFormContent() {
         description="AutoCreateForm can be used to create an automated form based on a AutoQuery CRUD Create Request DTO definition which can be rendered in a traditional inline Form with card formStyle option:"
         code={`<AutoCreateForm type="CreateBooking" formStyle="card" />`}
       >
-        <AutoCreateForm 
-          className="mx-auto max-w-3xl" 
-          type="CreateBooking" 
-          formStyle="card" 
+        <AutoCreateForm
+          panelClass="mx-auto max-w-3xl"
+          type="CreateBooking"
+          formStyle="card"
         />
       </CodeExample>
 
@@ -122,12 +122,12 @@ function AutoFormContent() {
   subHeading="Manage reservations for MyApp hotels." 
 />`}
       >
-        <AutoEditForm 
-          className="mx-auto max-w-3xl"
-          value={booking} 
-          type="UpdateBooking" 
-          deleteType="DeleteBooking" 
-          heading="Change an existing Room Booking" 
+        <AutoEditForm
+          panelClass="mx-auto max-w-3xl"
+          value={booking}
+          type="UpdateBooking"
+          deleteType="DeleteBooking"
+          heading="Change an existing Room Booking"
           subHeading="Manage reservations for MyApp hotels."
           formStyle="card"
         />
@@ -158,11 +158,11 @@ function AutoFormContent() {
   </div>
 </AutoEditForm>`}
       >
-        <AutoEditForm 
-          className="mx-auto max-w-3xl mb-4"
-          value={booking} 
-          formStyle="card" 
-          type="UpdateBooking" 
+        <AutoEditForm
+          panelClass="mx-auto max-w-3xl mb-4"
+          value={booking}
+          formStyle="card"
+          type="UpdateBooking"
           deleteType="DeleteBooking"
         >
           <div slot="heading">

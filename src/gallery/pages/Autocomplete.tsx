@@ -96,7 +96,7 @@ export default function AutocompletePage() {
           >
             {({ displayName, profileUrl }: any) => (
               <div className="flex items-center">
-                <Icon className="h-6 w-6 flex-shrink-0 rounded-full" src={profileUrl} loading="lazy" />
+                <Icon className="h-6 w-6 flex-shrink-0 rounded-full" src={profileUrl} />
                 <span className="ml-3 truncate">{displayName}</span>
               </div>
             )}
@@ -149,7 +149,7 @@ export default function AutocompletePage() {
           >
             {({ displayName, profileUrl }: any) => (
               <div className="flex items-center">
-                <Icon className="h-6 w-6 flex-shrink-0 rounded-full" src={profileUrl} loading="lazy" />
+                <Icon className="h-6 w-6 flex-shrink-0 rounded-full" src={profileUrl} />
                 <span className="ml-3 truncate">{displayName}</span>
               </div>
             )}

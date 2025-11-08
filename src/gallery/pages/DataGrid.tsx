@@ -70,15 +70,13 @@ const tracks = [
   }}
 />`}
       >
-        <DataGrid 
-          items={forecasts} 
-          className="max-w-screen-md" 
+        <DataGrid
+          items={forecasts}
+          className="max-w-screen-md"
           tableStyle={['stripedRows','uppercaseHeadings']}
           headerTitles={{ temperatureC:'TEMP. (C)', temperatureF:'TEMP. (F)' }}
-          headerSlots={{
-            'date-header': () => <span className="text-indigo-600">Date</span>
-          }}
-          columnSlots={{
+          slots={{
+            'date-header': () => <span className="text-indigo-600">Date</span>,
             date: ({ date }: any) => new Intl.DateTimeFormat().format(new Date(date)),
             temperatureC: ({ temperatureC }: any) => <>{temperatureC}&deg;</>,
             temperatureF: ({ temperatureF }: any) => <>{temperatureF}&deg;</>,
@@ -110,19 +108,17 @@ const tracks = [
   }}
 />`}
       >
-        <DataGrid 
+        <DataGrid
           items={bookings}
           visibleFrom={{ name:'xl', bookingStartDate:'sm', bookingEndDate:'xl' }}
           onHeaderSelected={headerSelected}
           onRowSelected={rowSelected}
           isSelected={(row: any) => selected === row.id}
-          columnSlots={{
+          slots={{
             id: ({ id }: any) => <span className="text-gray-900">{id}</span>,
             name: ({ name }: any) => name,
             cost: ({ cost }: any) => <span dangerouslySetInnerHTML={{ __html: currency(cost) }} />,
-            createdBy: ({ createdBy }: any) => <span dangerouslySetInnerHTML={{ __html: createdBy }} />
-          }}
-          headerSlots={{
+            createdBy: ({ createdBy }: any) => <span dangerouslySetInnerHTML={{ __html: createdBy }} />,
             'roomNumber-header': () => <><span className="hidden lg:inline">Room </span>No</>,
             'bookingStartDate-header': () => <>Start<span className="hidden lg:inline"> Date</span></>,
             'bookingEndDate-header': () => <>End<span className="hidden lg:inline"> Date</span></>,

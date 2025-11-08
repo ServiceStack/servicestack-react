@@ -35,19 +35,22 @@ function TagInputForm() {
             <ErrorSummary except={visibleFields} />
             <div className="grid grid-cols-12 gap-6">
               <div className="col-span-6">
-                <TextInput 
+                <TextInput
+                  id="firstName"
                   value={request.firstName}
                   onChange={(value) => updateField('firstName', value)}
                 />
               </div>
               <div className="col-span-6">
-                <TextInput 
+                <TextInput
+                  id="lastName"
                   value={request.lastName}
                   onChange={(value) => updateField('lastName', value)}
                 />
               </div>
               <div className="col-span-12">
-                <TagInput 
+                <TagInput
+                  id="skills"
                   value={request.skills}
                   onChange={(value) => updateField('skills', value)}
                   label="Technology Skills"
@@ -90,11 +93,11 @@ function TagInputContent() {
   formStyle="card" 
 />`}
       >
-        <AutoEditForm 
-          type="UpdateContact" 
-          value={contact} 
-          formStyle="card" 
-          className="max-w-3xl"
+        <AutoEditForm
+          type="UpdateContact"
+          value={contact}
+          formStyle="card"
+          panelClass="max-w-3xl"
         />
       </CodeExample>
 
