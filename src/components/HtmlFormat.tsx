@@ -19,7 +19,7 @@ export default function HtmlFormat(props: HtmlFormatProps) {
     const isArray = useMemo(() => Array.isArray(value), [value])
     const keyFmt = (s: string) => humanify(s)
     const getAttrs = (k: string) => fieldAttrs ? fieldAttrs(k) : null
-    const fields = useMemo(() => uniqueKeys(value), [value])
+    const fields = useMemo(() => isArray ? uniqueKeys(value) : [], [value, isArray])
     const rows = (val: any) => val ? Object.keys(val).map(k => ({ key: keyFmt(k), val: val[k] })) : []
 
     const formattedValue = useMemo(() => formatValue(value), [value])
