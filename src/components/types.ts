@@ -226,6 +226,7 @@ export interface AutocompleteProps {
   match:(item:any,value:string) => boolean
   viewCount?: number
   pageSize?: number
+  className?: string
   onChange?: (value:any[]|any) => void
   children?: ((item:any) => ReactNode) | ReactNode
 }
@@ -238,6 +239,10 @@ export interface ComboboxProps {
     options?: any
     values?: string[]
     entries?: { key:string, value:string }[],
+    label?: string
+    help?: string
+    placeholder?: string
+    className?: string
     onChange?: (value:any[]|any) => void
     children?: ((item:any) => ReactNode) | ReactNode
 }

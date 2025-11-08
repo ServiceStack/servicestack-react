@@ -32,7 +32,11 @@ const AutoFormFields = forwardRef<AutoFormFieldsRef, AutoFormFieldsProps>(({
 
   const { metadataApi, apiOf, typeOf, typeOfRef, createFormLayout, Crud } = useMetadata()
 
-  const typeName = useMemo(() => getTypeName(typeProp || modelValue), [typeProp, modelValue])
+  const typeName = useMemo(() => {
+    // If formLayout is provided, we don't need a type
+    if (formLayout && !typeProp) return null
+    return getTypeName(typeProp || modelValue)
+  }, [typeProp, modelValue, formLayout])
 
   const type = useMemo(() => metaType ?? typeOf(typeName), [metaType, typeName, typeOf])
 

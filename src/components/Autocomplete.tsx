@@ -34,6 +34,7 @@ const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.
   status,
   onChange,
   children,
+  className,
   ...attrs
 }, ref) => {
   const [expanded, setExpanded] = useState(false)
@@ -42,6 +43,7 @@ const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.
   const [take, setTake] = useState(viewCount)
   const [filteredValues, setFilteredValues] = useState<any[]>([])
   const txtInputRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const apiState = useApiState()
   const useLabel = label ?? humanize(toPascalCase(id))
@@ -57,10 +59,20 @@ const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.
     [responseStatus, id]
   )
 
-  const cls = useMemo(() => [
-    input.base,
-    errorField ? input.invalid : input.valid
-  ].join(' '), [errorField])
+  const cls = useMemo(() => {
+    if (multiple) {
+      return [
+        'w-full cursor-text flex flex-wrap sm:text-sm rounded-md dark:text-white dark:bg-gray-900 border focus-within:border-transparent focus-within:ring-1 focus-within:outline-none',
+        errorField
+          ? 'pr-10 border-red-300 text-red-900 placeholder-red-300 focus-within:outline-none focus-within:ring-red-500 focus-within:border-red-500'
+          : 'shadow-sm border-gray-300 dark:border-gray-600 focus-within:ring-indigo-500 focus-within:border-indigo-500'
+      ].join(' ')
+    }
+    return [
+      input.base,
+      errorField ? input.invalid : input.valid
+    ].join(' ')
+  }, [errorField, multiple])
 
   const filteredOptions = useMemo(() => {
     let ret = !inputValue
@@ -234,24 +246,53 @@ const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.
     refresh()
   }, [])
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setExpanded(false)
+      }
+    }
+
+    if (expanded) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [expanded])
+
   const hasOption = useCallback((option: any) => {
-    return Array.isArray(value) && value.indexOf(option) >= 0
+    if (!Array.isArray(value)) return false
+
+    // For objects, compare by key property if it exists
+    if (option && typeof option === 'object' && 'key' in option) {
+      return value.some(v => v && typeof v === 'object' && 'key' in v && v.key === option.key)
+    }
+
+    // For primitives, use indexOf
+    return value.indexOf(option) >= 0
   }, [value])
 
   const select = useCallback((option: any) => {
-    setInputValue('')
-    setExpanded(false)
-
     if (multiple) {
       let newValues = Array.from(value || [])
       if (hasOption(option)) {
-        newValues = newValues.filter(x => x !== option)
+        // Remove the option - use proper comparison for objects
+        if (option && typeof option === 'object' && 'key' in option) {
+          newValues = newValues.filter(x => !(x && typeof x === 'object' && 'key' in x && x.key === option.key))
+        } else {
+          newValues = newValues.filter(x => x !== option)
+        }
       } else {
         newValues.push(option)
       }
       setActive(null)
       onChange?.(newValues)
+      // Don't clear input or close dropdown in multiple mode - keep it open for more selections
     } else {
+      setInputValue('')
+      setExpanded(false)
       let val = option
       onChange?.(val)
     }
@@ -274,7 +315,7 @@ const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.
   }, [children])
 
   return (
-    <div id={`${id}-autocomplete`}>
+    <div id={`${id}-autocomplete`} className={className} ref={containerRef}>
       {useLabel && (
         <label htmlFor={`${id}-text`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           {useLabel}
@@ -282,27 +323,78 @@ const Autocomplete = forwardRef<AutocompleteRef, AutocompleteProps & Omit<React.
       )}
 
       <div className="relative mt-1">
-        <input
-          ref={txtInputRef}
-          id={`${id}-text`}
-          type="text"
-          role="combobox"
-          aria-controls="options"
-          aria-expanded="false"
-          autoComplete="off"
-          spellCheck="false"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          className={cls}
-          placeholder={multiple || !value ? placeholder : ''}
-          readOnly={!multiple && !!value && !expanded}
-          onKeyDown={keyDown}
-          onKeyUp={keyUp}
-          onClick={onInputClick}
-          onPaste={onPaste}
-          required={false}
-          {...attrs}
-        />
+        {multiple ? (
+          <div className={cls} onClick={onInputClick} tabIndex={-1}>
+            <div className="flex flex-wrap pb-1.5">
+              {Array.isArray(value) && value.map((option, idx) => (
+                <div key={idx} className="pt-1.5 pl-1">
+                  <span className="inline-flex rounded-full items-center py-0.5 pl-2.5 pr-1 text-sm font-medium bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300">
+                    {renderItem(option)}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (Array.isArray(value)) {
+                          onChange?.(value.filter(v => v !== option))
+                        }
+                      }}
+                      className="flex-shrink-0 ml-1 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 dark:text-indigo-500 hover:bg-indigo-200 dark:hover:bg-indigo-800 hover:text-indigo-500 dark:hover:text-indigo-400 focus:outline-none focus:bg-indigo-500 focus:text-white dark:focus:text-black"
+                    >
+                      <svg className="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
+                        <path strokeLinecap="round" strokeWidth="1.5" d="M1 1l6 6m0-6L1 7" />
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+              ))}
+              <div className="pt-1.5 pl-1 shrink">
+                <input
+                  ref={txtInputRef}
+                  id={`${id}-text`}
+                  type="text"
+                  role="combobox"
+                  aria-controls="options"
+                  aria-expanded="false"
+                  autoComplete="off"
+                  spellCheck="false"
+                  className="p-0 dark:bg-transparent rounded-md border-none focus:!border-none focus:!outline-none"
+                  style={{ boxShadow: 'none !important', width: `${inputValue.length + 1}ch` }}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder={!value || (Array.isArray(value) && value.length === 0) ? placeholder : ''}
+                  onKeyDown={keyDown}
+                  onKeyUp={keyUp}
+                  onClick={onInputClick}
+                  onPaste={onPaste}
+                  required={false}
+                  {...attrs}
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <input
+            ref={txtInputRef}
+            id={`${id}-text`}
+            type="text"
+            role="combobox"
+            aria-controls="options"
+            aria-expanded="false"
+            autoComplete="off"
+            spellCheck="false"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            className={cls}
+            placeholder={multiple || !value ? placeholder : ''}
+            readOnly={!multiple && !!value && !expanded}
+            onKeyDown={keyDown}
+            onKeyUp={keyUp}
+            onClick={onInputClick}
+            onPaste={onPaste}
+            required={false}
+            {...attrs}
+          />
+        )}
 
         <button
           type="button"

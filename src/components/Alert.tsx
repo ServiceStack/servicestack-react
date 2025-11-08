@@ -1,6 +1,7 @@
 import type { AlertProps } from '@/components/types'
+import React from 'react'
 
-export default function Alert({ type = "warn", hideIcon, className, children }: AlertProps) {
+export default function Alert({ type = "warn", hideIcon, className, children, ...attrs }: AlertProps & React.HTMLAttributes<HTMLDivElement>) {
   const backgroundColor = type === "info"
     ? "bg-blue-50 dark:bg-blue-200"
     : type === "error"
@@ -53,7 +54,7 @@ export default function Alert({ type = "warn", hideIcon, className, children }: 
           </div>
         )}
         <div>
-          <div className={`${textColor} text-sm`}>
+          <div className={`${textColor} text-sm`} {...attrs}>
             {children}
           </div>
         </div>

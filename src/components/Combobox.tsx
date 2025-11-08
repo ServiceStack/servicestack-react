@@ -18,6 +18,10 @@ const Combobox = forwardRef<ComboboxRef, ComboboxProps & Omit<React.HTMLAttribut
   values,
   entries,
   onChange,
+  label,
+  help,
+  placeholder,
+  className,
   children,
   ...attrs
 }, ref) => {
@@ -44,7 +48,14 @@ const Combobox = forwardRef<ComboboxRef, ComboboxProps & Omit<React.HTMLAttribut
   )
 
   const updateModelValue = useCallback((newModel: any[] | any) => {
-    onChange?.(newModel)
+    // Convert Pair objects back to keys for the parent component
+    if (Array.isArray(newModel)) {
+      onChange?.(newModel.map(x => x.key))
+    } else if (newModel && typeof newModel === 'object' && 'key' in newModel) {
+      onChange?.(newModel.key)
+    } else {
+      onChange?.(newModel)
+    }
   }, [onChange])
 
   const update = useCallback(() => {
@@ -88,6 +99,10 @@ const Combobox = forwardRef<ComboboxRef, ComboboxProps & Omit<React.HTMLAttribut
         ref={inputRef}
         id={id}
         status={status}
+        label={label}
+        help={help}
+        placeholder={placeholder}
+        className={className}
         options={kvpValues}
         match={match}
         multiple={multiple}
@@ -95,7 +110,7 @@ const Combobox = forwardRef<ComboboxRef, ComboboxProps & Omit<React.HTMLAttribut
         onChange={updateModelValue}
         {...attrs}
       >
-        {({ key, value }: { key: string, value: string }) => (
+        {({ value }: { key: string, value: string }) => (
           <span className="block truncate">{value}</span>
         )}
       </Autocomplete>

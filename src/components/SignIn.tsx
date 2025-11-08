@@ -102,7 +102,7 @@ const SignIn: React.FC<SignInProps> = ({
     ((authProvider as any)?.formLayout || []).map((input: InputInfo) =>
       Object.assign({}, input, {
         type: input.type?.toLowerCase(),
-        autocomplete: input.autocomplete || (input.type?.toLowerCase() === 'password' ? 'current-password' : undefined)
+        autoComplete: input.autocomplete || (input.type?.toLowerCase() === 'password' ? 'current-password' : undefined)
           || (input.id.toLowerCase() === 'username' ? 'username' : undefined),
         css: Object.assign({ field: 'col-span-12' }, input.css)
       })),

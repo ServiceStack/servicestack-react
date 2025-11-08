@@ -30,6 +30,7 @@ const FileInput: React.FC<FileInputProps & Omit<React.InputHTMLAttributes<HTMLIn
   files,
   status,
   onChange,
+  className,
   ...attrs
 }) => {
   const apiState = useApiState()
@@ -134,7 +135,7 @@ const FileInput: React.FC<FileInputProps & Omit<React.InputHTMLAttributes<HTMLIn
   }, [])
 
   return (
-    <div className={`flex ${!multiple ? 'justify-between' : 'flex-col'}`}>
+    <div className={`flex ${!multiple ? 'justify-between' : 'flex-col'} ${className || ''}`}>
       <div className="relative flex-grow mr-2 sm:mr-4">
         {useLabel && (
           <label htmlFor={id} className={`block text-sm font-medium text-gray-700 dark:text-gray-300 ${labelClass ?? ''}`}>
