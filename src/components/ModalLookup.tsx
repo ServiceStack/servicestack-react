@@ -529,7 +529,7 @@ export default function ModalLookup({
           </React.Suspense>
         ) : apiLoading ? (
           <React.Suspense fallback={<div>Loading...</div>}>
-            <Loading />
+            <Loading className="p-4" />
           </React.Suspense>
         ) : (
           <div>
