@@ -59,7 +59,7 @@ function ColorPickerInput({ id, value, onChange, label, help, className, labelCl
           type="text"
           value={value || '#3b82f6'}
           onChange={(e) => onChange?.(e.target.value)}
-          className="flex-1 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           placeholder="#3b82f6"
         />
       </div>
