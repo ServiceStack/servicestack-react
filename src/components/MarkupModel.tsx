@@ -28,25 +28,25 @@ export default function MarkupModel(props: MarkupModelProps) {
     }, [value])
 
     return (
-        <table className="my-2 w-full">
+        <table className={props.tableClass ?? "my-2 w-full"}>
             <tbody>
                 {Object.entries(basic).map(([k, v]) => (
-                    <tr key={k} className="leading-7">
-                        <th className="px-2 text-left align-top">{humanize(k)}</th>
-                        <td className="align-top">
+                    <tr key={k} className={props.basicTrClass ?? "leading-7"}>
+                        <th className={props.basicThClass ?? "px-2 text-left align-top"}>{humanize(k)}</th>
+                        <td className={props.basicTdClass ?? "align-top"}>
                             <MarkupFormat value={v} />
                         </td>
                     </tr>
                 ))}
                 {Object.entries(complex).map(([k, v]) => (
                     <React.Fragment key={k}>
-                        <tr className="my-2 leading-7">
-                            <td colSpan={2} className="px-2 bg-indigo-700 text-white">
+                        <tr className={props.complexTitleTrClass ?? "my-2 leading-7"}>
+                            <th colSpan={2} className={props.complexTitleTdClass ?? "px-2 bg-indigo-700 text-white"}>
                                 {humanize(k)}
-                            </td>
+                            </th>
                         </tr>
-                        <tr className="leading-7">
-                            <td colSpan={2} className="px-2 align-top">
+                        <tr className={props.complexBodyTrClass ?? "leading-7"}>
+                            <td colSpan={2} className={props.complexBodyTdClass ?? "px-2 align-top"}>
                                 <MarkupFormat value={v} />
                             </td>
                         </tr>

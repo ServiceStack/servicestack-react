@@ -467,6 +467,14 @@ export interface MarkupFormatProps {
 export interface MarkupModelProps {
   value: any,
   imageClass?: string
+  tableClass?: string
+  basicTrClass?: string
+  basicThClass?: string
+  basicTdClass?: string
+  complexTitleTrClass?: string
+  complexTitleTdClass?: string
+  complexBodyTrClass?: string
+  complexBodyTdClass?: string
 }
 
 // Additional Components
