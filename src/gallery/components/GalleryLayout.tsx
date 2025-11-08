@@ -28,11 +28,6 @@ export default function GalleryLayout({ children, title }: GalleryLayoutProps) {
               <a href="/gallery" className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 React Component Gallery
               </a>
-              <nav className="hidden md:flex gap-6">
-                <a href="/" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
-                  ← Back to Demo
-                </a>
-              </nav>
             </div>
             <DarkModeToggle />
           </div>

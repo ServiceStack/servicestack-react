@@ -1,10 +1,127 @@
-import React from 'react'
+import React, { useState, useMemo } from 'react'
 import GalleryLayout from '../components/GalleryLayout'
 import CodeBlock from '../components/CodeBlock'
+
+function ProjectTemplateSelector() {
+  const [project, setProject] = useState('MyApp')
+
+  const projectZip = useMemo(() => (project || 'MyApp') + '.zip', [project])
+
+  const zipUrl = (template: string) =>
+    `https://account.servicestack.net/archive/${template}?Name=${project || 'MyApp'}`
+
+  const isAlphaNumeric = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const key = e.key
+    // Allow alphanumeric characters and underscore
+    if (key.length === 1 && !/^[A-Za-z0-9_]$/.test(key)) {
+      e.preventDefault()
+    }
+  }
+
+  return (
+    <section className="not-prose w-full flex flex-col justify-center text-center">
+      <div id="empty" className="mt-4 mb-2">
+        <div className="flex justify-center mb-16">
+          <div className="w-70">
+            <input
+              value={project}
+              onChange={(e) => setProject(e.target.value)}
+              type="text"
+              placeholder="Project Name"
+              autoCorrect="off"
+              spellCheck={false}
+              onKeyDown={isAlphaNumeric}
+              className="mt-1 text-lg block w-full px-3 py-2 bg-white dark:bg-black border border-slate-300 dark:border-slate-700 rounded-md text-sm shadow-sm placeholder-slate-400
+                         focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+            />
+          </div>
+        </div>
+        <div id="ssg" className="mt-4 mb-2">
+          <h3 className="text-gray-400 text-xl mb-2">React Templates</h3>
+          <div className="flex flex-wrap justify-center">
+            <div>
+              <a className="archive-url hover:no-underline" href={zipUrl('NetCoreTemplates/react-vite')}>
+                <div className="bg-white dark:bg-gray-800 px-4 py-4 mr-4 mb-4 rounded-lg shadow-lg text-center items-center justify-center hover:shadow-2xl dark:border-2 dark:border-pink-600 dark:hover:border-blue-600" style={{ minWidth: '150px' }}>
+                  <div className="text-center font-extrabold flex items-center justify-center mb-2">
+                    <div className="text-4xl text-blue-400 my-3">
+                      <svg className="w-14 h-14" xmlns="http://www.w3.org/2000/svg" viewBox="-10.5 -9.45 21 18.9" fill="none">
+                        <circle cx="0" cy="0" r="2" fill="currentColor"></circle>
+                        <g stroke="currentColor" strokeWidth="1" fill="none">
+                          <ellipse rx="10" ry="4.5"></ellipse>
+                          <ellipse rx="10" ry="4.5" transform="rotate(60)"></ellipse>
+                          <ellipse rx="10" ry="4.5" transform="rotate(120)"></ellipse>
+                        </g>
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="text-xl font-medium text-gray-700 dark:text-gray-200">React Vite</div>
+                  <div className="flex justify-center h-8"></div>
+                  <span className="archive-name px-4 pb-2 text-blue-600 dark:text-indigo-400">{projectZip}</span>
+                  <div className="count mt-1 text-gray-400 text-sm"></div>
+                </div>
+              </a>
+              <a className="text-sm text-center mr-4" href="https://react-vite.web-templates.io">react-vite.web-templates.io</a>
+            </div>
+            <div>
+              <a className="archive-url hover:no-underline" href={zipUrl('NetCoreTemplates/nextjs')}>
+                <div className="bg-white dark:bg-gray-800 px-4 py-4 mr-4 mb-4 rounded-lg shadow-lg text-center items-center justify-center hover:shadow-2xl dark:border-2 dark:border-pink-600 dark:hover:border-blue-600" style={{ minWidth: '150px' }}>
+                  <div className="text-center font-extrabold flex items-center justify-center mb-2">
+                    <div className="text-4xl text-blue-400 my-3">
+                      <svg className="w-14 h-14 bg-white text-gray-900 rounded-full" xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+                        <path fill="currentColor" d="M386.399 35.508C217.06-64.061 1.885 57.55.012 253.882c-1.828 191.716 201.063 315.545 370.02 231.163L185.56 213.636v167.997c0 18.614-35.619 18.614-35.619 0V156.421c0-14.776 27.448-15.989 35.226-3.145L395.43 470.572c157.95-101.737 155.817-338.136-9.031-435.064zm-23.756 317.939L326.91 298.87V149.458c0-13.932 35.732-13.932 35.732 0v203.989z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="text-xl font-medium text-gray-700 dark:text-gray-200">Next.js</div>
+                  <div className="flex justify-center h-8"></div>
+                  <span className="archive-name px-4 pb-2 text-blue-600 dark:text-indigo-400">{projectZip}</span>
+                  <div className="count mt-1 text-gray-400 text-sm"></div>
+                </div>
+              </a>
+              <a className="text-sm text-center mr-4" href="https://nextjs.web-templates.io">nextjs.web-templates.io</a>
+            </div>
+            <div>
+              <a className="archive-url hover:no-underline" href={zipUrl('NetCoreTemplates/react-spa')}>
+                <div className="bg-white dark:bg-gray-800 px-4 py-4 mr-4 mb-4 rounded-lg shadow-lg text-center items-center justify-center hover:shadow-2xl dark:border-2 dark:border-pink-600 dark:hover:border-blue-600" style={{ minWidth: '150px' }}>
+                  <div className="text-center font-extrabold flex items-center justify-center mb-2">
+                    <div className="text-4xl text-blue-400 my-3">
+                      <svg className="w-14 h-14" xmlns="http://www.w3.org/2000/svg" viewBox="-10.5 -9.45 21 18.9" fill="none">
+                        <circle cx="0" cy="0" r="2" fill="currentColor"></circle>
+                        <g stroke="currentColor" strokeWidth="1" fill="none">
+                          <ellipse rx="10" ry="4.5"></ellipse>
+                          <ellipse rx="10" ry="4.5" transform="rotate(60)"></ellipse>
+                          <ellipse rx="10" ry="4.5" transform="rotate(120)"></ellipse>
+                        </g>
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="text-xl font-medium text-gray-700 dark:text-gray-200">React SPA</div>
+                  <div className="flex justify-center h-8"></div>
+                  <span className="archive-name px-4 pb-2 text-blue-600 dark:text-indigo-400">{projectZip}</span>
+                  <div className="count mt-1 text-gray-400 text-sm"></div>
+                </div>
+              </a>
+              <a className="text-sm text-center mr-4" href="https://react-spa.web-templates.io">react-spa.web-templates.io</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 export default function InstallPage() {
   return (
     <GalleryLayout title="Installation">
+      <h2>Starting Project Templates</h2>
+      <p>
+        The fastest way to get started is to use one of our pre-configured project templates.
+        These templates come with ServiceStack and <code>@servicestack/react</code> already configured with
+        best practices, authentication, and example components to help you hit the ground running.
+      </p>
+
+      <ProjectTemplateSelector />
+
       <h2>NPM Installation</h2>
         <p>
           <strong>@servicestack/react</strong> can be added to existing React Apps by installing via npm:
@@ -89,7 +206,7 @@ export default {
 import { JsonServiceClient } from '@servicestack/client'
 import { ClientContext, AutoQueryGrid } from '@servicestack/react'
 
-const client = new JsonServiceClient('https://blazor-gallery.jamstacks.net')
+const client = new JsonServiceClient('https://blazor-gallery.web-templates.io')
 
 function App() {
   return (
