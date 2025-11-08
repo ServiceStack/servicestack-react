@@ -11,14 +11,24 @@ function toAuth(auth?:AuthenticateResponse) {
 
 /** Sign In the currently Authenticated User */
 function signIn(user:AuthenticateResponse) {
-    Sole.user = toAuth(user)!
-    Sole.events.publish('signIn', user)
+    if (user) {
+        Sole.user = toAuth(user)!
+        console.debug('signIn', user, Sole.user)
+        Sole.events.publish('signIn', user)
+    } else {
+        signOut()
+    }
 }
 
 /** Sign Out currently Authenticated User */
 function signOut() {
+    console.debug('signOut', Sole.user)
     Sole.user = null
     Sole.events.publish('signOut', null)
+}
+
+function getAuth() {
+    return Sole.user
 }
 
 /** @returns {string[]} */
@@ -69,6 +79,7 @@ export function canAccess(op?:MetadataOperationType|null) {
 export function invalidAccessMessage(op:MetadataOperationType) {
     if (!op || !op.requiresAuth) return null
     const auth = Sole.user
+    console.debug('invalidAccessMessage', auth, op?.request?.name)
     if (!auth) {
         return `<b>${op.request.name}</b> requires Authentication`
     }
@@ -108,3 +119,17 @@ export function useAuth() {
 
     return { signIn, signOut, user, toAuth, isAuthenticated, hasRole, hasPermission, isAdmin, canAccess, invalidAccessMessage }
 }
+
+export function authContext() {
+    return {
+        signIn,
+        signOut,
+        getAuth,
+        hasRole,
+        hasPermission,
+        isAdmin,
+        canAccess,
+        invalidAccessMessage,        
+    }
+}
+

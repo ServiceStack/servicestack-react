@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef, useContext } from 'react'
 import type { JsonServiceClient } from '@servicestack/client'
 import type { ApiPrefs, ApiResponse, Column, ColumnSettings, MetadataPropertyType } from '@/types'
 import type { ModalLookupProps } from './types'
@@ -8,6 +8,7 @@ import { useConfig } from '@/use/config'
 import { Apis, createDto, Crud, getPrimaryKey, typeOf, typeProperties, useMetadata } from '@/use/metadata'
 import { grid } from './css'
 import { canAccess } from '@/use/auth'
+import { ClientContext } from '@/use/context'
 import ModalDialog from './ModalDialog'
 
 import FilterColumn from './grids/FilterColumn'
@@ -42,7 +43,7 @@ export default function ModalLookup({
 }: ModalLookupProps) {
   const { config } = useConfig()
   const { metadataApi, filterDefinitions } = useMetadata()
-  const client = useRef<JsonServiceClient>((window as any).client).current
+  const client = useContext(ClientContext)
   const storage = config.storage!
 
   // State
@@ -216,6 +217,10 @@ export default function ModalLookup({
       console.error(`No Query API was found for ${refInfo.model}`)
       return
     }
+    if (!client) {
+      console.error('JsonServiceClient is not available. Make sure to wrap your app with ClientContext.Provider')
+      return
+    }
     const requestDto = createDto(op, args)
     const complete = delaySet(x => {
       setApi(prev => ({ ...prev, response: undefined, error: undefined }))
@@ -277,6 +282,28 @@ export default function ModalLookup({
 
   async function createSave(result: any) {
     createDone()
+
+    // Fetch the newly created entity using its ID
+    if (result && result.id && queryOp && client) {
+      const pk = getPrimaryKey(viewModel)
+      if (pk) {
+        const pkName = pk.name
+        const pkValue = result.id
+
+        const requestDto = createDto(queryOp, { [pkName]: pkValue })
+        const apiResult = await client.api(requestDto)
+
+        if (apiResult.succeeded) {
+          const entity = mapGet(apiResult.response, 'results')?.[0]
+          if (entity) {
+            onDone?.(entity)
+            return
+          }
+        }
+      }
+    }
+
+    // Fallback to returning the result as-is if we couldn't fetch the entity
     onDone?.(result)
   }
 

@@ -2,7 +2,7 @@
 import { useUtils } from './use/utils'
 import { useConfig } from './use/config'
 import { useClient } from './use/client'
-import { useAuth } from './use/auth'
+import { useAuth, authContext } from './use/auth'
 import { useFiles } from './use/files'
 import { useMetadata } from './use/metadata'
 import { useFormatters } from './use/formatters'
@@ -14,7 +14,8 @@ export * from './components/types'
 export * from './types'
 
 // Export hooks and utilities
-export { useUtils, useConfig, useClient, useAuth, useMetadata, useFiles, useFormatters, useApiState, ClientContext, ApiStateContext, css }
+export { useUtils, useConfig, useClient, useAuth, useMetadata, useFiles, useFormatters, useApiState, authContext, ClientContext, ApiStateContext, css }
+
 
 // Import components (this will be excluded from type generation)
 

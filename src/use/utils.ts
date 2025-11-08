@@ -52,10 +52,11 @@ export function setRef<T>($ref: MutableRefObject<T> | ((value: T) => void), valu
     }
 }
 
-/** Returns a dto with all properties unwrapped - for React, just returns a shallow copy */
+/** Returns a dto with all properties unwrapped - for React, just returns the original object */
 export function unRefs<T extends Record<string, any>>(o: T): T {
-    // In React, we don't have Vue refs, so just return a shallow copy
-    return { ...o }
+    // In React, we don't have Vue refs, so just return the original object
+    // to preserve the Request DTO prototype chain (needed for getTypeName() method)
+    return o
 }
 
 /** Update transition class based on Tailwind animation transition rule-set */

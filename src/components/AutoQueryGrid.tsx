@@ -194,7 +194,7 @@ export const AutoQueryGrid = forwardRef<AutoQueryGridRef, AutoQueryGridComponent
     }, [props.rowClass, props.tableStyle, editId])
 
     const { metadataApi, typeOf, apiOf, filterDefinitions } = useMetadata()
-    const { invalidAccessMessage } = useAuth()
+    const { invalidAccessMessage, user } = useAuth()
 
     const typeName = useMemo(() => getTypeName(props.type), [props.type])
 
@@ -285,13 +285,13 @@ export const AutoQueryGrid = forwardRef<AutoQueryGridRef, AutoQueryGridComponent
         return null
     }, [metadataApi, props.apis, apis, apiOf])
 
-    const invalidAccess = useMemo(() => apis.AnyQuery && invalidAccessMessage(apis.AnyQuery), [apis.AnyQuery, invalidAccessMessage])
-    const invalidCreateAccess = useMemo(() => apis.Create && invalidAccessMessage(apis.Create), [apis.Create, invalidAccessMessage])
-    const invalidUpdateAccess = useMemo(() => apis.AnyUpdate && invalidAccessMessage(apis.AnyUpdate), [apis.AnyUpdate, invalidAccessMessage])
+    const invalidAccess = useMemo(() => apis.AnyQuery && invalidAccessMessage(apis.AnyQuery), [apis.AnyQuery, invalidAccessMessage, user])
+    const invalidCreateAccess = useMemo(() => apis.Create && invalidAccessMessage(apis.Create), [apis.Create, invalidAccessMessage, user])
+    const invalidUpdateAccess = useMemo(() => apis.AnyUpdate && invalidAccessMessage(apis.AnyUpdate), [apis.AnyUpdate, invalidAccessMessage, user])
 
-    const canCreate = useMemo(() => canAccess(apis.Create), [apis.Create])
-    const canUpdate = useMemo(() => canAccess(apis.AnyUpdate), [apis.AnyUpdate])
-    const canDelete = useMemo(() => canAccess(apis.Delete), [apis.Delete])
+    const canCreate = useMemo(() => canAccess(apis.Create), [apis.Create, user])
+    const canUpdate = useMemo(() => canAccess(apis.AnyUpdate), [apis.AnyUpdate, user])
+    const canDelete = useMemo(() => canAccess(apis.Delete), [apis.Delete, user])
 
     // Helper functions
     const prefsCacheKey = useCallback(() =>
@@ -387,21 +387,6 @@ export const AutoQueryGrid = forwardRef<AutoQueryGridRef, AutoQueryGridComponent
     const onFilterDone = useCallback(() => {
         setShowFilters(null)
     }, [])
-
-    const onFilterSave = useCallback(async (settings: ColumnSettings) => {
-        let column = showFilters?.column
-        if (column) {
-            column.settings = settings
-            storage.setItem(columnCacheKey(column.name), JSON.stringify(column.settings))
-            await update()
-        }
-        setShowFilters(null)
-    }, [showFilters, columnCacheKey, storage])
-
-    const filtersChanged = useCallback(async (column: Column) => {
-        storage.setItem(columnCacheKey(column.name), JSON.stringify(column.settings))
-        await update()
-    }, [columnCacheKey, storage])
 
     const saveApiPrefs = useCallback(async (prefs: ApiPrefs) => {
         setShowQueryPrefs(false)
@@ -535,6 +520,39 @@ export const AutoQueryGrid = forwardRef<AutoQueryGridRef, AutoQueryGridComponent
         await update()
     }, [update])
 
+    const onFilterSave = useCallback(async (settings: ColumnSettings) => {
+        let column = showFilters?.column
+        if (column) {
+            // Update the column object directly first (for immediate use in createRequestArgs)
+            column.settings = settings
+            storage.setItem(columnCacheKey(column.name), JSON.stringify(settings))
+
+            // Then update the columns state immutably to trigger re-render
+            setColumns(prevColumns => prevColumns.map(col =>
+                col.name === column.name
+                    ? { ...col, settings }
+                    : col
+            ))
+
+            await update()
+        }
+        setShowFilters(null)
+    }, [showFilters, columnCacheKey, storage, update])
+
+    const filtersChanged = useCallback(async (column: Column) => {
+        // Column is already mutated by the caller, just save to storage
+        storage.setItem(columnCacheKey(column.name), JSON.stringify(column.settings))
+
+        // Update the columns state immutably to trigger re-render
+        setColumns(prevColumns => prevColumns.map(col =>
+            col.name === column.name
+                ? { ...col, settings: column.settings }
+                : col
+        ))
+
+        await update()
+    }, [columnCacheKey, storage, update])
+
     const downloadCsv = useCallback(() => {
         const apiUrl = createApiUrl("csv")
         copyText(apiUrl)
@@ -559,14 +577,22 @@ export const AutoQueryGrid = forwardRef<AutoQueryGridRef, AutoQueryGridComponent
     }, [createRequestArgs, apis, client.baseUrl])
 
     const resetPreferences = useCallback(async () => {
+        // Mutate columns directly first (for immediate use in createRequestArgs)
         columns.forEach(column => {
             column.settings = { filters: [] }
             storage.removeItem(columnCacheKey(column.name))
         })
+
+        // Then update columns state immutably to trigger re-render
+        setColumns(prevColumns => prevColumns.map(column => ({
+            ...column,
+            settings: { filters: [] }
+        })))
+
         setApiPrefs({ take: defaultTake })
         storage.removeItem(prefsCacheKey())
         await update()
-    }, [columns, columnCacheKey, prefsCacheKey, storage, update])
+    }, [columns, columnCacheKey, prefsCacheKey, storage, update, defaultTake])
 
     const onShowNewItem = useCallback(() => {
         setCreate(true)
@@ -1060,15 +1086,32 @@ export const AutoQueryGrid = forwardRef<AutoQueryGridRef, AutoQueryGridComponent
                     headerTitles={props.headerTitles}
                     visibleFrom={props.visibleFrom}
                     onHeaderSelected={handleHeaderSelected}
+                    slots={{
+                        header: ({ column, label }: { column: string, label: string }) => {
+                            if (allow('filtering') && canFilter(column)) {
+                                const col = columns.find((x: Column) => x.name.toLowerCase() === column.toLowerCase())
+                                const isOpen = showFilters?.column.name === column
+                                return (
+                                    <div className="cursor-pointer flex justify-between items-center hover:text-gray-900 dark:hover:text-gray-50">
+                                        <span className="mr-1 select-none">
+                                            {label}
+                                        </span>
+                                        <SettingsIcons column={col} isOpen={isOpen} />
+                                    </div>
+                                )
+                            } else {
+                                return (
+                                    <div className="flex justify-between items-center">
+                                        <span className="mr-1 select-none">{label}</span>
+                                    </div>
+                                )
+                            }
+                        },
+                        ...headerSlots,
+                        ...columnSlots
+                    }}
                 >
-                    {columnSlots && Object.keys(columnSlots).map(slotName => {
-                        const slotFn = columnSlots[slotName]
-                        return (
-                            <React.Fragment key={slotName}>
-                                {slotFn({})}
-                            </React.Fragment>
-                        )
-                    })}
+                    {children}
                 </DataGrid>
             )}
         </div>

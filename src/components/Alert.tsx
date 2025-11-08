@@ -53,9 +53,9 @@ export default function Alert({ type = "warn", hideIcon, className, children }: 
           </div>
         )}
         <div>
-          <p className={`${textColor} text-sm`}>
+          <div className={`${textColor} text-sm`}>
             {children}
-          </p>
+          </div>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DarkModeToggle } from '../components/DarkModeToggle'
 import SecondaryButton from '../components/SecondaryButton'
 import TextInput from '../components/TextInput'
@@ -14,20 +14,46 @@ import SlideOver from '../components/SlideOver'
 import DataGrid from '../components/DataGrid'
 import AutoForm from '../components/AutoForm'
 import AutoQueryGrid from '../components/AutoQueryGrid'
+import AutoEditForm from '../components/AutoEditForm'
+import Icon from '../components/Icon'
+import TextLink from '../components/TextLink'
+import PreviewFormat from '../components/PreviewFormat'
 // In production, import from '@servicestack/react':
 // import { AutoQueryGrid, ClientContext } from '@servicestack/react'
 import { ClientContext } from '../use/context'
 import { tracks, RoomType } from './data'
 import { ApiResult, EmptyResponse, IReturn, ResponseStatus, JsonServiceClient } from '@servicestack/client'
-import { setMetadata } from '../use/metadata'
+import { setMetadata, loadMetadata } from '../use/metadata'
 import { Sole } from '../use/config'
+import { authContext } from '../use/auth'
 import metadataJson from './metadata.json'
 import PrimaryButton from '../components/PrimaryButton'
-
-setMetadata(metadataJson)
+import { Authenticate, IGet } from './dtos'
+import { useFormatters } from '../use/formatters'
 
 // Create a JsonServiceClient instance for AutoQueryGrid
-const client = new JsonServiceClient('https://blazor-gallery.jamstacks.net')
+// const client = new JsonServiceClient('https://blazor-gallery.jamstacks.net')
+const client = new JsonServiceClient()
+
+// setMetadata(metadataJson)
+loadMetadata({ client: client })
+
+const authCts = authContext()
+client.api(new Authenticate({ provider:'credentials', userName:'admin@email.com', password:'p@55wOrd' }))
+  .then(r => {
+    authCts.signIn(r.response)
+  })
+
+
+class GetWeatherForecast implements IReturn<Forecast[]>, IGet
+{
+    public date?: string;
+
+    public constructor(init?: Partial<GetWeatherForecast>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'GetWeatherForecast'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new Array<Forecast>(); }
+}
 
 class Forecast {
   public date?: string;
@@ -78,9 +104,12 @@ if (Sole.metadata?.api) {
 }
 
 export default function App() {
+  const { currency } = useFormatters()
+  const [coupon, setCoupon] = useState<any>(null)
   const [show, setShow] = useState(false)
   const [slideOver, setSlideOver] = useState(false)
   const [modal, setModal] = useState(false)
+  const [apiForecasts, setApiForecasts] = useState<Forecast[]>([])
 
   const [dates, setDates] = useState({
     isoDate7Z: '2024-01-15T10:30:00.0000000Z',
@@ -90,8 +119,21 @@ export default function App() {
     isoDateOnly: '2024-01-15'
   })
 
-  const [modelDateTimes, setModelDateTimes] = useState({})
-  const [modelDates, setModelDates] = useState({})
+  const [modelDateTimes, setModelDateTimes] = useState<Record<string, any>>({})
+  const [modelDates, setModelDates] = useState<Record<string, any>>({})
+
+  // Fetch weather forecasts from API
+  useEffect(() => {
+    (async () => {
+      const api = await client.api(new GetWeatherForecast())
+      if (api.succeeded) {
+        setApiForecasts(api.response!)
+        console.log('Weather forecast loaded:', api.response)
+      } else {
+        console.error('Failed to load weather forecast:', api.error)
+      }
+    })()
+  }, [])
 
   // Form inputs state
   const [formInputs, setFormInputs] = useState({
@@ -171,7 +213,7 @@ export default function App() {
       </div>
 
       <div className="mt-8 mx-auto max-w-4xl flex flex-col gap-y-4">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Custom DataGrid</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Custom DataGrid (Static Data)</h2>
         <DataGrid
           items={forecasts}
           className="max-w-screen-md"
@@ -198,6 +240,43 @@ export default function App() {
             )
           }}
         />
+      </div>
+
+      <div className="mt-8 mx-auto max-w-4xl flex flex-col gap-y-4">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          Weather Forecast from API
+          {apiForecasts.length > 0 && <span className="text-green-600 ml-2">✓ Loaded</span>}
+        </h2>
+        {apiForecasts.length > 0 ? (
+          <DataGrid
+            items={apiForecasts}
+            className="max-w-screen-md"
+            tableStyle={['stripedRows', 'uppercaseHeadings']}
+            headerTitles={{
+              temperatureC: 'TEMP. (C)',
+              temperatureF: 'TEMP. (F)'
+            }}
+            slots={{
+              'date-header': () => (
+                <span className="text-blue-600">Date</span>
+              ),
+              'date': ({ date }: Forecast) => (
+                <>{date ? new Intl.DateTimeFormat().format(new Date(date)) : ''}</>
+              ),
+              'temperatureC': ({ temperatureC }: Forecast) => (
+                <>{temperatureC}&deg;</>
+              ),
+              'temperatureF': ({ temperatureF }: Forecast) => (
+                <>{temperatureF}&deg;</>
+              ),
+              'summary': ({ summary }: Forecast) => (
+                <>{summary}</>
+              )
+            }}
+          />
+        ) : (
+          <div className="text-gray-500 dark:text-gray-400">Loading weather forecast from API...</div>
+        )}
       </div>
 
       <div className="mt-8 mx-auto max-w-4xl flex flex-col gap-y-4">
@@ -459,12 +538,70 @@ export default function App() {
       </div>
 
      {/* AutoQuery Bookings Test */}
-      <div className="max-w-4xl mx-auto p-8">
-        <h2 className="text-2xl font-bold mb-6">AutoQuery Bookings Test</h2>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <p className="mb-4 text-gray-600 dark:text-gray-400">
-          </p>
-          <AutoQueryGrid type="Booking" />
+      <div className="max-w-7xl mx-auto p-8">
+        <h2 className="text-2xl font-bold mb-6">
+          AutoQuery Bookings Test
+          
+        </h2>
+        <div>
+          <AutoQueryGrid
+            type="Booking"
+            selectedColumns={['id', 'name', 'cost', 'bookingStartDate', 'bookingEndDate', 'roomNumber', 'createdBy', 'discount']}
+            visibleFrom={{
+              name: 'xl',
+              bookingStartDate: 'sm',
+              bookingEndDate: 'xl',
+              createdBy: '2xl'
+            }}
+            columnSlots={{
+              id: ({ id }: any) => (
+                <span className="text-gray-900" dangerouslySetInnerHTML={{ __html: id }} />
+              ),
+              name: ({ name }: any) => <>{name}</>,
+              cost: ({ cost }: any) => (
+                <span dangerouslySetInnerHTML={{ __html: currency(cost) }} />
+              ),
+              createdBy: ({ createdBy }: any) => (
+                <span dangerouslySetInnerHTML={{ __html: createdBy }} />
+              ),
+              discount: ({ discount }: any) => (
+                discount ? (
+                  <TextLink
+                    className="flex items-end"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation()
+                      setCoupon(discount)
+                    }}
+                    title={discount.id}
+                  >
+                    <Icon className="w-5 h-5 mr-1" type="Coupon" />
+                    <PreviewFormat value={discount.description} />
+                  </TextLink>
+                ) : null
+              )
+            }}
+            headerSlots={{
+              'roomNumber-header': () => (
+                <><span className="hidden lg:inline">Room </span>No</>
+              ),
+              'bookingStartDate-header': () => (
+                <>Start<span className="hidden lg:inline"> Date</span></>
+              ),
+              'bookingEndDate-header': () => (
+                <>End<span className="hidden lg:inline"> Date</span></>
+              ),
+              'createdBy-header': () => <>Employee</>
+            }}
+          />
+
+          {coupon && (
+            <AutoEditForm
+              type="UpdateCoupon"
+              value={coupon}
+              onDone={() => setCoupon(null)}
+              onSave={() => setCoupon(null)}
+            />
+          )}
         </div>
       </div>
 

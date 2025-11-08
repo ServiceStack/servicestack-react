@@ -116,7 +116,7 @@ const AutoViewForm: React.FC<AutoViewFormProps & AutoViewFormSlots> = (props) =>
   }
 
   useEffect(() => {
-    doTransition(rule1, { value: transition1 } as any, show)
+    doTransition(rule1, setTransition1, show)
     if (!show) {
       const timer = setTimeout(done, 700)
       return () => clearTimeout(timer)

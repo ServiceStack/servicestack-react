@@ -2,6 +2,20 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './demo/App'
 import './tailwind.css'
+import { setDefaultFormats } from './use/formatters'
+
+// Initialize date formatting with Australian locale
+const browserLocale = 'en-AU' // Force Australian date format (DD/MM/YYYY)
+
+console.log('Using locale:', browserLocale)
+
+setDefaultFormats({
+  locale: browserLocale, // Australian locale for DD/MM/YYYY date format
+  date: {
+    method: "Intl.DateTimeFormat",
+    options: "{dateStyle:'medium'}"
+  }
+})
 
 // Initialize dark mode from localStorage
 const colorScheme = localStorage.getItem('color-scheme')

@@ -6,12 +6,13 @@ const TextLink: React.FC<TextLinkProps & React.AnchorHTMLAttributes<HTMLAnchorEl
   color = 'blue',
   children,
   href,
+  className,
   ...attrs
 }) => {
-  const cls = useMemo(() =>
-    (a[color] || a.blue) + (!href ? ' cursor-pointer' : ''),
-    [color, href]
-  )
+  const cls = useMemo(() => {
+    const baseClasses = (a[color] || a.blue) + (!href ? ' cursor-pointer' : '')
+    return className ? `${baseClasses} ${className}` : baseClasses
+  }, [color, href, className])
 
   return (
     <a className={cls} href={href} {...attrs}>

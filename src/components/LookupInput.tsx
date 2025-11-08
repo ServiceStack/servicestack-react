@@ -114,7 +114,6 @@ const LookupInput: React.FC<LookupInputProps> = ({
         return
       }
 
-      setRefInfoValue('')
       let refIdValue = refInfo.selfId == null
         ? mapGet(model, prop.name)
         : mapGet(model, refInfo.selfId)
@@ -123,8 +122,20 @@ const LookupInput: React.FC<LookupInputProps> = ({
       if (isRefType) {
         refIdValue = mapGet(model, refInfo.refId)
       }
-      if (refIdValue == null)
+      if (refIdValue == null) {
+        setRefInfoValue('')
         return
+      }
+
+      // Try to get cached value first
+      if (refInfo.refLabel != null) {
+        const cachedLabel = LookupValues.getValue(refInfo.model, refIdValue, refInfo.refLabel)
+        if (cachedLabel) {
+          setRefInfoValue(cachedLabel)
+          setRefPropertyName(prop.name)
+          return
+        }
+      }
 
       const queryOp = metadataApi?.operations.find(x => x.dataModel?.name === refInfo.model)
       console.debug('LookupInput queryOp', queryOp)
@@ -171,7 +182,7 @@ const LookupInput: React.FC<LookupInputProps> = ({
     }
 
     initialize()
-  }, []) // Only run on mount
+  }, [modelValue, id, property, useRef, metadataApi, client, metadataType, getTypeProperties, value])
 
   return (
     <div className="lookup-field">

@@ -112,7 +112,13 @@ const AutoCreateForm = forwardRef<AutoCreateFormRef, AutoCreateFormProps & AutoC
   }, [forceUpdate])
 
   const update = useCallback((value: ApiRequest) => {
-    // Model update handled internally
+    setModel(prev => {
+      // Mutate the DTO instance to preserve prototype methods like getTypeName()
+      Object.assign(prev, value)
+      // Create new instance with same prototype to trigger React re-render
+      const ctor = prev.constructor as any
+      return new ctor(prev)
+    })
   }, [])
 
   const openModal = useCallback((info: { name: string } & any, done: (result: any) => any) => {
@@ -210,7 +216,7 @@ const AutoCreateForm = forwardRef<AutoCreateFormRef, AutoCreateFormProps & AutoC
   }
 
   useEffect(() => {
-    doTransition(rule1, { value: transition1 } as any, show)
+    doTransition(rule1, setTransition1, show)
     if (!show) {
       const timer = setTimeout(done, 700)
       return () => clearTimeout(timer)
@@ -277,6 +283,7 @@ const AutoCreateForm = forwardRef<AutoCreateFormRef, AutoCreateFormProps & AutoC
           <AutoFormFields
             ref={formFieldsRef}
             key={formFieldsKey}
+            type={typeName}
             value={model}
             onChange={update}
             api={api}
@@ -309,6 +316,7 @@ const AutoCreateForm = forwardRef<AutoCreateFormRef, AutoCreateFormProps & AutoC
             <AutoFormFields
               ref={formFieldsRef}
               key={formFieldsKey}
+              type={typeName}
               value={model}
               onChange={update}
               api={api}

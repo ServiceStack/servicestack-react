@@ -150,7 +150,7 @@ export default function FilterColumn({
     return (
         <div className="fixed z-20 inset-0 overflow-y-auto" onClick={done}>
             <div className="absolute" style={{ top: `${topLeft.y}px`, left: `${topLeft.x}px` }} onClick={(e) => e.stopPropagation()}>
-                <div className="absolute top-0 right-0 bg-white dark:bg-black border dark:border-gray-800 rounded normal-case text-sm shadow w-80">
+                <div className="absolute top-0 right-0 bg-white dark:bg-black border border-gray-300 dark:border-gray-800 rounded normal-case text-sm shadow w-80">
                     <div className="p-4">
                         <h3 className="text-base font-medium mb-3 dark:text-gray-100">Sort</h3>
                         <div className="flex w-full justify-center">
@@ -221,7 +221,7 @@ export default function FilterColumn({
                                         </span>
                                     </div>
                                 ))}
-                                <div className="flex">
+                                <div className="flex space-x-1">
                                     <SelectInput
                                         id="filterRule"
                                         inputClass="w-32 mr-1"
@@ -238,6 +238,11 @@ export default function FilterColumn({
                                             type="text"
                                             value={newValue}
                                             onChange={(value) => setNewValue(value as string)}
+                                            onKeyUp={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    addFilter()
+                                                }
+                                            }}
                                             label=""
                                             placeholder=""
                                         />
