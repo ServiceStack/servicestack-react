@@ -13,7 +13,7 @@ import { useApiState } from '../use/context'
  *
  * The `status` prop takes precedence over the context error.
  */
-const CheckboxInput: React.FC<CheckboxInputProps & Omit<React.HTMLAttributes<HTMLInputElement>, 'onChange'>> = (props) => {
+const CheckboxInput: React.FC<CheckboxInputProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>> = (props) => {
   const {
     value,
     status,

@@ -25,7 +25,7 @@ import { useApiState } from '../use/context'
  * </AutoForm>
  * ```
  */
-const TextInput = forwardRef<TextInputRef, TextInputProps & Omit<React.HTMLAttributes<HTMLInputElement>, 'onChange'>>(
+const TextInput = forwardRef<TextInputRef, TextInputProps & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>>(
   (props, ref) => {
     const {
       status,
