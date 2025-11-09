@@ -13,7 +13,7 @@ import { useApiState } from '../use/context'
  *
  * The `status` prop takes precedence over the context error.
  */
-const SelectInput: React.FC<SelectInputProps & React.HTMLAttributes<HTMLSelectElement>> = (props) => {
+const SelectInput: React.FC<SelectInputProps & Omit<React.HTMLAttributes<HTMLSelectElement>, 'onChange'>> = (props) => {
   const {
     status,
     id,

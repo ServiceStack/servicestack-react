@@ -13,7 +13,7 @@ import { useApiState } from '../use/context'
  *
  * The `status` prop takes precedence over the context error.
  */
-const TextareaInput: React.FC<TextareaInputProps & React.HTMLAttributes<HTMLTextAreaElement>> = (props) => {
+const TextareaInput: React.FC<TextareaInputProps & Omit<React.HTMLAttributes<HTMLTextAreaElement>, 'onChange'>> = (props) => {
   const {
     status,
     id,
