@@ -27,6 +27,7 @@ export default function SlideOver({
   id = 'SlideOver',
   title,
   subtitle,
+  className,
   contentClass = "relative mt-6 flex-1 px-4 sm:px-6",
   children,
   onDone
@@ -71,7 +72,7 @@ export default function SlideOver({
   return (
     <div
       id={id}
-      className="relative z-10"
+      className={`relative z-10 ${className || ''}`}
       aria-labelledby={id + '-title'}
       role="dialog"
       aria-modal="true"

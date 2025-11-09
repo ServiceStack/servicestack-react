@@ -1,8 +1,8 @@
 import type { BreadcrumbProps } from '@/components/types'
 
-export default function Breadcrumb({ href, title, children }: BreadcrumbProps) {
+export default function Breadcrumb({ href, title, className, children }: BreadcrumbProps) {
   return (
-    <li>
+    <li className={className}>
       <div className="flex items-center">
         {/* Heroicon name: mini/chevron-right */}
         <svg className="h-6 w-6 flex-shrink-0 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

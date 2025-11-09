@@ -69,6 +69,7 @@ const AutoForm = forwardRef<AutoFormRef, AutoFormProps & AutoFormSlots>((props, 
     showLoading = true,
     jsconfig = 'eccn,edv',
     formStyle = "card",
+    className,
     metaType: metaTypeProp,
     configureField,
     configureFormLayout,
@@ -363,7 +364,7 @@ const AutoForm = forwardRef<AutoFormRef, AutoFormProps & AutoFormSlots>((props, 
   return (
     <ApiStateContext.Provider value={client}>
       <ModalProviderContext.Provider value={modalProvider}>
-        <div>
+        <div className={className}>
           {formStyle === 'card' ? (
             <div className={panelClass}>
               {formContent(false)}

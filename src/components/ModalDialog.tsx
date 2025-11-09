@@ -40,6 +40,7 @@ function transition(rule: TransitionRules, setTransition: (cls: string) => void,
 
 export default function ModalDialog({
   id = 'ModalDialog',
+  className,
   modalClass = css.modal.modalClass,
   sizeClass = css.modal.sizeClass,
   closeButtonClass = "bg-white dark:bg-black cursor-pointer rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:ring-offset-black",
@@ -116,7 +117,7 @@ export default function ModalDialog({
         id={id}
         data-transition-for={id}
         onMouseDown={close}
-        className="relative z-10"
+        className={`relative z-10 ${className || ''}`}
         aria-labelledby={`${id}-title`}
         role="dialog"
         aria-modal="true"

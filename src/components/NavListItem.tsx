@@ -8,10 +8,11 @@ export default function NavListItem({
   iconSvg,
   iconSrc,
   iconAlt,
+  className,
   children
 }: NavListItemProps & { children?: React.ReactNode }) {
   return (
-    <li className="relative flex items-start space-x-4 py-6">
+    <li className={`relative flex items-start space-x-4 py-6 ${className || ''}`}>
       <div className="flex-shrink-0">
         <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-900">
           <Icon className="w-6 h-6 text-indigo-700 dark:text-indigo-300" image={icon} src={iconSrc} svg={iconSvg} alt={iconAlt} />

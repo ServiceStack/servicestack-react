@@ -61,6 +61,7 @@ const AutoCreateForm = forwardRef<AutoCreateFormRef, AutoCreateFormProps & AutoC
   const {
     type,
     formStyle = "slideOver",
+    className,
     panelClass: panelClassProp,
     formClass: formClassProp,
     headingClass: headingClassProp,
@@ -346,7 +347,7 @@ const AutoCreateForm = forwardRef<AutoCreateFormRef, AutoCreateFormProps & AutoC
   return (
     <ApiStateContext.Provider value={client}>
       <ModalProviderContext.Provider value={modalProvider}>
-        <div>
+        <div className={className}>
           {formStyle === 'card' ? (
             <div className={panelClass}>
               {formContent(false)}

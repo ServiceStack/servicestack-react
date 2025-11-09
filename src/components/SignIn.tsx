@@ -41,6 +41,7 @@ import Icon from './Icon'
 const SignIn: React.FC<SignInProps> = ({
   provider: initialProvider,
   title = "Sign In",
+  className,
   tabs = true,
   oauth = true,
   onLogin
@@ -170,7 +171,7 @@ const SignIn: React.FC<SignInProps> = ({
 
   return (
     <ApiStateContext.Provider value={client}>
-      <div className="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className={`min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8 ${className || ''}`}>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-50">
           {title}

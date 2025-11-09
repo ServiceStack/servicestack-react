@@ -1,9 +1,9 @@
 import React from 'react'
 import type { FormLoadingProps } from '@/components/types'
 
-const FormLoading: React.FC<FormLoadingProps> = ({ icon = true, text = "loading..." }) => {
+const FormLoading: React.FC<FormLoadingProps> = ({ icon = true, text = "loading...", className }) => {
   return (
-    <div className="flex" title="loading...">
+    <div className={`flex ${className || ''}`} title="loading...">
       {icon && (
         <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="24px" height="30px" viewBox="0 0 24 30">
           <rect x="0" y="10" width="4" height="10" fill="#333" opacity="0.2">

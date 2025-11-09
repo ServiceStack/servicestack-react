@@ -10,6 +10,7 @@ export function Tabs(props: TabsProps) {
     param = 'tab',
     label,
     selected: initialSelected,
+    className,
     tabClass = '',
     bodyClass = 'p-4',
     url = true,
@@ -52,7 +53,7 @@ export function Tabs(props: TabsProps) {
   const SelectedComponent = selected ? tabs[selected] : null
 
   return (
-    <div>
+    <div className={className}>
       <div className="sm:hidden">
         <label htmlFor={id} className="sr-only">Select a tab</label>
         <select

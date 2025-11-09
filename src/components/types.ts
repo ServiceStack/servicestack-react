@@ -124,6 +124,7 @@ export interface AutoFormProps {
     configureField?: (field:InputProp) => void
     configureFormLayout?: (field:InputProp[]) => void
 
+    className?: string
     panelClass?: string
     bodyClass?: string
     formClass?: string
@@ -146,6 +147,7 @@ export interface AutoFormProps {
 export interface AutoFormBaseProps {
   type: string|InstanceType<any>|Function
   formStyle?: "slideOver" | "card"
+  className?: string
   panelClass?: string
   formClass?: string
   headingClass?: string
@@ -179,6 +181,7 @@ export interface AutoViewFormProps {
   typeName?: string,
   done?: Function,
   formStyle?: "slideOver" | "card"
+  className?: string
   panelClass?: string
   formClass?: string
   headingClass?: string
@@ -264,6 +267,7 @@ export interface LookupInputProps {
   input: InputProp|InputInfo
   metadataType: MetadataType
   value: any
+  className?: string
   label?: string
   labelClass?: string
   help?: string
@@ -311,6 +315,7 @@ export interface AutoQueryGridProps {
     selectedColumns?:string[]|string
     toolbarButtonClass?: string
     tableStyle?: TableStyleOptions
+    className?: string
     gridClass?: string
     grid2Class?: string
     grid3Class?: string
@@ -346,6 +351,7 @@ export interface AutoQueryGridProps {
 // Modal Components
 export interface ModalDialogProps {
   id?: string
+  className?: string
   modalClass?: string
   sizeClass?: string
   closeButtonClass?: string
@@ -358,6 +364,7 @@ export interface SlideOverProps {
   id?: string
   title?: string
   subtitle?: string
+  className?: string
   contentClass?: string
   children?: ReactNode
   onDone?: () => void
@@ -367,12 +374,14 @@ export interface SlideOverProps {
 export interface BreadcrumbsProps {
   homeHref?: string
   homeLabel?: string
+  className?: string
   children?: ReactNode
 }
 
 export interface BreadcrumbProps {
   href?: string
   title?: string
+  className?: string
   children?: ReactNode
 }
 
@@ -401,6 +410,7 @@ export interface AlertProps {
 
 export interface AlertSuccessProps {
     message?: string
+    className?: string
 }
 
 export interface ErrorSummaryProps {
@@ -430,9 +440,14 @@ export interface ConfirmDeleteProps {
   onDelete?: () => void
 }
 
+export interface DarkModeToggleProps {
+  className?: string
+}
+
 export interface FormLoadingProps {
   icon?: boolean
   text?: string
+  className?: string
 }
 
 // Format Components
@@ -481,6 +496,7 @@ export interface MarkupModelProps {
 export interface InputDescriptionProps {
   id: string
   description: string
+  className?: string
 }
 
 export interface TextLinkProps {
@@ -490,6 +506,7 @@ export interface TextLinkProps {
 
 export interface NavListProps {
   title?: string
+  className?: string
   children?: ReactNode
 }
 
@@ -500,6 +517,7 @@ export interface NavListItemProps {
   iconSvg?: string
   iconSrc?: string
   iconAlt?: string
+  className?: string
 }
 
 export interface SettingsIconsProps {
@@ -531,6 +549,7 @@ export interface QueryPrefsProps {
 
 export interface EnsureAccessProps {
   invalidAccess?: string
+  className?: string
   alertClass?: string
   children?: ReactNode
   onDone?: () => void
@@ -540,6 +559,7 @@ export interface EnsureAccessDialogProps {
   title?: string
   subtitle?: string
   invalidAccess?: string
+  className?: string
   alertClass?: string
   onDone?: () => void
 }
@@ -547,6 +567,7 @@ export interface EnsureAccessDialogProps {
 export interface CloseButtonProps {
   buttonClass?: string
   title?: string
+  className?: string
   onClose?: () => void
 }
 
@@ -563,6 +584,7 @@ export interface ModalLookupProps {
   showPagingInfo?: boolean|null
   showResetPreferences?: boolean|null
   showFiltersView?: boolean|null
+  className?: string
   toolbarButtonClass?: string
 
   canFilter?:(column:string) => boolean
@@ -580,6 +602,7 @@ export interface TabsProps {
     param?: string
     label?: (tab:string) => string
     selected?: string
+    className?: string
     tabClass?: string
     bodyClass?: string
     url?:boolean
@@ -589,6 +612,7 @@ export interface TabsProps {
 export interface SignInProps {
   provider?: string
   title?: string
+  className?: string
   tabs?: boolean|"false"
   oauth?: boolean|"false"
   onLogin?: (auth:AuthenticateResponse) => void
@@ -597,6 +621,7 @@ export interface SignInProps {
 export interface MarkdownInputProps {
   status?: ResponseStatus|null
   id: string
+  className?: string
   inputClass?: string
   filterClass?:(cls:string) => string
   label?: string
@@ -622,4 +647,10 @@ export interface SidebarLayoutRef {
   show(): void
   hide(): void
   toggle(show:boolean): void
+}
+
+export interface SidebarLayoutProps {
+  className?: string
+  children?: ReactNode
+  mobileTitlebar?: ReactNode
 }

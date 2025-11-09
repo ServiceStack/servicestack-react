@@ -7,6 +7,7 @@ export default function EnsureAccessDialog({
   title,
   subtitle,
   invalidAccess,
+  className,
   alertClass,
   onDone
 }: EnsureAccessDialogProps) {
@@ -17,6 +18,7 @@ export default function EnsureAccessDialog({
       title={title}
       subtitle={subtitle}
       onDone={onDone}
+      className={className}
       contentClass="relative flex-1"
     >
       <EnsureAccess alertClass={alertClass} invalidAccess={invalidAccess} />

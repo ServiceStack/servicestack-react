@@ -14,6 +14,7 @@ const LookupInput: React.FC<LookupInputProps> = ({
   input,
   metadataType,
   value: modelValue,
+  className,
   label,
   labelClass,
   help,
@@ -185,7 +186,7 @@ const LookupInput: React.FC<LookupInputProps> = ({
   }, [modelValue, id, property, useRef, metadataApi, client, metadataType, getTypeProperties, value])
 
   return (
-    <div className="lookup-field">
+    <div className={`lookup-field ${className || ''}`}>
       <input type="hidden" name={id} value={value || ''} />
       {useLabel && (
         <div className="flex justify-between">

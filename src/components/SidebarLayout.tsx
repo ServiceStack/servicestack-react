@@ -1,13 +1,8 @@
 import React, { useState, forwardRef, useImperativeHandle, ReactNode } from 'react'
-import type { SidebarLayoutRef } from '@/components/types'
-
-interface SidebarLayoutProps {
-  children?: ReactNode
-  mobileTitlebar?: ReactNode
-}
+import type { SidebarLayoutProps, SidebarLayoutRef } from '@/components/types'
 
 export const SidebarLayout = forwardRef<SidebarLayoutRef, SidebarLayoutProps>(
-  ({ children, mobileTitlebar }, ref) => {
+  ({ children, className, mobileTitlebar }, ref) => {
     const [toggleState, setToggleState] = useState(true)
     const [transition1, setTransition1] = useState('')
     const [transition2, setTransition2] = useState('')
@@ -59,7 +54,7 @@ export const SidebarLayout = forwardRef<SidebarLayoutRef, SidebarLayoutProps>(
     }))
 
     return (
-      <div>
+      <div className={className}>
         {/* Off-canvas menu for mobile, show/hide based on off-canvas menu state. */}
         {toggleState && (
           <div className="relative z-10 lg:hidden" role="dialog" aria-modal="true">

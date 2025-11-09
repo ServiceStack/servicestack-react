@@ -24,6 +24,7 @@ const AutoViewForm: React.FC<AutoViewFormProps & AutoViewFormSlots> = (props) =>
     typeName: typeNameProp,
     done: doneFn,
     formStyle = "slideOver",
+    className,
     panelClass: panelClassProp,
     formClass: formClassProp,
     headingClass: headingClassProp,
@@ -152,7 +153,7 @@ const AutoViewForm: React.FC<AutoViewFormProps & AutoViewFormSlots> = (props) =>
   }
 
   return (
-    <div>
+    <div className={className}>
       {formStyle === 'card' ? (
         <div className={panelClass}>
           <div className={formClass}>

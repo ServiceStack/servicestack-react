@@ -4,10 +4,11 @@ import type { CloseButtonProps } from './types'
 export default function CloseButton({
   buttonClass = 'bg-white dark:bg-black',
   title = 'Close',
+  className,
   onClose
 }: CloseButtonProps) {
   return (
-    <div className="absolute top-0 right-0 pt-4 pr-4">
+    <div className={className ?? "absolute top-0 right-0 pt-4 pr-4"}>
       <button
         type="button"
         onClick={onClose}

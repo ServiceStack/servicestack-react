@@ -6,7 +6,7 @@ import { appendQueryString } from "@servicestack/client"
 import Alert from './Alert'
 import SecondaryButton from './SecondaryButton'
 
-export default function EnsureAccess({ invalidAccess, alertClass, children }: EnsureAccessProps) {
+export default function EnsureAccess({ invalidAccess, className, alertClass, children }: EnsureAccessProps) {
   const { isAuthenticated } = useAuth()
   const { config } = useConfig()
 
@@ -25,7 +25,7 @@ export default function EnsureAccess({ invalidAccess, alertClass, children }: En
   if (!invalidAccess) return null
 
   return (
-    <div>
+    <div className={className}>
       <Alert className={alertClass}>
         <span dangerouslySetInnerHTML={{ __html: invalidAccess }} />
       </Alert>

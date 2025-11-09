@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef, useImperativeHandle, forwardRef, useContext, type CSSProperties, type ReactNode } from 'react'
-import type { JsonServiceClient } from '@servicestack/client'
 import type { ApiPrefs, ApiResponse, Column, ColumnSettings, MetadataPropertyType, GridAllowOptions, GridShowOptions } from '@/types'
 import type { AutoQueryGridProps } from '@/components/types'
 import { ApiResult, appendQueryString, combinePaths, delaySet, leftPart, mapGet, queryString, rightPart } from '@servicestack/client'
@@ -105,6 +104,7 @@ export const AutoQueryGrid = forwardRef<AutoQueryGridRef, AutoQueryGridComponent
     const {
         id = 'AutoQueryGrid',
         skip: initialSkip = 0,
+        className,
         onHeaderSelected,
         onRowSelected,
         onNav,
@@ -724,7 +724,7 @@ export const AutoQueryGrid = forwardRef<AutoQueryGridRef, AutoQueryGridComponent
     }
 
     return (
-        <div className="pt-1">
+        <div className={className ?? "pt-1"}>
             {show('forms') && create && apis.Create && (
                 <div>
                     {invalidCreateAccess ? (

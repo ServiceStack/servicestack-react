@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import type { AlertSuccessProps } from '@/components/types'
 
-export default function AlertSuccess({ message, children }: AlertSuccessProps & { children?: React.ReactNode }) {
+export default function AlertSuccess({ message, className, children }: AlertSuccessProps & { children?: React.ReactNode }) {
   const [dismissed, setDismissed] = useState(false)
 
   if (dismissed) return null
 
   return (
-    <div className="rounded-md bg-green-50 dark:bg-green-200 p-4" role="alert">
+    <div className={`rounded-md bg-green-50 dark:bg-green-200 p-4 ${className || ''}`} role="alert">
       <div className="flex">
         <div className="flex-shrink-0">
           <svg className="h-5 w-5 text-green-400 dark:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

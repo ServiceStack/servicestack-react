@@ -63,6 +63,7 @@ const AutoEditForm = forwardRef<AutoEditFormRef, AutoEditFormProps & AutoEditFor
     type,
     value: modelValue,
     formStyle = "slideOver",
+    className,
     panelClass: panelClassProp,
     formClass: formClassProp,
     headingClass: headingClassProp,
@@ -456,7 +457,7 @@ const AutoEditForm = forwardRef<AutoEditFormRef, AutoEditFormProps & AutoEditFor
   return (
     <ApiStateContext.Provider value={client}>
       <ModalProviderContext.Provider value={modalProvider}>
-        <div>
+        <div className={className}>
           {formStyle === 'card' ? (
             <div className={panelClass}>
               {formContent(false)}

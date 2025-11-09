@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
+import type { DarkModeToggleProps } from './types'
 
-export function DarkModeToggle() {
+export function DarkModeToggle({ className }: DarkModeToggleProps) {
   const html = typeof document !== 'undefined' ? document.documentElement : null
   const hasDarkClass = () => html?.classList.contains('dark') ?? false
 
@@ -15,7 +16,7 @@ export function DarkModeToggle() {
     const currentIsDark = hasDarkClass()
     const newIsDark = !currentIsDark
 
-    console.log('Toggle clicked - current:', currentIsDark, 'new:', newIsDark)
+    // console.log('Toggle clicked - current:', currentIsDark, 'new:', newIsDark)
 
     if (newIsDark) {
       html?.classList.add('dark')
@@ -23,19 +24,19 @@ export function DarkModeToggle() {
       html?.classList.remove('dark')
     }
 
-    console.log('After toggle - classList:', html?.classList.toString())
+    // console.log('After toggle - classList:', html?.classList.toString())
 
     setIsDark(newIsDark)
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('color-scheme', newIsDark ? 'dark' : 'light')
-      console.log('Saved to localStorage:', newIsDark ? 'dark' : 'light')
+      // console.log('Saved to localStorage:', newIsDark ? 'dark' : 'light')
     }
   }
 
   return (
     <button
       type="button"
-      className="bg-gray-200 dark:bg-gray-700 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:ring-offset-black"
+      className={`bg-gray-200 dark:bg-gray-700 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:ring-offset-black ${className || ''}`}
       role="switch"
       aria-checked="false"
       onClick={toggleDark}

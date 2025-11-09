@@ -34,6 +34,7 @@ export default function ModalLookup({
   showPagingInfo = true,
   showResetPreferences = true,
   showFiltersView = true,
+  className,
   toolbarButtonClass: propToolbarButtonClass,
   canFilter: propCanFilter,
   modelTitle: propModelTitle,
@@ -339,7 +340,7 @@ export default function ModalLookup({
   if (!refInfo) return null
 
   return (
-    <ModalDialog id={id} onDone={done} configureField={configureField}>
+    <ModalDialog id={id} className={className} onDone={done} configureField={configureField}>
       <div className="pt-2 overflow-auto" style={{ minHeight: '620px' }}>
         <div className="mt-3 pl-5 flex flex-wrap items-center">
           <h3 className="hidden sm:block text-xl leading-6 font-medium text-gray-900 dark:text-gray-50 mr-3">

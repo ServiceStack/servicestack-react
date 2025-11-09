@@ -42,6 +42,7 @@ export interface MarkdownInputRef {
 const MarkdownInput = forwardRef<MarkdownInputRef, MarkdownInputProps>(({
   status,
   id,
+  className,
   inputClass,
   filterClass: filterClassProp,
   label,
@@ -504,7 +505,7 @@ const MarkdownInput = forwardRef<MarkdownInputRef, MarkdownInputProps>(({
   }))
 
   return (
-    <div>
+    <div className={className}>
       {useLabel && (
         <label htmlFor={id} className={`mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300 ${labelClass ?? ''}`}>
           {useLabel}

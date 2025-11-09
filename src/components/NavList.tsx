@@ -1,8 +1,8 @@
 import type { NavListProps } from '@/components/types'
 
-export default function NavList({ title, children }: NavListProps) {
+export default function NavList({ title, className, children }: NavListProps) {
   return (
-    <div>
+    <div className={className}>
       {title && (
         <h2 className="text-base font-semibold text-gray-500 dark:text-gray-400">
           {title}
