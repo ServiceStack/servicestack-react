@@ -165,15 +165,15 @@ const AutoViewForm: React.FC<AutoViewFormProps & AutoViewFormSlots> = (props) =>
               )}
             </div>
             <MarkupModel
-              value={model}
-              tableClass="border-separate border-spacing-y-1"
-              basicTrClass="group"
-              basicThClass="py-2 px-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-l-md"
-              basicTdClass="py-2 px-4 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 rounded-r-md"
-              complexTitleTrClass="group"
-              complexTitleTdClass="py-2 px-4 text-sm font-semibold bg-indigo-600 dark:bg-indigo-700 text-white rounded-md"
-              complexBodyTrClass="group"
-              complexBodyTdClass="py-2 px-4 bg-white dark:bg-gray-900 rounded-md"
+                value={model}
+                tableClass="w-full border-separate border-spacing-y-1"
+                basicTrClass="group"
+                basicThClass="py-1 px-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300"
+                basicTdClass="py-1 px-4 text-sm text-gray-900"
+                complexTitleTrClass="group"
+                complexTitleTdClass="py-1 px-4 font-semibold bg-indigo-600 dark:bg-indigo-700 text-white"
+                complexBodyTrClass="group"
+                complexBodyTdClass="py-1 px-4 bg-white dark:bg-gray-900"
             />
           </div>
         </div>
