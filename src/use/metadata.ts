@@ -330,7 +330,7 @@ export function getMetadata(opt?:{assert?:boolean}):any { // use 'any' to avoid 
 /** Explicitly set AppMetadata and save to localStorage */
 export function setMetadata(metadata:AppMetadata|null|undefined) {
     if (metadata && isValid(metadata)) {
-        console.debug('setMetadata', metadata)
+        // console.debug('setMetadata', metadata)
         metadata.date = toDateTime(new Date())
         Sole.metadata = metadata
         if (typeof localStorage != 'undefined') localStorage.setItem(metadataPath, JSON.stringify(metadata))
@@ -364,7 +364,7 @@ export function tryLoad() {
 }
 
 export async function downloadMetadata(metadataPath:string, resolve?:() => Promise<Response>) {
-    console.debug('downloadMetadata', metadataPath, !!resolve)
+    // console.debug('downloadMetadata', metadataPath, !!resolve)
     let r = resolve
         ? await resolve()
         : await fetch(metadataPath)

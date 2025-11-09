@@ -200,7 +200,7 @@ const AutoViewForm: React.FC<AutoViewFormProps & AutoViewFormSlots> = (props) =>
                             </div>
                           </div>
                         </div>
-                        <div className="">
+                        <div>
                           <MarkupModel
                             value={model}
                             tableClass="w-full border-separate border-spacing-y-1"

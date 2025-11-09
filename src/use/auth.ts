@@ -13,7 +13,7 @@ function toAuth(auth?:AuthenticateResponse) {
 function signIn(user:AuthenticateResponse) {
     if (user) {
         Sole.user = toAuth(user)!
-        console.debug('signIn', user, Sole.user)
+        // console.debug('signIn', user, Sole.user)
         Sole.events.publish('signIn', user)
     } else {
         signOut()
@@ -22,7 +22,7 @@ function signIn(user:AuthenticateResponse) {
 
 /** Sign Out currently Authenticated User */
 function signOut() {
-    console.debug('signOut', Sole.user)
+    // console.debug('signOut', Sole.user)
     Sole.user = null
     Sole.events.publish('signOut', null)
 }
@@ -79,7 +79,7 @@ export function canAccess(op?:MetadataOperationType|null) {
 export function invalidAccessMessage(op:MetadataOperationType) {
     if (!op || !op.requiresAuth) return null
     const auth = Sole.user
-    console.debug('invalidAccessMessage', auth, op?.request?.name)
+    // console.debug('invalidAccessMessage', auth, op?.request?.name)
     if (!auth) {
         return `<b>${op.request.name}</b> requires Authentication`
     }
