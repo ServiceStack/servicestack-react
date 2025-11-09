@@ -83,7 +83,8 @@ const TextInput = forwardRef<TextInputRef, TextInputProps & Omit<React.InputHTML
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (onChange) {
         const newValue = textInputValue(useType, e.target.value)
-        onChange(newValue)
+        // Improve UX by always returning a string for text inputs
+        onChange(typeof newValue == 'string' ? newValue : `${newValue ?? ''}`)
       }
     }
 
