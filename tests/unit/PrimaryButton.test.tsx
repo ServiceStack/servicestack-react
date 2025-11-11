@@ -118,15 +118,17 @@ test('renders with Link when href is provided', () => {
   expect(link?.getAttribute('href')).toBe('/test')
 })
 
-test('renders button inside Link when href is provided', () => {
+test('renders Link with button styling when href is provided', () => {
   const { container } = renderWithRouter(
     <PrimaryButton href="/test">Link Button</PrimaryButton>
   )
 
   const link = container.querySelector('a')
-  const button = link?.querySelector('button')
-  expect(button).toBeTruthy()
-  expect(button?.textContent).toBe('Link Button')
+  expect(link).toBeTruthy()
+  expect(link?.textContent).toBe('Link Button')
+  // Should have button-like styling classes
+  expect(link?.classList.contains('inline-flex')).toBe(true)
+  expect(link?.classList.contains('bg-indigo-600')).toBe(true)
 })
 
 test('applies disabled attribute', () => {
