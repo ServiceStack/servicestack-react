@@ -1,5 +1,6 @@
 import type { NavListItemProps } from '@/components/types'
 import Icon from './Icon'
+import { NavigationLink } from './NavigationLink'
 
 export default function NavListItem({
   title,
@@ -21,10 +22,10 @@ export default function NavListItem({
       <div className="min-w-0 flex-1">
         <h3 className="text-base font-medium text-gray-900 dark:text-gray-100">
           <span className="rounded-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2">
-            <a href={href} className="focus:outline-none">
+            <NavigationLink href={href} className="focus:outline-none">
               <span className="absolute inset-0" aria-hidden="true"></span>
               {title}
-            </a>
+            </NavigationLink>
           </span>
         </h3>
         <p className="text-base text-gray-500">

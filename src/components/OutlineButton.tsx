@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { NavigationLink } from './NavigationLink'
 import type { OutlineButtonProps } from '@/components/types'
 
 const OutlineButton: React.FC<OutlineButtonProps> = ({
@@ -17,11 +17,9 @@ const OutlineButton: React.FC<OutlineButtonProps> = ({
 
   if (href) {
     return (
-      <Link to={href}>
-        <button type="button" className={cls} onClick={onClick} {...attrs}>
-          {children}
-        </button>
-      </Link>
+      <NavigationLink href={href} className={cls} onClick={onClick} {...attrs}>
+        {children}
+      </NavigationLink>
     )
   }
 

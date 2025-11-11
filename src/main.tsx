@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import App from './demo/App'
 import Gallery from './gallery'
 import AlertsPage from './gallery/pages/Alerts'
@@ -26,8 +26,13 @@ import InstallPage from './gallery/pages/Install'
 import CustomAutoFormsPage from './gallery/pages/CustomAutoForms'
 import MarkdownEditorPage from './gallery/pages/MarkdownEditor'
 import CustomInputsPage from './gallery/pages/CustomInputs'
+import SetupPage from './gallery/pages/Setup'
 import './tailwind.css'
 import { setDefaultFormats } from './use/formatters'
+import { setLinkComponent } from './use/config'
+
+// Configure the library to use React Router's Link component
+setLinkComponent(Link)
 
 // Initialize date formatting with Australian locale
 const browserLocale = 'en-AU' // Force Australian date format (DD/MM/YYYY)
@@ -84,6 +89,7 @@ ReactDOM.createRoot(document.getElementById('app')!).render(
         <Route path="/gallery/custom-autoforms" element={<CustomAutoFormsPage />} />
         <Route path="/gallery/markdown" element={<MarkdownEditorPage />} />
         <Route path="/gallery/custom-inputs" element={<CustomInputsPage />} />
+        <Route path="/gallery/setup" element={<SetupPage />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,

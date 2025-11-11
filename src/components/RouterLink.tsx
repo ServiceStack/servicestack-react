@@ -1,15 +1,23 @@
 import React, { ReactNode } from 'react'
-import { Link, LinkProps } from 'react-router-dom'
+import { NavigationLink } from './NavigationLink'
 
-interface RouterLinkProps extends Omit<LinkProps, 'to'> {
+interface RouterLinkProps {
   to?: string
+  href?: string
   children?: ReactNode
+  [key: string]: any
 }
 
-export function RouterLink({ to = '/', children, ...attrs }: RouterLinkProps) {
+/**
+ * RouterLink component that uses the configured Link component.
+ * Supports both 'to' (React Router style) and 'href' props for compatibility.
+ */
+export function RouterLink({ to, href, children, ...attrs }: RouterLinkProps) {
+  const path = to || href || '/'
+
   return (
-    <Link to={to} title={to} {...attrs}>
+    <NavigationLink href={path} title={path} {...attrs}>
       {children}
-    </Link>
+    </NavigationLink>
   )
 }

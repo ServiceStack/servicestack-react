@@ -142,6 +142,9 @@ export default function NavigationPage() {
           <PrimaryButton href="https://docs.servicestack.net/vue/" className="mr-2">
             Vue Component Gallery
           </PrimaryButton>
+          <PrimaryButton href="/gallery">
+            React Component Docs
+          </PrimaryButton>
           <SecondaryButton href="/gallery">
             React Component Docs
           </SecondaryButton>

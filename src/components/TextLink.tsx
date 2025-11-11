@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import type { TextLinkProps } from '@/components/types'
 import { a } from './css'
+import { NavigationLink } from './NavigationLink'
 
 const TextLink: React.FC<TextLinkProps & React.AnchorHTMLAttributes<HTMLAnchorElement>> = ({
   color = 'blue',
@@ -14,10 +15,20 @@ const TextLink: React.FC<TextLinkProps & React.AnchorHTMLAttributes<HTMLAnchorEl
     return className ? `${baseClasses} ${className}` : baseClasses
   }, [color, href, className])
 
+  // If href is provided, use NavigationLink for routing
+  if (href) {
+    return (
+      <NavigationLink href={href} className={cls} {...attrs}>
+        {children}
+      </NavigationLink>
+    )
+  }
+
+  // Otherwise render as a span with cursor-pointer for onClick handlers
   return (
-    <a className={cls} href={href} {...attrs}>
+    <span className={cls} {...attrs}>
       {children}
-    </a>
+    </span>
   )
 }
 

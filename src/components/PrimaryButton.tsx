@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { NavigationLink } from './NavigationLink'
 import type { PrimaryButtonProps } from '@/components/types'
 
 const PrimaryButton: React.FC<PrimaryButtonProps> = ({
@@ -29,11 +29,9 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 
   if (href) {
     return (
-      <Link to={href}>
-        <button type="button" className={cls} onClick={onClick} {...attrs}>
-          {children}
-        </button>
-      </Link>
+      <NavigationLink href={href} className={cls} onClick={onClick} {...attrs}>
+        {children}
+      </NavigationLink>
     )
   }
 

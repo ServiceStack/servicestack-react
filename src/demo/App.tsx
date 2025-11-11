@@ -26,7 +26,7 @@ import { ApiResult, EmptyResponse, IReturn, ResponseStatus, JsonServiceClient } 
 import { setMetadata, loadMetadata } from '../use/metadata'
 import { Sole } from '../use/config'
 import { authContext } from '../use/auth'
-import metadataJson from './metadata.json'
+import metadataJson from './app.json'
 import PrimaryButton from '../components/PrimaryButton'
 import { Authenticate, IGet } from './dtos'
 import { useFormatters } from '../use/formatters'
@@ -198,6 +198,9 @@ export default function App() {
     <>
       <ClientContext.Provider value={client}>
       <div className="absolute top-2 right-2 flex items-center gap-4">
+        <a href="/gallery/setup" className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 font-medium">
+          Setup Examples
+        </a>
         <a href="/gallery" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-medium">
           Component Gallery
         </a>

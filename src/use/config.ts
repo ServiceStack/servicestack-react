@@ -3,7 +3,6 @@ import type { ComponentType } from "react"
 import { getFormatters } from "./formatters"
 import { enumFlagsConverter } from "./metadata"
 import { createBus, toKebabCase } from "@servicestack/client"
-import { RouterLink } from '../components/RouterLink'
 
 export class Interceptors {
     callbacks:{ [key:string]: (key:string, value:any) => void} = {}
@@ -101,9 +100,8 @@ export class Sole {
         return () => subscribers.delete(callback)
     }
 
-    static components:{[k:string]:ComponentType} = {
-        RouterLink,
-    }
+    static components:{[k:string]:ComponentType} = {}
+
     static component(name:string) {
         const component = Sole.components[name]
         if (component) return component
@@ -151,6 +149,15 @@ export function registerComponents(components:{[name:string]:ComponentType}) {
     Object.assign(Sole.components, components)
 }
 
+/**
+ * Set a custom Link component for navigation
+ * For React Router: setLinkComponent(Link) from 'react-router-dom'
+ * For Next.js: setLinkComponent(Link) from 'next/link'
+ */
+export function setLinkComponent(component:any) {
+    Sole.config.linkComponent = component
+}
+
 /** Manage Global Configuration for Component Library */
 export function useConfig() {
     const events = Sole.events
@@ -166,5 +173,6 @@ export function useConfig() {
         registerInterceptor,
         registerComponent,
         registerComponents,
+        setLinkComponent,
     }
 }

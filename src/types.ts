@@ -114,6 +114,8 @@ export interface UiConfig {
     storage?:Storage
     tableIcon?:ImageInfo
     scopeWhitelist?: {[k:string]:Function}
+    /** Custom Link component for navigation (e.g., react-router-dom Link or next/link) */
+    linkComponent?: any
 }
 
 export interface AutoQueryApis {
