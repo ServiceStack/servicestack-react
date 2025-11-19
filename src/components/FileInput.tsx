@@ -23,6 +23,7 @@ const FileInput: React.FC<FileInputProps & Omit<React.InputHTMLAttributes<HTMLIn
   filterClass: filterClassFn,
   label,
   labelClass,
+  imageClass,
   help,
   placeholder,
   value,
@@ -176,7 +177,7 @@ const FileInput: React.FC<FileInputProps & Omit<React.InputHTMLAttributes<HTMLIn
             <div className="shrink-0 cursor-pointer" title={!isDataUri(src) ? src : ''}>
               <img
                 onClick={openFile}
-                className={`h-16 w-16 ${imgCls(src)}`}
+                className={imageClass ?? `h-16 w-16 ${imgCls(src)}`}
                 alt={`Current ${useLabel ?? ''}`}
                 src={fallbackSrc || assetsPathResolver(src)}
                 onError={onError}
@@ -194,7 +195,7 @@ const FileInput: React.FC<FileInputProps & Omit<React.InputHTMLAttributes<HTMLIn
                     <div className="flex w-full" title={!isDataUri(file.filePath) ? file.filePath : ''}>
                       <img
                         src={fallbackSrcMap[filePathUri(file.filePath)!] || assetsPathResolver(filePathUri(file.filePath)!)}
-                        className={`mr-2 h-8 w-8 ${imgCls(file.filePath)}`}
+                        className={imageClass ?? `mr-2 h-8 w-8 ${imgCls(file.filePath)}`}
                         onError={() => onErrorMultiple(file.filePath)}
                         alt=""
                       />

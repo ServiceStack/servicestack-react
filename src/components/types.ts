@@ -74,6 +74,7 @@ export interface FileInputProps {
   filterClass?:(cls:string) => string
   label?: string
   labelClass?: string
+  imageClass? : string
   help?: string
   placeholder?: string
   value?: string
