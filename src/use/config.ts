@@ -21,27 +21,54 @@ export class Interceptors {
     }
 }
 
-/** SSR safe wrapper around localStorage */
+/**
+ * In-memory storage implementation for Node.js/Server environments.
+ * Automatically used when localStorage is not available (e.g., React Server Components, Node.js).
+ * Implements the Web Storage API interface using a Map.
+ */
+export class MemoryStore implements Storage {
+    private store: Map<string, string> = new Map()
+
+    get length() { return this.store.size }
+
+    getItem(key: string): string | null {
+        return this.store.get(key) ?? null
+    }
+
+    setItem(key: string, value: string): void {
+        this.store.set(key, value)
+    }
+
+    removeItem(key: string): void {
+        this.store.delete(key)
+    }
+
+    clear(): void {
+        this.store.clear()
+    }
+
+    key(index: number): string | null {
+        const keys = Array.from(this.store.keys())
+        return keys[index] ?? null
+    }
+}
+
+/** Wrapper around localStorage for browser environments */
 export class LocalStore implements Storage {
-    get length() { return typeof localStorage == "undefined" ? 0 : localStorage.length }
+    get length() { return localStorage.length }
     getItem(key:string) {
-        if (typeof localStorage == "undefined") return null
         return localStorage.getItem(key)
     }
     setItem(key:string, value:string) {
-        if (typeof localStorage == "undefined") return
         localStorage.setItem(key, value)
     }
     removeItem(key:string) {
-        if (typeof localStorage == "undefined") return
         localStorage.removeItem(key)
     }
     clear() {
-        if (typeof localStorage == "undefined") return
         localStorage.clear()
     }
     key(index: number) {
-        if (typeof localStorage == "undefined") return null
         return localStorage.key(index)
     }
 }
@@ -58,7 +85,7 @@ export class Sole {
         navigate: url => location.href = url,
         assetsPathResolver: src => src,
         fallbackPathResolver: src => src,
-        storage: new LocalStore(),
+        storage: typeof localStorage !== 'undefined' ? new LocalStore() : new MemoryStore(),
         tableIcon: { svg: `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><g fill='none' stroke='currentColor' stroke-width='1.5'><path d='M5 12v6s0 3 7 3s7-3 7-3v-6'/><path d='M5 6v6s0 3 7 3s7-3 7-3V6'/><path d='M12 3c7 0 7 3 7 3s0 3-7 3s-7-3-7-3s0-3 7-3Z'/></g></svg>` },
         scopeWhitelist: {
             enumFlagsConverter,

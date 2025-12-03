@@ -327,22 +327,22 @@ export function getMetadata(opt?:{assert?:boolean}):any { // use 'any' to avoid 
     return Sole.metadata
 }
 
-/** Explicitly set AppMetadata and save to localStorage */
+/** Explicitly set AppMetadata and save to storage */
 export function setMetadata(metadata:AppMetadata|null|undefined) {
     if (metadata && isValid(metadata)) {
         // console.debug('setMetadata', metadata)
         metadata.date = toDateTime(new Date())
         Sole.metadata = metadata
-        if (typeof localStorage != 'undefined') localStorage.setItem(metadataPath, JSON.stringify(metadata))
+        Sole.config.storage?.setItem(metadataPath, JSON.stringify(metadata))
         return true
     }
     return false
 }
 
-/** Delete AppMetadata and remove from localStorage */
+/** Delete AppMetadata and remove from storage */
 export function clearMetadata() {
     Sole.metadata = null
-    if (typeof localStorage != 'undefined') localStorage.removeItem(metadataPath)
+    Sole.config.storage?.removeItem(metadataPath)
 }
 
 export function tryLoad() {
@@ -351,12 +351,12 @@ export function tryLoad() {
     if (isValid(metadata)) {
         setMetadata(metadata)
     } else {
-        const json = typeof localStorage != 'undefined' ? localStorage.getItem(metadataPath) : null
+        const json = Sole.config.storage?.getItem(metadataPath)
         if (json) {
             try {
                 setMetadata(JSON.parse(json) as AppMetadata)
             } catch(e) {
-                console.error(`Could not JSON.parse ${metadataPath} from localStorage`)
+                console.error(`Could not JSON.parse ${metadataPath} from storage`)
             }
         }
     }
@@ -716,7 +716,16 @@ const defaultViewerConventions:AutoQueryConvention[] = [
 ]
 
 export function useMetadata(client?:JsonServiceClient) {
-    client ??= useContext(ClientContext)
+    // Only use context in client components
+    // Check if we're in a React render context by checking if useContext throws
+    if (!client && typeof useContext === 'function') {
+        try {
+            client = useContext(ClientContext)
+        } catch {
+            // useContext throws outside of React render context (e.g., in server components)
+            // This is expected and safe to ignore
+        }
+    }
 
     tryLoad()
 
